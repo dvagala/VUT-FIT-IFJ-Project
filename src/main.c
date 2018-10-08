@@ -1,6 +1,6 @@
 #include <stdio.h>
 
 int main() {
-    printf("Hello, IFJ projectghghghg!\n");
+    printf("Hello, IFJ projectghghghg dfgdg!\n");
     return 0;
 }
