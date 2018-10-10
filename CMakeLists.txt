@@ -3,4 +3,4 @@ project(IFJ_project C)
 
 set(CMAKE_C_STANDARD 99)
 
-add_executable(IFJ_project src/main.c)
+add_executable(IFJ_project src/main.c src/scanner.h)
