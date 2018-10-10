@@ -1,6 +1,6 @@
 #include <stdio.h>
 
 int main() {
-    printf("asdfgwwwwww!\n");
+    printf("asdfgwwwsssswww!\n");
     return 0;
 }
