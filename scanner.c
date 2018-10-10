@@ -1,6 +1,6 @@
 #include <stdio.h>
 
 int main() {
-    printf("asdfg!\n");
+    printf("asd5g!\n");
     return 0;
 }
