@@ -4,7 +4,8 @@
 int main() {
 
 
-    while ((c=getchar)!='\n')
+    int c;
+    while ((c=getchar())!='\n')
     {
         printf("%c",c);
     }
