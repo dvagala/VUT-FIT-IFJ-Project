@@ -48,7 +48,7 @@ typedef enum {
     //COMMENTS
     SINGLECOM,   // # -SINGLE-LINE COMMENTS
     BEGCOM,      // =begin - BLOCK COMMENTS BEGIN
-    ENCOM,       // =end   - BLOCK COMMENTS END    
+    ENCOM,       // =end   - BLOCK COMMENTS END
 
 
 } Tokens_Types;
