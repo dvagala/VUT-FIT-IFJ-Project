@@ -7,5 +7,3 @@
 
 #endif //IFJ_PROJECT_SCANNER_H
 
-
-#define TOKEN
