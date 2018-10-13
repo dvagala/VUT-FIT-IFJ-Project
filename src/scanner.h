@@ -26,10 +26,13 @@ typedef enum {
     MODULO,     // %
     DIVIDE,     // /
     ASSIGN,     // =
-
+    INC,        //++
+    DEC,        /--
     //LOGIC
     LESS,       // <
     MORE,       // >
+    LOE,        // <=
+    MOE,        // >=
     EQUAL,      // ==
 
 
@@ -47,6 +50,6 @@ typedef enum {
     //COMMENTS
     SINGLECOM,   // # -SINGLE-LINE COMMENTS
     BEGCOM,      // =begin - BLOCK COMMENTS BEGIN
-    ENCOM,       // =end   - BLOCK COMMENTS END
-
+    ENDCOM,       // =end   - BLOCK COMMENTS END
+} Tokens_Types;
 
