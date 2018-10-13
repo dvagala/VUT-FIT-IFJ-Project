@@ -41,7 +41,6 @@ typedef enum {
     RPAR,       // )
 
     //TERM
-    EOF,
     nil,
     ID,
 
@@ -51,4 +50,3 @@ typedef enum {
     ENCOM,       // =end   - BLOCK COMMENTS END
 
 
-} Tokens_Types;
