@@ -127,7 +127,20 @@ int main() {
                                 {
                                     case NOT:
                                 }
-                                
+                                /*else if(strcmp(token, "SINGLECOM") == 0)
+                                {
+                                    case SINGLECOM:
+                                }
+                                else if(strcmp(token, "BEGCOM") == 0)
+                                {
+                                    case BEGCOM:
+                                }
+                                else if(strcmp(token, "ENDCOM") == 0)
+                                {
+                                    case ENDCOM:
+                                }
+                                */
+
 
                             }
                         }
