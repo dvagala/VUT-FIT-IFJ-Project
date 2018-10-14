@@ -174,7 +174,7 @@ int main() {
                 printf("%c \n",token[i]);
             }
         }
-
+        //CASE FOR FLOAT AND INT
         case 51:
         {
             while (isdigit(c))
@@ -182,6 +182,24 @@ int main() {
                 token[i] = c;
                 c = getchar();
                 i++;
+                if(c == '.')
+                {
+                    c = getchar();
+                    if(isdigit(c))
+                    {
+                        case FLOAT:
+                    }
+                }
+                else if(c == 'e' || c == 'E')
+                {
+                    c = getchar();
+                    if(c == '+' || c == '-' || isdigit(c))
+                    {
+                        case FLOAT:
+                    }
+                }
+                else case INT:
+
             }
             printf("%s", token);
         }
