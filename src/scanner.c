@@ -1,7 +1,11 @@
 #include <stdio.h>
 #include <malloc.h>
 #include <ctype.h>
+#include <string.h>
 #include "scanner.h"
+
+
+static char* Keywords[KEYWORD_COUNT]={"IF","ELSE","DEF","DO","END","NIL","THEN","WHILE"};
 int main() {
 
     char token[50];
@@ -9,6 +13,7 @@ int main() {
 
     c=getchar();
     Tokens_Types state=0;
+
 
     if (isalpha(c))
     {
@@ -72,11 +77,18 @@ int main() {
         case 50://IDENTIFICATOR OR A KEY WORD
         {
             printf("I am here");
-            while (isalpha(c))
+            while (isalpha(c) || c=='_')
             {
                 token[i] = c;
                 c = getchar();
                 i++;
+                for (int i=0;i<KEYWORD_COUNT;i++)
+                {
+                    if(strcmp(token,Keywords[i])==0)
+                    {
+
+                    }
+                }
             }
 
             for(int i=0;token[i]!='\0';i++)

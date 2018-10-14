@@ -8,7 +8,7 @@
 #endif //IFJ_PROJECT_SCANNER_H
 
 
-#define TOKEN
+#define KEYWORD_COUNT  9
 
 typedef enum {
 
@@ -16,7 +16,7 @@ typedef enum {
     IF, ELSE, DEF, DO, END, NOT, NIL, THEN, WHILE,
 
     //DATA
-    INT, DOUBLE, STRING,
+    INT, FLOAT, STRING,
 
 
     //OPERATORS
@@ -27,7 +27,7 @@ typedef enum {
     DIVIDE,     // /
     ASSIGN,     // =
     INC,        //++
-    DEC,        /--
+    DEC,        //--
     //LOGIC
     LESS,       // <
     MORE,       // >
