@@ -148,6 +148,27 @@ int main() {
                 }
             }
 
+            if(c == '{')
+            {
+                case LBRA:
+            }
+            if(c == '}')
+            {
+                case RBRA:
+            }
+            if(c == ';')
+            {
+                case SEMICOLON:
+            }
+            if(c == '(')
+            {
+                case LPAR:
+            }
+            if(c == ')')
+            {
+                case RPAR:
+            }
+
             for(int i=0;token[i]!='\0';i++)
             {
                 printf("%c \n",token[i]);
@@ -199,10 +220,7 @@ int main() {
                 }
         }
 
-        case LPAR:
-        {
 
-        }
 
         case IF:break;
         case ELSE:break;
