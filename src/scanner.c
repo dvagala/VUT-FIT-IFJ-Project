@@ -2,10 +2,11 @@
 #include <malloc.h>
 #include <ctype.h>
 #include <string.h>
+#include <stdlib.h>
 #include "scanner.h"
 
 
-static char* Keywords[KEYWORD_COUNT]={"IF","ELSE","DEF","DO","END","NIL","THEN","WHILE"};
+static char* Keywords[KEYWORD_COUNT]={"IF","ELSE","DEF","DO","END","NOT","NIL","THEN","WHILE"};
 int main() {
 
     char token[50];
@@ -86,7 +87,49 @@ int main() {
                 {
                     if(strcmp(token,Keywords[i])==0)
                     {
+                        if (c=getchar()==' ')
+                        {
+                            case 100: //100 is word
+                            {
+                                if(strcmp(token, Keywords[i] == 0))
+                                {
+                                   case IF:
+                                }
+                                if(strcmp(token, Keywords[i] == 0))
+                                {
+                                    case ELSE:
+                                }
+                                if(strcmp(token, Keywords[i] == 0))
+                                {
+                                    case DEF:
+                                }
+                                if(strcmp(token, Keywords[i] == 0))
+                                {
+                                    case DO:
+                                }
+                                if(strcmp(token, Keywords[i] == 0))
+                                {
+                                    case END:
+                                }
+                                if(strcmp(token, Keywords[i] == 0))
+                                {
+                                    case NIL:
+                                }
+                                if(strcmp(token, Keywords[i] == 0))
+                                {
+                                    case THEN:
+                                }
+                                if(strcmp(token, Keywords[i] == 0))
+                                {
+                                    case WHILE:
+                                }
+                                if(strcmp(token, Keywords[i] == 0))
+                                {
+                                    case NOT:
+                                }
 
+                            }
+                        }
                     }
                 }
             }

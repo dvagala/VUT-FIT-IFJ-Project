@@ -44,7 +44,6 @@ typedef enum {
     RPAR,       // )
 
     //TERM
-    nil,
     ID,
 
     //COMMENTS
