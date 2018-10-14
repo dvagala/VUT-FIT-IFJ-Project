@@ -25,7 +25,7 @@ int main() {
     if (isdigit(c))
     {
         state= 51;
-    }
+}
 
     if(c == '+')
     {
@@ -89,16 +89,25 @@ int main() {
         case 50://IDENTIFICATOR OR A KEY WORD
         {
             printf("I am here");
-            while (isalpha(c) || c=='_')
+            while (isalpha(c) || isdigit(c) || c=='_')
             {
                 token[i] = c;
                 c = getchar();
                 i++;
+                if (c=='?' || c=='!')
+                {
+                    token[i]=c;
+                    case IDENTIFICATOR:
+                    {
+
+                    }
+                }
                 for (int i=0;i<KEYWORD_COUNT;i++)
                 {
                     if(strcmp(token,Keywords[i])==0)
                     {
-                        if (c=getchar()==' ')
+                        c=getchar();
+                        if (c==' '||c=='\n')
                         {
                             case 100: //100 is word
                             {
@@ -138,47 +147,13 @@ int main() {
                                 {
                                     case NOT:
                                 }
-                                /*else if(strcmp(token, "SINGLECOM") == 0)
-                                {
-                                    case SINGLECOM:
-                                }
-                                else if(strcmp(token, "BEGCOM") == 0)
-                                {
-                                    case BEGCOM:
-                                }
-                                else if(strcmp(token, "ENDCOM") == 0)
-                                {
-                                    case ENDCOM:
-                                }
-                                */
-
-
                             }
+
                         }
                     }
                 }
             }
 
-            if(c == '{')
-            {
-                case LBRA:
-            }
-            if(c == '}')
-            {
-                case RBRA:
-            }
-            if(c == ';')
-            {
-                case SEMICOLON:
-            }
-            if(c == '(')
-            {
-                case LPAR:
-            }
-            if(c == ')')
-            {
-                case RPAR:
-            }
 
             for(int i=0;token[i]!='\0';i++)
             {
@@ -295,30 +270,8 @@ int main() {
 
 
 
-        case IF:break;
-        case ELSE:break;
-        case DEF:break;
-        case DO:break;
-        case END:break;
-        case NIL:break;
-        case THEN:break;
-        case WHILE:break;
-        case INT:break;
+
         case STRING:break;
-        case MULT:break;
-        case MODULO:break;
-        case DIVIDE:break;
-        case ASSIGN:break;
-        case LESS:break;
-        case MORE:break;
-        case LOE:break;
-        case MOE:break;
-        case EQUAL:break;
-        case LBRA:break;
-        case RBRA:break;
-        case SEMICOLON:break;
-        case RPAR:break;
-        case nil:break;
         case ID:break;
         case SINGLECOM:break;
         case BEGCOM:break;
