@@ -71,7 +71,18 @@ int main() {
     {
         state = RPAR;
     }
-
+    if(c == '<')
+    {
+        state = 55;
+    }
+    if(c == '>')
+    {
+        state = 56;
+    }
+    if(c == '=')
+    {
+        state = 57;
+    }
     switch(state)
     {
         int i = 0;
@@ -236,6 +247,50 @@ int main() {
                 {
 
                 }
+        }
+
+        case 55:
+        {
+            token[i]=c;
+            c = getchar();
+            if(c == '=')
+            {
+                case LOE:
+            }
+            else
+            {
+                case LESS:
+            }
+
+        }
+
+        case 56:
+        {
+            token[i]=c;
+            c = getchar();
+            if(c == '=')
+            {
+                case EQUAL:
+            }
+            else
+            {
+                case ASSIGN:
+            }
+
+        }
+
+        case 57:
+        {
+            token[i]=c;
+            c = getchar();
+            if(c == '=')
+            {
+                case MOE:
+            }
+            else
+            {
+                case MORE:
+            }
         }
 
 
