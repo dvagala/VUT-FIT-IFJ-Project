@@ -91,42 +91,43 @@ int main() {
                         {
                             case 100: //100 is word
                             {
-                                if(strcmp(token, "IF")
+                                if(strcmp(token, "IF") == 0)
                                 {
                                    case IF:
                                 }
-                                else if(strcmp(token, "ELSE")
+                                else if(strcmp(token, "ELSE") == 0)
                                 {
                                     case ELSE:
                                 }
-                                else if(strcmp(token, "DEF")
+                                else if(strcmp(token, "DEF") == 0)
                                 {
                                     case DEF:
                                 }
-                                else if(strcmp(token, "DO")
+                                else if(strcmp(token, "DO") == 0)
                                 {
                                     case DO:
                                 }
-                                else if(strcmp(token, "END")
+                                else if(strcmp(token, "END") == 0)
                                 {
                                     case END:
                                 }
-                                else if(strcmp(token, "NIL")
+                                else if(strcmp(token, "NIL") == 0)
                                 {
                                     case NIL:
                                 }
-                                else if(strcmp(token, "THEN")
+                                else if(strcmp(token, "THEN") == 0)
                                 {
                                     case THEN:
                                 }
-                                else if(strcmp(token, "WHILE")
+                                else if(strcmp(token, "WHILE") == 0)
                                 {
                                     case WHILE:
                                 }
-                                else if(strcmp(token, "NOT")
+                                else if(strcmp(token, "NOT") == 0)
                                 {
                                     case NOT:
                                 }
+                                
 
                             }
                         }
