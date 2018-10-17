@@ -7,161 +7,197 @@
 
 
 static char* Keywords[KEYWORD_COUNT]={"IF","ELSE","DEF","DO","END","NOT","NIL","THEN","WHILE"};
-int main() {
+int next(int c)
+{
 
-    char token[50];
-    int c;
+    char token[50]={0};
 
-    c=getchar();
     Tokens_Types state=0;
 
 
-    if (isalpha(c))
+    while (c == ' ' || isspace(c))
     {
-
-        state = 50;
+        c=getchar();
+    }
+    if (isalpha(c) && !isspace(c) && c!=' ')
+    {
+        state = WORD;
     }
 
-    if (isdigit(c))
+    else if (isdigit(c))
     {
-        state= 51;
-}
+        state= NUMBER;
+    }
 
-    if(c == '+')
+    else if(c == '+')
     {
-        state = 52;
+        state = PLUSCASES;
     }
-    if(c == '-')
+    else if(c == '-')
     {
-        state = 53;
+        state = MINUSCASES;
     }
-    if(c == '*')
+    else if(c == '*')
     {
         state = MULT;
     }
-    if(c == '%')
+    else if(c == '%')
     {
         state = MODULO;
     }
-    if(c == '/')
+    else if(c == '/')
     {
         state = DIVIDE;
     }
-    if(c == '=')
+    else if(c == '=')
     {
-        state = 54;
+        state = EQUALCASES;
     }
-    if(c == '{')
+    else if(c == '{')
     {
         state = LBRA;
     }
-    if(c == '}')
+    else if(c == '}')
     {
         state = RBRA;
     }
-    if(c == ';')
+    else if(c == ';')
     {
         state = SEMICOLON;
     }
-    if(c == '(')
+    else if(c == '(')
     {
         state = LPAR;
     }
-    if(c == ')')
+    else if(c == ')')
     {
         state = RPAR;
     }
-    if(c == '<')
+    else if(c == '<')
     {
-        state = 55;
+        state = LESSCASES;
     }
-    if(c == '>')
+    else if(c == '>')
     {
-        state = 56;
+        state = MORECASES;
     }
-    if(c == '=')
+    else if (c == '\"')
     {
-        state = 57;
+        state = STRING;
     }
+
+    else if (c == '#')
+    {
+        state = SINGLECOM;
+    }
+
+    else
+    {
+        state =ERROR;
+    }
+    int i = 0;
+
     switch(state)
     {
-        int i = 0;
-        case 50://IDENTIFICATOR OR A KEY WORD
+
+        case WORD://IDENTIFICATOR OR A KEY WORD
         {
-            printf("I am here");
+
             while (isalpha(c) || isdigit(c) || c=='_')
             {
                 token[i] = c;
                 c = getchar();
                 i++;
-                if (c=='?' || c=='!')
+                for (int j=0;j<KEYWORD_COUNT;j++)
                 {
-                    token[i]=c;
-                    case IDENTIFICATOR:
-                    {
-
-                    }
-                }
-                for (int i=0;i<KEYWORD_COUNT;i++)
-                {
-                    if(strcmp(token,Keywords[i])==0)
+                    if(strcmp(token,Keywords[j])==0)
                     {
                         c=getchar();
                         if (c==' '||c=='\n')
                         {
-                            case 100: //100 is word
+                            case KEYWORDCASES: //100 is word
                             {
                                 if(strcmp(token, "IF") == 0)
                                 {
                                    case IF:
+                                   {
+                                        break;
+                                   }
                                 }
                                 else if(strcmp(token, "ELSE") == 0)
                                 {
                                     case ELSE:
+                                    {
+                                        break;
+                                    }
                                 }
                                 else if(strcmp(token, "DEF") == 0)
                                 {
                                     case DEF:
+                                    {
+                                        break;
+                                    }
                                 }
                                 else if(strcmp(token, "DO") == 0)
                                 {
                                     case DO:
+                                    {
+                                        break;
+                                    }
                                 }
                                 else if(strcmp(token, "END") == 0)
                                 {
                                     case END:
+                                    {
+                                        break;
+                                    }
                                 }
                                 else if(strcmp(token, "NIL") == 0)
                                 {
                                     case NIL:
+                                    {
+                                        break;
+                                    }
                                 }
                                 else if(strcmp(token, "THEN") == 0)
                                 {
                                     case THEN:
+                                    {
+                                        break;
+                                    }
                                 }
                                 else if(strcmp(token, "WHILE") == 0)
                                 {
                                     case WHILE:
+                                    {
+                                        break;
+                                    }
                                 }
                                 else if(strcmp(token, "NOT") == 0)
                                 {
                                     case NOT:
+                                    {
+                                        break;
+                                    }
                                 }
+                                else break;
                             }
-
                         }
                     }
                 }
             }
 
-
-            for(int i=0;token[i]!='\0';i++)
+            case IDENTIFICATOR:
             {
-                printf("%c \n",token[i]);
+                if (c == '?' || c == '!')
+                {
+                    token[i] = c;
+                }
+                printf("CONGRATS! you found: %s\n",token);
+                break;
             }
-        }
-        //CASE FOR FLOAT AND INT
-        case 51:
+    } //CASE FOR FLOAT AND INT
+        case NUMBER:
         {
             while (isdigit(c))
             {
@@ -174,23 +210,33 @@ int main() {
                     if(isdigit(c))
                     {
                         case FLOAT:
+                        {
+                            break;
+                        }
                     }
                 }
                 else if(c == 'e' || c == 'E')
                 {
                     c = getchar();
-                    if(c == '+' || c == '-' || isdigit(c))
+                    if(c == '+' || c == '-')
                     {
-                        case FLOAT:
+                        case FLOAT_EXPO:
+                        {
+                            break;
+                        }
                     }
                 }
-                else case INT:
+                else if (!isdigit(c))
+                    case INT:
+                    {
+                        printf("here we have a number, and it's %s \n",token);
+                        break;
+                    }
 
             }
-            printf("%s", token);
         }
 
-        case 52:
+        case PLUSCASES:
         {
             token[i]=c;
             c = getchar();
@@ -198,89 +244,191 @@ int main() {
             {
                 case INC:
                 {
-
+                    break;
                 }
             }
             else
                 case PLUS:
                 {
-
+                    break;
                 }
         }
 
-        case 53:
+        case MINUSCASES:
         {
             if (c=='-')
             {
                 case DEC:
                 {
-
+                    break;
                 }
             }
             else
                 case MINUS:
                 {
-
+                    break;
                 }
         }
 
-        case 55:
+        case LESSCASES:
         {
             token[i]=c;
             c = getchar();
             if(c == '=')
             {
                 case LOE:
+                {
+                    break;
+                }
             }
             else
             {
                 case LESS:
+                {
+                    break;
+                }
             }
 
         }
 
-        case 56:
+        case EQUALCASES:
         {
             token[i]=c;
             c = getchar();
             if(c == '=')
             {
                 case EQUAL:
+                {
+                    break;
+                }
             }
             else
             {
                 case ASSIGN:
+                {
+                    printf("Hey!\n");
+                    break;
+                }
             }
 
         }
 
-        case 57:
+        case MORECASES:
         {
             token[i]=c;
             c = getchar();
             if(c == '=')
             {
                 case MOE:
+                {
+                    break;
+                }
             }
             else
             {
                 case MORE:
+                {
+                    break;
+                }
             }
         }
 
+        case STRING:
+        {
+            c=getchar();
+            while (c!='\"')
+            {
+                c=getchar();
+                token[i]=c;
+                i++;
+            }
+            break;
 
+        }
 
+        case MULT:
+        {
+            break;
+        }
 
-        case STRING:break;
-        case ID:break;
-        case SINGLECOM:break;
-        case BEGCOM:break;
-        case ENDCOM:break;
+        case MODULO:
+        {
+            break;
+        }
+
+        case DIVIDE:
+        {
+            break;
+        }
+
+        case LBRA:
+        {
+            break;
+        }
+
+        case RBRA:
+        {
+            break;
+        }
+
+        case SEMICOLON:
+        {
+            break;
+        }
+
+        case LPAR:
+        {
+            break;
+        }
+
+        case RPAR:
+        {
+            break;
+        }
+
+        case SINGLECOM:
+        {
+            break;
+        }
+
+        case ID:
+        {
+            break;
+        }
+        case BEGCOM:
+        {
+            break;
+        }
+        case ENDCOM:
+        {
+            break;
+        }
+
+        case ERROR:
+        {
+            printf("You really need to stop.");
+            break;
+        }
+        default:break;
     }
 
 
 
+    return c;
+}
 
-
+int main()
+{
+    int c;
+    c=getchar();
+    do
+    {
+        c=next(c);
+        if (isspace(c) && c!='\n' && c!=' ')
+        {
+            c=getchar();
+            printf("caught a not newline, new char is %c",c);
+        }
+    } while (c != '\n');
     return 0;
 }
