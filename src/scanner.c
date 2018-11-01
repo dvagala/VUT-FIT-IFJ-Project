@@ -7,10 +7,10 @@
 int c;
 
 static char* Keywords[KEYWORD_COUNT]={"if","else","def","do","end","not","nil","then","while"};
-tToken nextToken(int c)
+tToken nextToken()
 {
 
-    char token[50]={0};
+    char* token=malloc((sizeof(token)*50));
     tToken identificator;
 
     Tokens_Types state=0;
@@ -106,6 +106,7 @@ tToken nextToken(int c)
 
             while (isalpha(c) || isdigit(c) || c=='_')
             {
+                printf("am I even here?");
                 token[i] = c;
                 c = getchar();
                 i++;
@@ -123,7 +124,7 @@ tToken nextToken(int c)
                                    case IF:
                                    {
                                         identificator.type = IF;
-                                        identificator.string = token;
+                                        identificator.data.string = token;
                                         break;
                                    }
                                 }
@@ -132,7 +133,7 @@ tToken nextToken(int c)
                                     case ELSE:
                                     {
                                         identificator.type = ELSE;
-                                        identificator.string = token;
+                                        identificator.data.string = token;
                                         break;
                                     }
                                 }
@@ -141,7 +142,7 @@ tToken nextToken(int c)
                                     case DEF:
                                     {
                                         identificator.type = DEF;
-                                        identificator.string = token;
+                                        identificator.data.string = token;
                                         break;
                                     }
                                 }
@@ -150,7 +151,7 @@ tToken nextToken(int c)
                                     case DO:
                                     {
                                         identificator.type = DO;
-                                        identificator.string = token;
+                                        identificator.data.string = token;
                                         break;
                                     }
                                 }
@@ -159,7 +160,7 @@ tToken nextToken(int c)
                                     case END:
                                     {
                                         identificator.type = END;
-                                        identificator.string = token;
+                                        identificator.data.string = token;
                                         break;
                                     }
                                 }
@@ -168,7 +169,7 @@ tToken nextToken(int c)
                                     case NIL:
                                     {
                                         identificator.type = NIL;
-                                        identificator.string = token;
+                                        identificator.data.string = token;
                                         break;
                                     }
                                 }
@@ -177,7 +178,7 @@ tToken nextToken(int c)
                                     case THEN:
                                     {
                                         identificator.type = THEN;
-                                        identificator.string = token;
+                                        identificator.data.string = token;
                                         break;
                                     }
                                 }
@@ -186,7 +187,7 @@ tToken nextToken(int c)
                                     case WHILE:
                                     {
                                         identificator.type = WHILE;
-                                        identificator.string = token;
+                                        identificator.data.string = token;
                                         break;
                                     }
                                 }
@@ -195,7 +196,7 @@ tToken nextToken(int c)
                                     case NOT:
                                     {
                                         identificator.type = NOT;
-                                        identificator.string = token;
+                                        identificator.data.string = token;
                                         break;
                                     }
                                 }
@@ -213,7 +214,7 @@ tToken nextToken(int c)
                     token[i] = c;
                 }
                 identificator.type=IDENTIFICATOR;
-                identificator.string=token;
+                identificator.data.string=token;
                 break;
             }
     } //CASE FOR FLOAT AND INT
@@ -232,7 +233,7 @@ tToken nextToken(int c)
                         case FLOAT:
                         {
                             identificator.type = FLOAT;
-                            identificator.value_double = atof(token);
+                            identificator.data.value_double = atof(token);
                             break;
                         }
                     }
@@ -245,7 +246,7 @@ tToken nextToken(int c)
                         case FLOAT_EXPO:
                         {
                             identificator.type = FLOAT_EXPO;
-                            identificator.value_double = atof(token);
+                            identificator.data.value_double = atof(token);
                             break;
                         }
                     }
@@ -254,7 +255,7 @@ tToken nextToken(int c)
                     case INT:
                     {
                         identificator.type = INT;
-                        identificator.value_double = atoi(token);
+                        identificator.data.value_double = atoi(token);
                         break;
                     }
 
@@ -377,7 +378,7 @@ tToken nextToken(int c)
                 i++;
             }
             identificator.type = INC;
-            identificator.string = token;
+            identificator.data.string = token;
             break;
 
         }
@@ -461,7 +462,7 @@ tToken nextToken(int c)
     }
 
 
-
+    free(token);
     return identificator;
 }
 
@@ -470,7 +471,7 @@ int main()
     c=getchar();
     do
     {
-        nextToken(c);
+        nextToken();
         if (isspace(c) && c!='\n' && c!=' ')
         {
             c=getchar();

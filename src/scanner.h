@@ -63,5 +63,5 @@ typedef struct
         int    value_int;
         double value_double;
         char*  string;
-    };
+    }data;
 }tToken;
