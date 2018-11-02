@@ -106,7 +106,6 @@ tToken nextToken()
 
             while (isalpha(c) || isdigit(c) || c=='_')
             {
-                printf("am I even here?");
                 token[i] = c;
                 c = getchar();
                 i++;
@@ -255,6 +254,7 @@ tToken nextToken()
                     case INT:
                     {
                         identificator.type = INT;
+                        printf("%s \n",token);
                         identificator.data.value_double = atoi(token);
                         break;
                     }
@@ -461,7 +461,7 @@ tToken nextToken()
         default:break;
     }
 
-
+    token=NULL;
     free(token);
     return identificator;
 }
