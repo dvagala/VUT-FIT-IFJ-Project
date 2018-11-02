@@ -10,7 +10,7 @@ static char* Keywords[KEYWORD_COUNT]={"if","else","def","do","end","not","nil","
 tToken nextToken()
 {
 
-    char* token=malloc((sizeof(token)*50));
+    char* token=malloc((sizeof(int)*50));
     tToken identificator;
 
     Tokens_Types state=0;
@@ -370,14 +370,18 @@ tToken nextToken()
 
         case STRING:
         {
+
             c=getchar();
-            while (c!='\"')
+            while (c !='\"')
             {
-                c=getchar();
-                token[i]=c;
+                token[i] = c;
                 i++;
+                c=getchar();
             }
-            identificator.type = INC;
+            token[i]='\0';
+            c=getchar();
+            printf("what is the char here? >>%s<<\n",token);
+            identificator.type = STRING;
             identificator.data.string = token;
             break;
 
