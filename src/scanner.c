@@ -15,7 +15,6 @@ tToken nextToken()
 
     Tokens_Types state=0;
 
-
     while (c == ' ' || isspace(c))
     {
         c=getchar();
@@ -23,6 +22,21 @@ tToken nextToken()
     if (isalpha(c) && !isspace(c) && c!=' ')
     {
         state = WORD;
+    }
+
+    while (c == '\n')
+    {
+        c=getchar();
+        if (c == '=')
+        {
+            state = BEGCOM;
+        }
+        state = EOL_CASE;
+    }
+
+    if (c == EOF)
+    {
+        state = EOF_CASE;
     }
 
     else if (isdigit(c))
@@ -254,7 +268,6 @@ tToken nextToken()
                     case INT:
                     {
                         identificator.type = INT;
-                        printf("%s \n",token);
                         identificator.data.value_double = atoi(token);
                         break;
                     }
@@ -335,6 +348,7 @@ tToken nextToken()
                     break;
                 }
             }
+
             else
             {
                 case ASSIGN:
@@ -448,7 +462,37 @@ tToken nextToken()
         }
         case BEGCOM:
         {
-            identificator.type = BEGCOM;
+            for (int x=0;x<5;x++)
+            {
+                token[i]=getchar();
+                i++;
+            }
+            if (strcmp(token,"begin")==0)
+            {
+                char end[5];
+                int isEnd=0;
+                while(isEnd!=1 && c=='\n')
+                {
+                    c=getchar();
+                    if (c == '\n')
+                    {
+                        for (int x=0;x<4;x++)
+                        {
+                            end[x]=getchar();
+                        }
+                        if (strcmp(end,"=end")==0)
+                        {
+                            isEnd=1;
+                        }
+
+                    }
+
+                }
+            }
+            token=NULL;
+            nextToken();
+
+
             break;
         }
         case ENDCOM:
@@ -457,6 +501,20 @@ tToken nextToken()
             break;
         }
 
+        case EOL_CASE:
+        {
+            if ((c=getchar())=='\n')
+            {
+                nextToken();
+            }
+            else
+                identificator.type=EOL_CASE;
+        }
+
+        case EOF_CASE:
+        {
+            identificator.type=EOF_CASE;
+        }
         case ERROR:
         {
             printf("You really need to stop.");
@@ -473,14 +531,6 @@ tToken nextToken()
 int main()
 {
     c=getchar();
-    do
-    {
-        nextToken();
-        if (isspace(c) && c!='\n' && c!=' ')
-        {
-            c=getchar();
-            printf("caught a not newline, new char is %c",c);
-        }
-    } while (c != '\n');
+
     return 0;
 }
