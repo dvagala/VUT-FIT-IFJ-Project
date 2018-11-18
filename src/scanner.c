@@ -10,31 +10,37 @@ static char* Keywords[KEYWORD_COUNT]={"if","else","def","do","end","not","nil","
 tToken nextToken()
 {
 
+    c=getchar();
     char* token=malloc((sizeof(int)*50));
     tToken identificator;
-
     Tokens_Types state=0;
 
     while (c == ' ' || isspace(c))
     {
         c=getchar();
     }
-    if (isalpha(c) && !isspace(c) && c!=' ')
+    if (isalpha(c))
     {
         state = WORD;
     }
 
-    while (c == '\n')
+    else if (c == '\n')
     {
-        c=getchar();
-        if (c == '=')
+        while (c == '\n')
         {
-            state = BEGCOM;
+            c=getchar();
+            if (c == '=')
+            {
+                state = BEGCOM;
+            }
+            else
+            {
+                state = EOL_CASE;
+            }
         }
-        state = EOL_CASE;
     }
 
-    if (c == EOF)
+    else if (c == EOF)
     {
         state = EOF_CASE;
     }
@@ -117,9 +123,10 @@ tToken nextToken()
 
         case WORD://IDENTIFICATOR OR A KEY WORD
         {
-
+            int f=0;
             while (isalpha(c) || isdigit(c) || c=='_')
             {
+                f++;
                 token[i] = c;
                 c = getchar();
                 i++;
@@ -509,14 +516,17 @@ tToken nextToken()
             }
             else
                 identificator.type=EOL_CASE;
+            break;
         }
 
         case EOF_CASE:
         {
             identificator.type=EOF_CASE;
+            break;
         }
         case ERROR:
         {
+            printf("what is C? : %c \n",c);
             printf("You really need to stop.");
             break;
         }
@@ -530,7 +540,10 @@ tToken nextToken()
 
 int main()
 {
-    c=getchar();
-
+    for (int i=0;i<10;i++)
+    {
+        tToken token =nextToken();
+        printf("Token type: %d \n",token.type);
+    }
     return 0;
 }
