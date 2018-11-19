@@ -4,18 +4,21 @@
 #include <string.h>
 #include <stdlib.h>
 #include "scanner.h"
-int c;
+int c=30000;
 
 static char* Keywords[KEYWORD_COUNT]={"if","else","def","do","end","not","nil","then","while"};
 tToken nextToken()
 {
 
-    c=getchar();
+    if (c == 30000)
+    {
+        c=getchar();
+    }
     char* token=malloc((sizeof(int)*50));
     tToken identificator;
     Tokens_Types state=0;
 
-    while (c == ' ' || isspace(c))
+    while (isspace(c) && c!='\n')
     {
         c=getchar();
     }
@@ -31,6 +34,7 @@ tToken nextToken()
             c=getchar();
             if (c == '=')
             {
+                printf("am I here?");
                 state = BEGCOM;
             }
             else
@@ -120,7 +124,6 @@ tToken nextToken()
 
     switch(state)
     {
-
         case WORD://IDENTIFICATOR OR A KEY WORD
         {
             int f=0;
@@ -135,92 +138,14 @@ tToken nextToken()
                     if(strcmp(token,Keywords[j])==0)
                     {
                         c=getchar();
-                        if (c==' '||c=='\n')
+                        if (c==' '||c=='\n'||isspace(c)||c==EOF)
                         {
                             case KEYWORDCASES: //100 is word
                             {
-                                if(strcmp(token, "if") == 0)
-                                {
-                                   case IF:
-                                   {
-                                        identificator.type = IF;
-                                        identificator.data.string = token;
-                                        break;
-                                   }
-                                }
-                                else if(strcmp(token, "else") == 0)
-                                {
-                                    case ELSE:
-                                    {
-                                        identificator.type = ELSE;
-                                        identificator.data.string = token;
-                                        break;
-                                    }
-                                }
-                                else if(strcmp(token, "def") == 0)
-                                {
-                                    case DEF:
-                                    {
-                                        identificator.type = DEF;
-                                        identificator.data.string = token;
-                                        break;
-                                    }
-                                }
-                                else if(strcmp(token, "do") == 0)
-                                {
-                                    case DO:
-                                    {
-                                        identificator.type = DO;
-                                        identificator.data.string = token;
-                                        break;
-                                    }
-                                }
-                                else if(strcmp(token, "end") == 0)
-                                {
-                                    case END:
-                                    {
-                                        identificator.type = END;
-                                        identificator.data.string = token;
-                                        break;
-                                    }
-                                }
-                                else if(strcmp(token, "nil") == 0)
-                                {
-                                    case NIL:
-                                    {
-                                        identificator.type = NIL;
-                                        identificator.data.string = token;
-                                        break;
-                                    }
-                                }
-                                else if(strcmp(token, "then") == 0)
-                                {
-                                    case THEN:
-                                    {
-                                        identificator.type = THEN;
-                                        identificator.data.string = token;
-                                        break;
-                                    }
-                                }
-                                else if(strcmp(token, "while") == 0)
-                                {
-                                    case WHILE:
-                                    {
-                                        identificator.type = WHILE;
-                                        identificator.data.string = token;
-                                        break;
-                                    }
-                                }
-                                else if(strcmp(token, "not") == 0)
-                                {
-                                    case NOT:
-                                    {
-                                        identificator.type = NOT;
-                                        identificator.data.string = token;
-                                        break;
-                                    }
-                                }
-                                else break;
+                                identificator.type=j;
+                                free(token);
+                                token=NULL;
+                                return identificator;
                             }
                         }
                     }
@@ -243,19 +168,85 @@ tToken nextToken()
             while (isdigit(c))
             {
                 token[i] = c;
-                c = getchar();
                 i++;
+                c = getchar();
                 if(c == '.')
                 {
+                    token[i]=c;
+                    i++;
                     c = getchar();
+
                     if(isdigit(c))
                     {
                         case FLOAT:
                         {
+                            token[i]=c;
+                            i++;
+                            c=getchar();
+
+                            if (c=='e' || c=='E')
+                            {
+                                token[i]=c;
+                                i++;
+                                c=getchar();
+                                if (c=='+'||c=='-')
+                                {
+                                    token[i]=c;
+                                    i++;
+                                    c=getchar();
+                                    if (isdigit(c))
+                                    {
+                                        while(isdigit(c))
+                                        {
+                                            token[i] = c;
+                                            i++;
+                                            c=getchar();
+                                        }
+                                    }
+                                    else
+                                    {
+                                        identificator.type=ERROR;
+                                        free(token);
+                                        return identificator;
+
+                                    }
+                                }
+                                else
+                                {
+                                    identificator.type=ERROR;
+                                    free(token);
+                                    return identificator;
+
+                                }
+                            }
+                            if (isdigit(c))
+                            {
+                                while (isdigit(c))
+                                {
+                                    token[i] = c;
+                                    i++;
+                                    c = getchar();
+                                }
+                            }
+                            else
+                            {
+                                identificator.type=ERROR;
+                                free(token);
+                                return identificator;
+
+                            }
                             identificator.type = FLOAT;
                             identificator.data.value_double = atof(token);
+                            printf("%f is here",identificator.data.value_double);
                             break;
                         }
+
+                    }
+                    else
+                    {
+                        free(token);
+                        identificator.type=ERROR;
+                        return identificator;
                     }
                 }
                 else if(c == 'e' || c == 'E')
@@ -267,6 +258,19 @@ tToken nextToken()
                         {
                             identificator.type = FLOAT_EXPO;
                             identificator.data.value_double = atof(token);
+                            c=getchar();
+                            if (!isdigit(c))
+                            {
+                                free(token);
+                                identificator.type=ERROR;
+                                return identificator;
+                            }
+                            while(isdigit(c))
+                            {
+                                token[i]=c;
+                                i++;
+                                c=getchar();
+                            }
                             break;
                         }
                     }
@@ -274,23 +278,24 @@ tToken nextToken()
                 else if (!isdigit(c))
                     case INT:
                     {
+                        printf("did I get here?");
                         identificator.type = INT;
-                        identificator.data.value_double = atoi(token);
+                        identificator.data.value_int = atoi(token);
                         break;
                     }
 
-            }
+            }break;
         }
 
         case PLUSCASES:
         {
-            token[i]=c;
             c = getchar();
             if (c=='+')
             {
                 case INC:
                 {
                     identificator.type = INC;
+                    c=getchar();
                     break;
                 }
             }
@@ -304,11 +309,13 @@ tToken nextToken()
 
         case MINUSCASES:
         {
+            c=getchar();
             if (c=='-')
             {
                 case DEC:
                 {
                     identificator.type = DEC;
+                    c=getchar();
                     break;
                 }
             }
@@ -322,12 +329,12 @@ tToken nextToken()
 
         case LESSCASES:
         {
-            token[i]=c;
             c = getchar();
             if(c == '=')
             {
                 case LOE:
                 {
+                    c=getchar();
                     identificator.type = LOE;
                     break;
                 }
@@ -345,12 +352,12 @@ tToken nextToken()
 
         case EQUALCASES:
         {
-            token[i]=c;
             c = getchar();
             if(c == '=')
             {
                 case EQUAL:
                 {
+                    c=getchar();
                     identificator.type = EQUAL;
                     break;
                 }
@@ -369,12 +376,12 @@ tToken nextToken()
 
         case MORECASES:
         {
-            token[i]=c;
             c = getchar();
             if(c == '=')
             {
                 case MOE:
                 {
+                    c=getchar();
                     identificator.type = MOE;
                     break;
                 }
@@ -411,47 +418,55 @@ tToken nextToken()
         case MULT:
         {
             identificator.type = MULT;
+            c=getchar();
             break;
         }
 
         case MODULO:
         {
             identificator.type = MODULO;
+            c=getchar();
             break;
         }
 
         case DIVIDE:
         {
             identificator.type = DIVIDE;
+            c=getchar();
             break;
         }
 
         case LBRA:
         {
+            c=getchar();
             identificator.type = LBRA;
             break;
         }
 
         case RBRA:
         {
+            c=getchar();
             identificator.type = RBRA;
             break;
         }
 
         case SEMICOLON:
         {
+            c=getchar();
             identificator.type = SEMICOLON;
             break;
         }
 
         case LPAR:
         {
+            c=getchar();
             identificator.type = LPAR;
             break;
         }
 
         case RPAR:
         {
+            c=getchar();
             identificator.type = RPAR;
             break;
         }
@@ -459,6 +474,12 @@ tToken nextToken()
         case SINGLECOM:
         {
             identificator.type = SINGLECOM;
+            while(c!='\n' && c!=EOF)
+            {
+                c=getchar();
+            }
+            c=getchar();
+
             break;
         }
 
@@ -469,37 +490,41 @@ tToken nextToken()
         }
         case BEGCOM:
         {
+            printf("are we here?");
+            char start[6]={0};
+            char end[5]={0};
             for (int x=0;x<5;x++)
             {
-                token[i]=getchar();
+                start[i]=getchar();
                 i++;
             }
-            if (strcmp(token,"begin")==0)
+            printf(">>%s<<",start);
+            if (strcmp(start,"begin")==0)
             {
-                char end[5];
+                printf("success");
                 int isEnd=0;
-                while(isEnd!=1 && c=='\n')
+                while (!(isEnd==1 && c=='\n'))
                 {
                     c=getchar();
-                    if (c == '\n')
+                    printf("%c",c);
+                    if (c=='\n')
                     {
-                        for (int x=0;x<4;x++)
+                        printf("hello");
+                        for (int e=0;e<4;e++)
                         {
-                            end[x]=getchar();
+                            c=getchar();
+                            end[e]=c;
                         }
+
                         if (strcmp(end,"=end")==0)
                         {
+                            printf("success?");
                             isEnd=1;
                         }
-
                     }
-
                 }
             }
-            token=NULL;
             nextToken();
-
-
             break;
         }
         case ENDCOM:
@@ -510,12 +535,8 @@ tToken nextToken()
 
         case EOL_CASE:
         {
-            if ((c=getchar())=='\n')
-            {
-                nextToken();
-            }
-            else
                 identificator.type=EOL_CASE;
+                c=getchar();
             break;
         }
 
@@ -540,7 +561,8 @@ tToken nextToken()
 
 int main()
 {
-    for (int i=0;i<10;i++)
+
+    for (int i=0;i<6;i++)
     {
         tToken token =nextToken();
         printf("Token type: %d \n",token.type);
