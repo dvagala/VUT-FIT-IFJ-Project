@@ -17,7 +17,7 @@ typedef enum {
     IF=0, ELSE, DEF, DO, END, NOT, NIL, THEN, WHILE,
 
     //STATES
-    WORD, NUMBER, EQUALCASES, LESSCASES, MORECASES, PLUSCASES, MINUSCASES, KEYWORDCASES, EOL_CASE, EOF_CASE=500, ERROR,
+    WORD, NUMBER, EQUALCASES, LESSCASES, MORECASES, KEYWORDCASES, EOL_CASE, EOF_CASE=500, ERROR,
 
     //DATA
     INT=1000, FLOAT, STRING, FLOAT_EXPO, IDENTIFICATOR,
@@ -27,11 +27,10 @@ typedef enum {
     PLUS,       // +
     MINUS=100,      // -
     MULT,       // *
-    MODULO,     // %
     DIVIDE,     // /
     ASSIGN,     // =
-    INC,        //++
-    DEC,        //--
+
+
     //LOGIC
     LESS,       // <
     MORE,       // >
@@ -46,9 +45,6 @@ typedef enum {
     SEMICOLON,  // ;
     LPAR,       // (
     RPAR,       // )
-
-    //TERM
-    ID,
 
     //COMMENTS
     SINGLECOM=200,   // # -SINGLE-LINE COMMENTS

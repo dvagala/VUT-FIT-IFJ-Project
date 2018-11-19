@@ -56,19 +56,15 @@ tToken nextToken()
 
     else if(c == '+')
     {
-        state = PLUSCASES;
+        state = PLUS;
     }
     else if(c == '-')
     {
-        state = MINUSCASES;
+        state = MINUS;
     }
     else if(c == '*')
     {
         state = MULT;
-    }
-    else if(c == '%')
-    {
-        state = MODULO;
     }
     else if(c == '/')
     {
@@ -115,7 +111,6 @@ tToken nextToken()
     {
         state = SINGLECOM;
     }
-
     else
     {
         state =ERROR;
@@ -228,13 +223,6 @@ tToken nextToken()
                                     c = getchar();
                                 }
                             }
-                            else
-                            {
-                                identificator.type=ERROR;
-                                free(token);
-                                return identificator;
-
-                            }
                             identificator.type = FLOAT;
                             identificator.data.value_double = atof(token);
                             printf("%f is here",identificator.data.value_double);
@@ -285,46 +273,6 @@ tToken nextToken()
                     }
 
             }break;
-        }
-
-        case PLUSCASES:
-        {
-            c = getchar();
-            if (c=='+')
-            {
-                case INC:
-                {
-                    identificator.type = INC;
-                    c=getchar();
-                    break;
-                }
-            }
-            else
-                case PLUS:
-                {
-                    identificator.type = PLUS;
-                    break;
-                }
-        }
-
-        case MINUSCASES:
-        {
-            c=getchar();
-            if (c=='-')
-            {
-                case DEC:
-                {
-                    identificator.type = DEC;
-                    c=getchar();
-                    break;
-                }
-            }
-            else
-                case MINUS:
-                {
-                    identificator.type = MINUS;
-                    break;
-                }
         }
 
         case LESSCASES:
@@ -408,7 +356,6 @@ tToken nextToken()
             }
             token[i]='\0';
             c=getchar();
-            printf("what is the char here? >>%s<<\n",token);
             identificator.type = STRING;
             identificator.data.string = token;
             break;
@@ -422,13 +369,19 @@ tToken nextToken()
             break;
         }
 
-        case MODULO:
+        case PLUS:
         {
-            identificator.type = MODULO;
+            identificator.type = PLUS;
             c=getchar();
             break;
         }
 
+        case MINUS:
+        {
+            identificator.type = MINUS;
+            c=getchar();
+            break;
+        }
         case DIVIDE:
         {
             identificator.type = DIVIDE;
@@ -483,11 +436,6 @@ tToken nextToken()
             break;
         }
 
-        case ID:
-        {
-            identificator.type = ID;
-            break;
-        }
         case BEGCOM:
         {
             printf("are we here?");
@@ -547,8 +495,8 @@ tToken nextToken()
         }
         case ERROR:
         {
-            printf("what is C? : %c \n",c);
             printf("You really need to stop.");
+            c=getchar();
             break;
         }
         default:break;
