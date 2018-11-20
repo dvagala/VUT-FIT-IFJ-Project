@@ -14,42 +14,43 @@
 typedef enum {
 
     //KEYWORDS
-    IF=0, ELSE, DEF, DO, END, NOT, NIL, THEN, WHILE,
+    IF = 0, ELSE, DEF, DO, END, NOT, NIL, THEN, WHILE, //012345678
 
     //STATES
-    WORD, NUMBER, EQUALCASES, LESSCASES, MORECASES, KEYWORDCASES, EOL_CASE, EOF_CASE=500, ERROR,
+    WORD = 20, NUMBER, EQUALCASES, LESSCASES, MORECASES, KEYWORDCASES, //20,21,22,23,24,25
+    EOL_CASE = 500, EOF_CASE, ERROR, //500, 501, 502
 
     //DATA
-    INT=1000, FLOAT, STRING, FLOAT_EXPO, IDENTIFICATOR,
+    INT = 1000, FLOAT, STRING, FLOAT_EXPO, IDENTIFICATOR, //1000, 1001, 1002, 1003, 1004
 
 
     //OPERATORS
-    PLUS,       // +
-    MINUS=100,      // -
-    MULT,       // *
-    DIVIDE,     // /
-    ASSIGN,     // =
+    PLUS = 100, // + 100
+    MINUS,      // - 101
+    MULT,       // * 102
+    DIVIDE,     // / 103
+    ASSIGN,     // = 104
 
 
     //LOGIC
-    LESS,       // <
-    MORE,       // >
-    LOE,        // <=
-    MOE,        // >=
-    EQUAL,      // ==
+    LESS,       // < 105
+    MORE,       // > 106
+    LOE,        // <=107
+    MOE,        // >=108
+    EQUAL,      // ==109
 
 
     //SYMBOLS
-    LBRA,       // {
-    RBRA,       // }
-    SEMICOLON,  // ;
-    LPAR,       // (
-    RPAR,       // )
+    LBRA,       // { 110
+    RBRA,       // } 111
+    SEMICOLON,  // ; 112
+    LPAR,       // ( 113
+    RPAR,       // ) 114
 
     //COMMENTS
-    SINGLECOM=200,   // # -SINGLE-LINE COMMENTS
-    BEGCOM,      // =begin - BLOCK COMMENTS BEGIN
-    ENDCOM,       // =end   - BLOCK COMMENTS END
+    SINGLECOM=200,   // # -SINGLE-LINE COMMENTS   200
+    BEGCOM,      // =begin - BLOCK COMMENTS BEGIN 201
+    ENDCOM,       // =end   - BLOCK COMMENTS END  203
 } Tokens_Types;
 
 typedef struct
