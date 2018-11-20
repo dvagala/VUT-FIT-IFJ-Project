@@ -137,8 +137,8 @@ tToken nextToken()
                             case KEYWORDCASES: //100 is word
                             {
                                 identificator.type=j;
-                                free(token);
                                 token=NULL;
+                                free(token);
                                 return identificator;
                             }
                         }
