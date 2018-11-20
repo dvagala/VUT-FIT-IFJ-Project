@@ -238,15 +238,21 @@ tToken nextToken()
                 }
                 else if(c == 'e' || c == 'E')
                 {
+                    token[i]=c;
+                    i++;
                     c = getchar();
                     if(c == '+' || c == '-')
                     {
                         case FLOAT_EXPO:
                         {
+                            token[i]=c;
+                            i++;
                             c=getchar();
                             if (!isdigit(c))
                             {
                                 free(token);
+                                identificator.type=ERROR;
+                                break;
 
                             }
                             while(isdigit(c))
@@ -255,16 +261,28 @@ tToken nextToken()
                                 i++;
                                 c=getchar();
                             }
-                            free(token);
-                            identificator.type=ERROR;
+                            identificator.type=FLOAT;
+                            identificator.data.value_double=atof(token);
                             break;
                         }
                     }
+                    else if (isdigit(c))
+                    {
+                        while (isdigit(c))
+                        {
+                            token[i]=c;
+                            i++;
+                            c=getchar();
+                        }
+                        identificator.type=FLOAT;
+                        identificator.data.value_double=atof(token);
+                        break;
+                    }
+
                 }
                 else if (!isdigit(c))
                     case INT:
                     {
-                        printf("did I get here?");
                         identificator.type = INT;
                         identificator.data.value_int = atoi(token);
                         break;
