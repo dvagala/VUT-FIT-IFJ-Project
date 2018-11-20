@@ -154,6 +154,7 @@ tToken nextToken()
                 }
                 identificator.type=IDENTIFICATOR;
                 identificator.data.string=token;
+                c=getchar();
                 break;
             }
     } //CASE FOR FLOAT AND INT
