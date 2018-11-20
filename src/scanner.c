@@ -484,7 +484,6 @@ tToken nextToken()
         case EOL_CASE:
         {
                 identificator.type=EOL_CASE;
-                c=getchar();
             break;
         }
 
@@ -510,7 +509,7 @@ tToken nextToken()
 int main()
 {
 
-    for (int i=0;i<6;i++)
+    for (int i=0;i<10;i++)
     {
         tToken token =nextToken();
         printf("Token type: %d \n",token.type);
