@@ -10,13 +10,19 @@ static char* Keywords[KEYWORD_COUNT]={"if","else","def","do","end","not","nil","
 tToken nextToken()
 {
 
+    Tokens_Types state=0;
+
     if (c == 30000)
     {
         c=getchar();
+        if (c == '=')
+        {
+            state=BEGCOM;
+        }
     }
     char* token=malloc((sizeof(int)*50));
     tToken identificator;
-    Tokens_Types state=0;
+
 
     while (isspace(c) && c!='\n')
     {
@@ -71,7 +77,10 @@ tToken nextToken()
     }
     else if(c == '=')
     {
-        state = EQUALCASES;
+        if (state!=BEGCOM)
+        {
+            state = EQUALCASES;
+        }
     }
     else if(c == '{')
     {
@@ -156,7 +165,6 @@ tToken nextToken()
                 }
                 identificator.type=IDENTIFICATOR;
                 identificator.data.string=token;
-                c=getchar();
                 break;
             }
     } //CASE FOR FLOAT AND INT
@@ -186,7 +194,7 @@ tToken nextToken()
                                 token[i]=c;
                                 i++;
                                 c=getchar();
-                                if (c=='+'||c=='-'||isdigit(c))
+                                if (c=='+'||c=='-')
                                 {
                                     token[i]=c;
                                     i++;
@@ -208,6 +216,15 @@ tToken nextToken()
 
                                     }
                                 }
+                                else if (isdigit(c))
+                                {
+                                    while(isdigit(c))
+                                    {
+                                        token[i] = c;
+                                        i++;
+                                        c = getchar();
+                                    }
+                                }
                                 else
                                 {
                                     identificator.type=ERROR;
@@ -216,7 +233,7 @@ tToken nextToken()
 
                                 }
                             }
-                            if (isdigit(c))
+                            else if (isdigit(c))
                             {
                                 while (isdigit(c))
                                 {
@@ -285,8 +302,15 @@ tToken nextToken()
                 else if (!isdigit(c))
                     case INT:
                     {
-                        identificator.type = INT;
-                        identificator.data.value_int = atoi(token);
+                        if (!isalpha(c))
+                        {
+                            identificator.type = INT;
+                            identificator.data.value_int = atoi(token);
+                        }
+                        else
+                        {
+                            identificator.type = ERROR;
+                        }
                         break;
                     }
 
@@ -471,8 +495,6 @@ tToken nextToken()
 
         case BEGCOM:
         {
-            token[i]=c;
-            i++;
             char start[6]={0};
             char end[5]={0};
             for (int x=0;x<5;x++)
@@ -484,28 +506,47 @@ tToken nextToken()
 
             if (strcmp(start,"begin")==0)
             {
-                int isEnd=0;
-                while (!(isEnd==1 && c=='\n'))
+                c=getchar();
+                if (!isspace(c))
                 {
-                    c=getchar();
-
-                    if (c=='\n' && isEnd==0)
+                    identificator.type=ERROR;
+                }
+                else
+                {
+                    int isEnd=0;
+                    while (!(isEnd==1 && (c=='\n'||c==EOF)))
                     {
-                        for (int e=0;e<4;e++)
-                        {
-                            c=getchar();
-                            end[e]=c;
-                        }
+                        int corrector=0;
 
-                        if (strcmp(end,"=end")==0)
+                        if (c=='\n' && isEnd==0)
                         {
-                            isEnd=1;
+                            for (int e=0;e<4;e++)
+                            {
+                                c=getchar();
+                                end[e]=c;
+                            }
+
+                            if (strcmp(end,"=end")==0)
+                            {
+                                c=getchar();
+                                corrector=1;
+                                if (isspace(c)||c==EOF)
+                                {
+                                    isEnd=1;
+                                }
+
+                            }
+                        }
+                        if (corrector==0)
+                        {
+                            c = getchar();
                         }
                     }
+                    c=getchar();
+                    //identificator.type=BEGCOM;
+                    return nextToken();
                 }
-                c=getchar();
-                //identificator.type=BEGCOM;
-                return nextToken();
+;
             }
             else
             {
