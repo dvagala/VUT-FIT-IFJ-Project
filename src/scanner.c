@@ -105,7 +105,10 @@ tToken nextToken()
     {
         state = STRING;
     }
-
+    else if (c == '!')
+    {
+        state = NOTEQUAL;
+    }
     else if (c == '#')
     {
         state = SINGLECOM;
@@ -183,7 +186,7 @@ tToken nextToken()
                                 token[i]=c;
                                 i++;
                                 c=getchar();
-                                if (c=='+'||c=='-')
+                                if (c=='+'||c=='-'||isdigit(c))
                                 {
                                     token[i]=c;
                                     i++;
@@ -224,7 +227,6 @@ tToken nextToken()
                             }
                             identificator.type = FLOAT;
                             identificator.data.value_double = atof(token);
-                            printf("%f is here",identificator.data.value_double);
                             break;
                         }
 
@@ -358,6 +360,20 @@ tToken nextToken()
                     break;
                 }
             }
+        }
+
+        case NOTEQUAL:
+        {
+            c=getchar();
+            if (c == '=')
+            {
+                c=getchar();
+                identificator.type=NOTEQUAL;
+                break;
+            }
+            else
+                identificator.type=ERROR;
+                break;
         }
 
         case STRING:

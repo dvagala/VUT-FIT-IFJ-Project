@@ -38,14 +38,15 @@ typedef enum {
     LOE,        // <=107
     MOE,        // >=108
     EQUAL,      // ==109
+    NOTEQUAL,   // !=110
 
 
     //SYMBOLS
-    LBRA,       // { 110
-    RBRA,       // } 111
-    SEMICOLON,  // ; 112
-    LPAR,       // ( 113
-    RPAR,       // ) 114
+    LBRA,       // { 111
+    RBRA,       // } 112
+    SEMICOLON,  // ; 113
+    LPAR,       // ( 114
+    RPAR,       // ) 115
 
     //COMMENTS
     SINGLECOM=200,   // # -SINGLE-LINE COMMENTS   200
