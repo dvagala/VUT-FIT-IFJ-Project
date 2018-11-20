@@ -132,7 +132,6 @@ tToken nextToken()
                 {
                     if(strcmp(token,Keywords[j])==0)
                     {
-                        c=getchar();
                         if (c==' '||c=='\n'||isspace(c)||c==EOF)
                         {
                             case KEYWORDCASES: //100 is word
@@ -244,14 +243,11 @@ tToken nextToken()
                     {
                         case FLOAT_EXPO:
                         {
-                            identificator.type = FLOAT_EXPO;
-                            identificator.data.value_double = atof(token);
                             c=getchar();
                             if (!isdigit(c))
                             {
                                 free(token);
-                                identificator.type=ERROR;
-                                return identificator;
+
                             }
                             while(isdigit(c))
                             {
@@ -259,6 +255,8 @@ tToken nextToken()
                                 i++;
                                 c=getchar();
                             }
+                            free(token);
+                            identificator.type=ERROR;
                             break;
                         }
                     }
