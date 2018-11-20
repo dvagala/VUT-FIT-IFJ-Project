@@ -22,7 +22,7 @@ tToken nextToken()
     {
         c=getchar();
     }
-    if (isalpha(c) || c=='_')
+    if ((c>='a'&&c<='z') || c=='_')
     {
         state = WORD;
     }
