@@ -22,7 +22,7 @@ tToken nextToken()
     {
         c=getchar();
     }
-    if (isalpha(c))
+    if ((c>='a'&&c<='z') || c=='_')
     {
         state = WORD;
     }
@@ -154,6 +154,7 @@ tToken nextToken()
                 }
                 identificator.type=IDENTIFICATOR;
                 identificator.data.string=token;
+                c=getchar();
                 break;
             }
     } //CASE FOR FLOAT AND INT
