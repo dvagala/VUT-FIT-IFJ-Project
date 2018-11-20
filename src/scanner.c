@@ -34,7 +34,6 @@ tToken nextToken()
             c=getchar();
             if (c == '=')
             {
-                printf("am I here?");
                 state = BEGCOM;
             }
             else
@@ -443,38 +442,39 @@ tToken nextToken()
 
         case SINGLECOM:
         {
-            identificator.type = SINGLECOM;
+
             while(c!='\n' && c!=EOF)
             {
                 c=getchar();
             }
             c=getchar();
-
-            break;
+            return nextToken();
+            //identificator.type = SINGLECOM;
+            //break;
         }
 
         case BEGCOM:
         {
-            printf("are we here?");
+            token[i]=c;
+            i++;
             char start[6]={0};
             char end[5]={0};
             for (int x=0;x<5;x++)
             {
-                start[i]=getchar();
+                c=getchar();
+                start[x]=c;
                 i++;
             }
-            printf(">>%s<<",start);
+
             if (strcmp(start,"begin")==0)
             {
-                printf("success");
                 int isEnd=0;
                 while (!(isEnd==1 && c=='\n'))
                 {
                     c=getchar();
-                    printf("%c",c);
-                    if (c=='\n')
+
+                    if (c=='\n' && isEnd==0)
                     {
-                        printf("hello");
                         for (int e=0;e<4;e++)
                         {
                             c=getchar();
@@ -483,18 +483,18 @@ tToken nextToken()
 
                         if (strcmp(end,"=end")==0)
                         {
-                            printf("success?");
                             isEnd=1;
                         }
                     }
                 }
+                c=getchar();
+                //identificator.type=BEGCOM;
+                return nextToken();
             }
-            nextToken();
-            break;
-        }
-        case ENDCOM:
-        {
-            identificator.type = ENDCOM;
+            else
+            {
+                identificator.type=ERROR;
+            }
             break;
         }
 
@@ -512,6 +512,7 @@ tToken nextToken()
         case ERROR:
         {
             printf("You really need to stop.");
+            identificator.type=ERROR;
             c=getchar();
             break;
         }
