@@ -489,7 +489,7 @@ tToken nextToken()
                 c=getchar();
             }
             c=getchar();
-            if (c !='=')
+            if (c !='=')//are we in this version?
             return nextToken();
             //identificator.type = SINGLECOM;
             //break;
