@@ -527,7 +527,6 @@ tToken nextToken()
                                 {
                                     e=-1;
                                 }
-                                printf("%c \n",c);
                                 end[e]=c;
                             }
 
