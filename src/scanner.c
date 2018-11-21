@@ -523,6 +523,11 @@ tToken nextToken()
                             for (int e=0;e<4;e++)
                             {
                                 c=getchar();
+                                if (c=='\n')
+                                {
+                                    e=-1;
+                                }
+                                printf("%c \n",c);
                                 end[e]=c;
                             }
 
