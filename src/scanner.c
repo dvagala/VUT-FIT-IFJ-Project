@@ -523,11 +523,18 @@ tToken nextToken()
                             for (int e=0;e<4;e++)
                             {
                                 c=getchar();
+                                printf("%d",e);
+                                if (c=='\n')
+                                {
+                                    e=-1;
+                                }
+                                printf("%c \n",c);
                                 end[e]=c;
                             }
 
                             if (strcmp(end,"=end")==0)
                             {
+                                printf("checking in");
                                 c=getchar();
                                 corrector=1;
                                 if (isspace(c)||c==EOF)
@@ -540,6 +547,7 @@ tToken nextToken()
                         if (corrector==0)
                         {
                             c = getchar();
+                            printf("corrector is %c \n",c);
                         }
                     }
                     c=getchar();
