@@ -41,17 +41,17 @@ typedef enum {
     NOTEQUAL,   // !=110
 
 
+
     //SYMBOLS
     LBRA,       // { 111
     RBRA,       // } 112
-    COLON,  // ; 113
+    COLON,      // , 113
     LPAR,       // ( 114
     RPAR,       // ) 115
 
     //COMMENTS
     SINGLECOM=200,   // # -SINGLE-LINE COMMENTS   200
     BEGCOM,      // =begin - BLOCK COMMENTS BEGIN 201
-    ENDCOM,       // =end   - BLOCK COMMENTS END  203
 } Tokens_Types;
 
 typedef struct
