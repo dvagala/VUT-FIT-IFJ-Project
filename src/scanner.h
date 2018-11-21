@@ -44,7 +44,7 @@ typedef enum {
     //SYMBOLS
     LBRA,       // { 111
     RBRA,       // } 112
-    SEMICOLON,  // ; 113
+    COLON,  // ; 113
     LPAR,       // ( 114
     RPAR,       // ) 115
 

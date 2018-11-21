@@ -90,9 +90,9 @@ tToken nextToken()
     {
         state = RBRA;
     }
-    else if(c == ';')
+    else if(c == ',')
     {
-        state = SEMICOLON;
+        state = COLON;
     }
     else if(c == '(')
     {
@@ -460,10 +460,10 @@ tToken nextToken()
             break;
         }
 
-        case SEMICOLON:
+        case COLON:
         {
             c=getchar();
-            identificator.type = SEMICOLON;
+            identificator.type = COLON;
             break;
         }
 
