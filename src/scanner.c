@@ -162,6 +162,7 @@ tToken nextToken()
                 if (c == '?' || c == '!')
                 {
                     token[i] = c;
+                    c=getchar();
                 }
                 identificator.type=IDENTIFICATOR;
                 identificator.data.string=token;
