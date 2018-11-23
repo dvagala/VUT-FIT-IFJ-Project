@@ -73,6 +73,7 @@ tToken nextToken()
     }
     else if(c == '/')
     {
+        printf("hey?");
         state = DIVIDE;
     }
     else if(c == '=')
@@ -168,7 +169,7 @@ tToken nextToken()
                 identificator.data.string=token;
                 break;
             }
-    } //CASE FOR FLOAT AND INT
+        } //CASE FOR FLOAT AND INT
         case NUMBER:
         {
             while (isdigit(c))
@@ -398,7 +399,7 @@ tToken nextToken()
             }
             else
                 identificator.type=ERROR;
-                break;
+            break;
         }
 
         case STRING:
@@ -407,9 +408,81 @@ tToken nextToken()
             c=getchar();
             while (c !='\"')
             {
-                token[i] = c;
-                i++;
-                c=getchar();
+                if (c == '\\')
+                {
+                    c=getchar();
+                    switch(c)
+                    {
+                        case 'n':
+                        {
+                            token[i]='\n';
+                            i++;
+                            break;
+                        }
+                        case 't':
+                        {
+                            token[i]='\t';
+                            i++;
+                            break;
+                        }
+                        case 's':
+                        {
+                            token[i]=' ';
+                            i++;
+                            break;
+                        }
+                        case '\\':
+                        {
+                            token[i]='\\';
+                            i++;
+                            break;
+                        }
+                        case '\"':
+                        {
+                            token[i]='\"';
+                            i++;
+                            break;
+                        }
+                        case 'x':
+                        {
+                            c=getchar();
+                            if (isdigit(c)||(c>='A'&&c<='F'))
+                            {
+                                token[i]=c;
+                                i++;
+                                break;
+                            }
+                            else
+                            {
+                                identificator.type=ERROR;
+                                token=NULL;
+                                free(token);
+                                return identificator;
+                            }
+                        }
+                        default:
+                        {
+                            identificator.type=ERROR;
+                            token=NULL;
+                            free(token);
+                            return identificator;
+                        }
+                    }
+                    c=getchar();
+                }
+                else
+                {
+                    token[i] = c;
+                    i++;
+                    c = getchar();
+                }
+                if (c == EOF)
+                {
+                    identificator.type=ERROR;
+                    token=NULL;
+                    free(token);
+                    return identificator;
+                }
             }
             token[i]='\0';
             c=getchar();
@@ -490,7 +563,7 @@ tToken nextToken()
             }
             c=getchar();
             if (c !='=')//are we in this version?
-            return nextToken();
+                return nextToken();
             //identificator.type = SINGLECOM;
             //break;
         }
@@ -552,7 +625,7 @@ tToken nextToken()
                     //identificator.type=BEGCOM;
                     return nextToken();
                 }
-;
+                ;
             }
             else
             {
@@ -563,7 +636,7 @@ tToken nextToken()
 
         case EOL_CASE:
         {
-                identificator.type=EOL_CASE;
+            identificator.type=EOL_CASE;
             break;
         }
 
@@ -582,6 +655,7 @@ tToken nextToken()
         default:break;
     }
 
+    //printf("HERE IS TOKEN %s",token);
     token=NULL;
     free(token);
     return identificator;
@@ -593,6 +667,10 @@ int main()
     for (int i=0;i<10;i++)
     {
         tToken token =nextToken();
+        if (i==0)
+        {
+            printf("%s TOKEN",token.data.string);
+        }
         printf("Token type: %d \n",token.type);
     }
     return 0;
