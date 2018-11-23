@@ -21,8 +21,7 @@ tToken nextToken()
         }
         else if (isspace(c))
         {
-            c=getchar();
-            if (c=='\n')
+            while (isspace(c))
             {
                 c=getchar();
             }
