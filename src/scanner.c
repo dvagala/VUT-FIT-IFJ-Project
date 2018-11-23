@@ -19,6 +19,14 @@ tToken nextToken()
         {
             state=BEGCOM;
         }
+        else if (isspace(c))
+        {
+            c=getchar();
+            if (c=='\n')
+            {
+                c=getchar();
+            }
+        }
     }
     char* token=malloc((sizeof(int)*50));
     tToken identificator;
@@ -404,10 +412,15 @@ tToken nextToken()
 
         case STRING:
         {
-
+            int mult_alloc=1;
             c=getchar();
             while (c !='\"')
             {
+                if (49*mult_alloc)
+                {
+                    mult_alloc++;
+                    token=malloc(sizeof(char)*49*mult_alloc);
+                }
                 if (c == '\\')
                 {
                     c=getchar();
@@ -669,7 +682,7 @@ int main()
         tToken token =nextToken();
         if (i==0)
         {
-            printf("%s TOKEN",token.data.string);
+        //    printf("%s TOKEN",token.data.string);
         }
         printf("Token type: %d \n",token.type);
     }
