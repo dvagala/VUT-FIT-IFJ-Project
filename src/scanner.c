@@ -697,7 +697,7 @@ int main()
         tToken token =nextToken();
         if (i==0)
         {
-           printf("%s \n",token.data.string);
+         //  printf("%s \n",token.data.string);
         }
         printf("Token type: %d \n",token.type);
     }
