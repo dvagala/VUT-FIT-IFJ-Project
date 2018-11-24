@@ -413,9 +413,11 @@ tToken nextToken()
         {
             int mult_alloc=1;
             c=getchar();
+            char hexValue[3]={0};
+            int symbol;
             while (c !='\"')
             {
-                if (49*mult_alloc)
+                if (i==49*mult_alloc && i!=0)
                 {
                     mult_alloc++;
                     token=malloc(sizeof(char)*49*mult_alloc);
@@ -460,8 +462,22 @@ tToken nextToken()
                             c=getchar();
                             if (isdigit(c)||(c>='A'&&c<='F'))
                             {
-                                token[i]=c;
+                                hexValue[0]=c;
+                                c=getchar();
+                                if (isdigit(c)||(c>='A'&&c<='F'))
+                                {
+                                    hexValue[1]=c;
+                                }
+                                else
+                                {
+                                    token[i]=c;
+                                    c++;
+                                }
+                                hexValue[2]='\0';
+                                symbol = strtol(hexValue,NULL,16);
+                                token[i]=symbol;
                                 i++;
+
                                 break;
                             }
                             else
@@ -681,7 +697,7 @@ int main()
         tToken token =nextToken();
         if (i==0)
         {
-        //    printf("%s TOKEN",token.data.string);
+           printf("%s \n",token.data.string);
         }
         printf("Token type: %d \n",token.type);
     }
