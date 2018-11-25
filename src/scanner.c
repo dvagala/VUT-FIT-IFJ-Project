@@ -1,8 +1,3 @@
-#include <stdio.h>
-#include <malloc.h>
-#include <ctype.h>
-#include <string.h>
-#include <stdlib.h>
 #include "scanner.h"
 int c=30000;
 

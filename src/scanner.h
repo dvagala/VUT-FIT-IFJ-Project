@@ -5,11 +5,15 @@
 #ifndef IFJ_PROJECT_SCANNER_H
 #define IFJ_PROJECT_SCANNER_H
 
-#endif //IFJ_PROJECT_SCANNER_H
-
+// Add here all libraries for project, so it dont get messy
+#include <stdio.h>
+#include <malloc.h>
+#include <ctype.h>
+#include <string.h>
+#include <stdlib.h>
+#include <stdbool.h>
 
 #define KEYWORD_COUNT  9
-
 
 typedef enum {
 
@@ -52,6 +56,7 @@ typedef enum {
     //COMMENTS
     SINGLECOM=200,   // # -SINGLE-LINE COMMENTS   200
     BEGCOM,      // =begin - BLOCK COMMENTS BEGIN 201
+    EXPR,
 } Tokens_Types;
 
 typedef struct
@@ -64,3 +69,7 @@ typedef struct
         char*  string;
     }data;
 }tToken;
+
+tToken nextToken();
+
+#endif //IFJ_PROJECT_SCANNER_H
