@@ -2,16 +2,12 @@
 // Created by Dominik Vagala on 18. 11. 2018.
 //
 
-#include "scanner.h"
-#include "stdbool.h"
-
-int error_code;
-
 #ifndef IFJ_PROJECT_PARSER_H
 #define IFJ_PROJECT_PARSER_H
 
-#endif //IFJ_PROJECT_PARSER_H
+#include "scanner.h"
 
+int error_code;
 
 const char* token_type_enum_string[] = {
 
@@ -30,7 +26,7 @@ const char* token_type_enum_string[] = {
         "MOE",        // >=108
         "EQUAL",      // ==109
         "NOTEQUAL",   // !=110
-        "SYMBOLS" "LBRA",       // { 111
+        "LBRA",       // { 111
         "RBRA",       // } 112
         "COLON",      // , 113
         "LPAR",       // ( 114
@@ -49,3 +45,5 @@ bool more_param();
 bool st_list();
 
 tToken analyze_expression(tToken token, tToken aheadToken);
+
+#endif //IFJ_PROJECT_PARSER_H
