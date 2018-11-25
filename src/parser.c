@@ -3,6 +3,7 @@
 //
 
 #include "parser.h"
+#include "scanner.h"
 
 int error_code = 0;
 
@@ -10,6 +11,10 @@ tToken token;
 tToken previousToken;       // always behind actual token
 tToken aheadToken;          // When I need to do lookahead what is after actual token, this is it
 bool tokenLookAheadFlag = false;
+
+// Because I set token type as EXPR when I find out that is indeed start of expression, I need
+// somehow store this original type of token, so it can set back to original before calling analyze_expression()
+int original_token_type_backup;
 
 
 /** Wrapper for nextToken enhanced with memory
@@ -24,7 +29,12 @@ tToken enhanced_next_token(){
         tokenLookAheadFlag = false;
         return aheadToken;
     } else{
-        return nextToken();
+        tToken next_token = nextToken();
+        if(previousToken.type == EOL_CASE && next_token.type == EOL_CASE){
+            next_token = enhanced_next_token();
+        }
+
+        return next_token;
     }
 }
 
@@ -55,27 +65,41 @@ bool isTokenVariable(){
  * */
 bool is_token_start_of_expr() {
 
+    printf("Checking if is_token_start_of_expr\n");
+
     if (token.type == IDENTIFICATOR) {
+//        if(next_token_lookahead().type == ASSIGN){
+//
+//            // TODO
+//            // Check if id_var isnt previously declared function -> error 3
+//            // Add id_var to symtable if not already
+//
+//            return false;
+//        }
         if(isTokenVariable()){
             if(next_token_lookahead().type != ASSIGN && previousToken.type != LPAR && previousToken.type != COLON && previousToken.type != IDENTIFICATOR){
                 // There are only 3 cases when id_variable is not start of expression
                 // 1. id_variable = restOfCode
                 // 2. def id_func(id_variable, id_variable)
                 // 3. def id_func id_variable, id_variable
-                printf("First\n");
+                printf("--Start of expr: First\n");
                 return true;
             }
         }
-    } else if (token.type == INT || token.type == STRING ||
-               token.type == FLOAT || token.type == FLOAT_EXPO){
-        printf("Second\n");
-        return true;
+    } else if(token.type == INT || token.type == STRING || token.type == FLOAT || token.type == FLOAT_EXPO){
+        // In this cases it is not start of expression
+        // 1. id_func 45, "hoho"
+        // 2. id_func (45, "hoho")
+        if(previousToken.type != IDENTIFICATOR && previousToken.type != COLON && previousToken.type != LPAR){
+            printf("--Start of expr: Second\n");
+            return true;
+        }
     } else if(token.type == LPAR && previousToken.type != IDENTIFICATOR){
         // There are only two cases when '(' is not start of expression
         // 1. id = id(id, id)
         // 2. def id(id, id)
         // So if token before '(' was id it is certainly not an expression
-        printf("Third\n");
+        printf("--Start of expr: Third\n");
         return true;
     }
 
@@ -91,8 +115,9 @@ void pop(){
     printf("New token type: %s\n", token_type_enum_string[token.type]);
 
     if(is_token_start_of_expr()){
-        token.type = EXPR;      // override token.type, so we can handle it easily with rules
-        printf("Am in isTokenStartOfExpr\n");
+        original_token_type_backup = token.type;      // Store original token type, so later i can be reverted and handed to expression analyzer
+        token.type = EXPR;                   // override token type, so we can handle it easily with rules
+        printf("End of isTokenStartOfExpr\n");
     }
 }
 
@@ -118,6 +143,9 @@ bool expr(){
     printf("Im in %s\n", non_term);
     printf("token type: %s\n", token_type_enum_string[token.type]);
 
+    // Set back original token type
+    token.type = original_token_type_backup;
+
     // Fake expression analyzer, just read epression and came back when expression ends
     token = analyze_expression(token, aheadToken);
 
@@ -137,7 +165,10 @@ bool more_param(){
         return true;
     } else if(token.type == COLON){        // 32. More_params -> , id More_params
         pop();
-        return more_param();
+        if(token.type == IDENTIFICATOR){
+            pop();
+            return more_param();
+        }
     }
 
     printf("%s returning: %d\n", non_term, 0);
@@ -203,7 +234,7 @@ bool def_func(){
     return false;
 }
 
-bool more_args(){
+bool more_args(int *num_of_args){
     char non_term[] = "more_args";
     printf("Im in %s\n", non_term);
     printf("token type: %s\n", token_type_enum_string[token.type]);
@@ -214,7 +245,8 @@ bool more_args(){
         return true;
     } else if(token.type == COLON){         // 16. More-args -> , Term More-args
         pop();
-        return term() && more_args();
+        (*num_of_args)++;                   // So we found another argument
+        return term() && more_args(num_of_args);
     }
 
     printf("%s returning: %d\n", non_term, 0);
@@ -254,7 +286,7 @@ bool term(){
     return false;
 }
 
-bool arg_in_brackets(){
+bool arg_in_brackets(int *num_of_args){
     char non_term[] = "arg_in_brackets";
     printf("Im in %s\n", non_term);
     printf("token type: %s\n", token_type_enum_string[token.type]);
@@ -262,7 +294,11 @@ bool arg_in_brackets(){
     // 15. Arg_in_brackets -> Term More-args
     if(token.type == IDENTIFICATOR || token.type == INT || token.type == FLOAT ||
        token.type == STRING || token.type == NIL){
-        return term() && more_args();
+
+        // '1' becase if we get here, there will be ceratily at least one term + more_arg
+        *num_of_args = 1;
+
+        return term() && more_args(num_of_args);
     } else if(token.type == RPAR){            // 14. Arg_in_brackets -> eps
         printf("%s returning: %d\n", non_term, 1);
         return true;
@@ -272,7 +308,7 @@ bool arg_in_brackets(){
     return false;
 }
 
-bool call_func_args(){
+bool call_func_args(int *num_of_args){
     char non_term[] = "call_func_args";
     printf("Im in %s\n", non_term);
     printf("token type: %s\n", token_type_enum_string[token.type]);
@@ -280,12 +316,17 @@ bool call_func_args(){
     // 13. Call_func_args -> Term More-args
     if(token.type == IDENTIFICATOR || token.type == INT || token.type == FLOAT ||
        token.type == STRING || token.type == NIL){
-        return term() && more_args();
+
+        // '1' becase if we get here, there will be ceratily at least one term + more_arg
+        *num_of_args = 1;
+
+        return term() && more_args(num_of_args);
     } else if(token.type == EOL_CASE){            // 11. Call_func_args -> eps
         return true;
     } else if(token.type == LPAR){            // 12. Call_func_args -> ( Arg_in_brackets )
         pop();
-        if(!arg_in_brackets())
+
+        if(!arg_in_brackets(num_of_args))
             return false;
         if(token.type == RPAR){
             pop();
@@ -305,8 +346,23 @@ bool call_func(){
 
     // 8. Call_func -> id Call_func_args
     if(token.type == IDENTIFICATOR){
+
+        // TODO
+        // id_func == token
+        // Check if function was defined, if not error 3
+
+        char *func_name = token.data.string;
         pop();
-        return call_func_args();
+
+        int num_of_args = 0;
+        // num_of_args is handed by pointer, so sub_functions can later increment its value if there is another argument
+        bool sub_analysis_result = call_func_args(&num_of_args);
+
+        // TODO: Check if num_of_args == func_name.defined.parameters, if not error 5
+
+        printf("\n\n Function: %s is calling with: %d arguments.\n\n", func_name, num_of_args);
+
+        return sub_analysis_result;
     }
 
     printf("%s returning: %d\n", non_term, 0);
@@ -338,8 +394,29 @@ bool after_id() {
     // 10. After_id -> Call_func_args
     if(token.type == IDENTIFICATOR || token.type == EOL_CASE || token.type == LPAR ||
        token.type == INT || token.type == FLOAT || token.type == STRING || token.type == NIL){
-        return call_func_args();
+
+        // TODO
+        // Check if function was defined, if not error 3
+
+        // previous_token == id_func      // cause we are in after_id
+        char *func_name = previousToken.data.string;
+
+        int num_of_args = 0;
+        // num_of_args is handed by pointer, so sub_functions can later increment its value if there is another argument
+        bool sub_analysis_result = call_func_args(&num_of_args);
+
+        // TODO: Check if num_of_args == func_name.defined.parameters, if not error 5
+
+        printf("\n\n Function: %s is calling with: %d arguments.\n\n", func_name, num_of_args);
+
+        return sub_analysis_result;
     }else if(token.type == ASSIGN){        // 6. After_id -> = Func_or_expr
+
+        // TODO
+        // previous_token == id_var      // cause we are in after_id
+        // Check if id_var isnt previously declared function -> error 3
+        // Add id_var to symtable if not already
+
         pop();
         return func_or_expr();
     }
@@ -487,9 +564,9 @@ bool prog(){
 void test_scanner(){
     printf("\nTest scanner:\n\n");
 
-    tToken token;
     while(token.type != EOF_CASE){
-        token = nextToken();
+        token = enhanced_next_token();
+//        token = nextToken();
         printf("%s ", token_type_enum_string[token.type]);
         if(token.type == EOL_CASE)
             printf("\n");
@@ -497,6 +574,7 @@ void test_scanner(){
     printf("\n");
     printf("\n");
 }
+
 
 int main(){
 
@@ -514,7 +592,7 @@ int main(){
         return 1;
     }
     else if(analysis_result == false){
-        printf("\nAnalysis error!\n\n");
+        printf("\n!!! Analysis error!\n\n");
         return 2;
     }
 
