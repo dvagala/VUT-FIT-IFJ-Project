@@ -41,15 +41,14 @@ int keyCmp(char *key1, char *key2, int letter_position ) {
 
 }
 
-int Binsert(Bnode *rootPtr,tToken *token){
+bool Binsert(Bnode *rootPtr, char *id, bool func_bool){
 
     if(!*rootPtr){
         Bnode new = malloc(sizeof(struct Node));
         if(new) {
-            new->data.type = get_type_from_token(token);
-            new->key = token->data.string;
+            new->key = id;
             new->data.defined = false;
-            new->data.function = false;
+            new->data.function = func_bool;
             new->Lptr = NULL;
             new->Rptr = NULL;
             new->data.list = malloc(sizeof(List));
@@ -59,17 +58,17 @@ int Binsert(Bnode *rootPtr,tToken *token){
     }
         //key comparison
     else {
-        if((keyCmp((*rootPtr)->key, token->data.string, 0))==TEQUAL){ //nothing happens, if they are equal
-            return 1;
+        if((keyCmp((*rootPtr)->key, id, 0))==TEQUAL){ //nothing happens, if they are equal
+            return true;
         }
-        else if(keyCmp((*rootPtr)->key, token->data.string, 0)==TLESS){ // if added one is less we go to left
-            Binsert(&(*rootPtr)->Lptr,token);
+        else if(keyCmp((*rootPtr)->key, id, 0)==TLESS){ // if added one is less we go to left
+            Binsert(&(*rootPtr)->Lptr, id, func_bool);
         }
-        else if((keyCmp((*rootPtr)->key, token->data.string, 0)==TMORE)){ // to right if it's more
-            Binsert(&(*rootPtr)->Rptr,token);
+        else if((keyCmp((*rootPtr)->key, id, 0)==TMORE)){ // to right if it's more
+            Binsert(&(*rootPtr)->Rptr, id, func_bool);
         }
     }
-    return 0;
+    return false;
 }
 
 Bnode Bsearch(Bnode rootPtr, char *key ) {
@@ -91,31 +90,33 @@ void update_function(Bnode *rootPtr,char *key, bool function_bool){
 void update_defined(Bnode *rootPtr,char *key, bool defined_bool){
     Bsearch(*rootPtr,key)->data.defined = defined_bool;
 }
-//updates type in data
-void update_type(Bnode *rootPtr,char *key, Data_type type){
-    Bsearch(*rootPtr,key)->data.type = type;
-}
 
 bool is_variable_defined(Bnode *actual_symtable, char *var_name){
-    if(Bsearch(*actual_symtable,var_name)->data.defined)
-        return true;
+    Bnode pom = Bsearch(*actual_symtable,var_name);
+    if(pom) {
+        if(pom->data.defined)
+            return true;
+    }
     return false;
 }
 
 bool is_func_defined(Bnode *global_symtable, char *func_name){
     Bnode pom = Bsearch(*global_symtable, func_name);
-    if(pom->data.function && pom->data.defined)
-        return true;
-    return false;
-}
-
-bool is_variable_already_in_func_params(Bnode *global_symtable, char *func_name, char *var_name){
-    if(is_element(Bsearch(*global_symtable,func_name)->data.list,var_name)){
-        return true;
+    if(pom) {
+        if (pom->data.function && pom->data.defined)
+            return true;
     }
     return false;
 }
 
+bool is_variable_already_in_func_params(Bnode *global_symtable, char *func_name, char *var_name){
+    Bnode pom = Bsearch(*global_symtable, func_name);
+    if(pom) {
+        if (is_element(pom->data.list,var_name))
+            return true;
+    }
+    return false;
+}
 
 bool has_func_same_name_as_global_variable(Bnode *global_symtable, char *func_name){
     if(Bsearch(*global_symtable,func_name) != NULL)
@@ -129,20 +130,45 @@ bool has_variable_same_name_as_func(Bnode *global_symtable, char *var_name){
     return false;
 }
 
-
-//adds function argument into list
-void add_param(Bnode *globalRoot, char *funcName, tToken *token){
-    List *pom = Bsearch(*globalRoot,funcName)->data.list;
-    insert_element(pom,funcName,get_type_from_token(token));
-    pom->element_count++;
+int get_num_of_defined_func_params(Bnode *global_symtable, char *func_name){
+    Bnode pom = Bsearch(*global_symtable,func_name);
+    if(pom){
+        return pom->data.list->element_count;
+    }
+    return 0;
 }
 
-void BDispose(Bnode *rootPtr){
-    if(*rootPtr){
-        BDispose(&(*rootPtr)->Rptr);
-        BDispose(&(*rootPtr)->Lptr);
-        free(*rootPtr);
-        Binit(&(*rootPtr));
+//---- These return false only when malloc fail creating new tree node,
+bool add_variable_to_symtable(Bnode *actual_symtable, char *var_name){
+    if (Binsert(actual_symtable, var_name, false))
+        return true;
+    return false;
+}
+bool add_func_to_symtable(Bnode *global_symtable, char *func_name){
+    if (Binsert(global_symtable, func_name, true))
+        return true;
+    return false;
+}
+
+bool add_variable_to_func_params(Bnode *global_symtable, char *func_name, char *var_name){
+    Bnode pom = Bsearch(*global_symtable,func_name);
+    if(pom){
+        if(pom->data.function){
+            insert_element(pom->data.list, var_name, type_undefined);
+            pom->data.list->element_count++;
+            return true;
+        }
+    }
+    return false;
+}
+//----
+
+void free_symtable(Bnode *symtable){
+    if(*symtable){
+        free_symtable(&(*symtable)->Rptr);
+        free_symtable(&(*symtable)->Lptr);
+        free(*symtable);
+        Binit(&(*symtable));
     }
 }
 //int main(){
@@ -150,7 +176,7 @@ void BDispose(Bnode *rootPtr){
 //    Binit(tree);
 //    tToken *token = malloc(sizeof(tToken));
 //    token->type = FLOAT;
-//    token->data.string = "olo";
+//    id = "olo";
 //    Binsert(tree,token);
 //
 //    tToken *token2 = malloc(sizeof(tToken));

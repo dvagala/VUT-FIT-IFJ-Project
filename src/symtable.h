@@ -16,7 +16,6 @@
 
 
 typedef struct {
-    Data_type type;
     bool function;
     List *list;
     bool defined;
@@ -29,35 +28,31 @@ typedef struct Node{
     struct Node *Rptr;
 }*Bnode;
 Data_type get_type_from_token(tToken *token);
-int Binsert(Bnode *rootPtr,tToken *token);
+
+bool Binsert(Bnode *rootPtr,char *id, bool func_bool);
+
 void update_function(Bnode *rootPtr,char *key, bool function_bool);
+
 void update_defined(Bnode *rootPtr,char *key, bool defined_bool);
-void update_type(Bnode *rootPtr,char *key, Data_type type);
-void add_param(Bnode *globalRoot, char *funcName, tToken *token);
-void BDispose(Bnode *rootPtr);
-#endif //IFJ_PROJECT_SYMTABLE_H
-
-
-
-// TODO Functions for parser
 
 bool is_id_variable(char *var_name);
+
 bool is_variable_defined(Bnode *actual_symtable, char *var_name);
+
 bool is_func_defined(Bnode *global_symtable, char *func_name);
+
 bool is_variable_already_in_func_params(Bnode *global_symtable, char *func_name, char *var_name);
+
 bool has_func_same_name_as_global_variable(Bnode *global_symtable, char *func_name);
+
 bool has_variable_same_name_as_func(Bnode *global_symtable, char *var_name);
 
-int get_num_of_defined_func_params(Bnode *global_symtable, char *func_name);
+bool add_variable_to_symtable(Bnode *actual_symtable, char *var_name);
 
-// These return false only when malloc fail creating new tree node,
-bool add_variable_to_symtable(Bnode *actual_symtable);
-bool add_func_to_symtable(Bnode *global_symtable);
+bool add_func_to_symtable(Bnode *global_symtable, char *func_name);
+
 bool add_variable_to_func_params(Bnode *global_symtable, char *func_name, char *var_name);
 
+void free_symtable(Bnode *symtable);
 
-// Return pointer to new symtable, NULL when malloc fail or something
-Bnode* create_symtable();
-
-// Return false only when free fail or something (maybe not neccessary)
-bool free_symtable(Bnode *symtable);
+#endif //IFJ_PROJECT_SYMTABLE_H
