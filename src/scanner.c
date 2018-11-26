@@ -68,7 +68,7 @@ tToken nextToken()
 
     else if (isdigit(c))
     {
-        state= INT;
+        state= NUMBER;
     }
 
     else if(c == '+')
@@ -181,7 +181,7 @@ tToken nextToken()
                 break;
             }
         } //CASE FOR FLOAT AND INT
-        case INT:
+        case NUMBER:
         {
             while (isdigit(c))
             {
@@ -201,6 +201,11 @@ tToken nextToken()
                             token[i]=c;
                             i++;
                             c=getchar();
+                            while (isdigit(c))
+                            {
+                                c=getchar();
+                            }
+
 
                             if (c=='e' || c=='E')
                             {
@@ -313,20 +318,23 @@ tToken nextToken()
 
                 }
                 else if (!isdigit(c))
-                {
-                    if (!isalpha(c))
+                    case INT:
                     {
-                        identificator.type = INT;
-                        identificator.data.value_int = atoi(token);
-                    } else
-                    {
-                        identificator.type = ERROR;
+                        if (!isalpha(c))
+                        {
+                            identificator.type = INT;
+                            identificator.data.value_int = atoi(token);
+                        }
+                        else
+                        {
+                            identificator.type = ERROR;
+                        }
+                        break;
                     }
-                    break;
-                }
 
             }break;
         }
+
 
         case LESS:
         {
