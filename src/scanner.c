@@ -37,7 +37,7 @@ tToken nextToken()
 
     else if (c == '\n')
     {
-        while (c == '\n')
+        while (isspace(c))
         {
             c=getchar();
             if (c == '=')
@@ -75,7 +75,6 @@ tToken nextToken()
     }
     else if(c == '/')
     {
-        printf("hey?");
         state = DIVIDE;
     }
     else if(c == '=')
@@ -585,7 +584,11 @@ tToken nextToken()
                 c=getchar();
             }
             c=getchar();
-            if (c !='=')//are we in this version?
+            while (isspace(c))
+            {
+                c=getchar();
+            }
+            if (c !='=')
                 return nextToken();
             //identificator.type = SINGLECOM;
             //break;
