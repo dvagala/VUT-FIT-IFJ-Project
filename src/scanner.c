@@ -9,6 +9,7 @@ tToken nextToken()
 
     if (c == 30000)
     {
+
         c=getchar();
         if (c == '=')
         {
@@ -19,6 +20,11 @@ tToken nextToken()
             while (isspace(c))
             {
                 c=getchar();
+                if (c == '=')
+                {
+                    state=BEGCOM;
+                    break;
+                }
             }
         }
     }
@@ -39,10 +45,13 @@ tToken nextToken()
     {
         while (isspace(c))
         {
+
             c=getchar();
             if (c == '=')
             {
                 state = BEGCOM;
+                printf("what's up");
+                break;
             }
             else
             {
