@@ -23,7 +23,7 @@ tToken nextToken()
                 if (c == '=')
                 {
                     state=BEGCOM;
-                    break;
+
                 }
             }
         }
@@ -205,7 +205,6 @@ tToken nextToken()
                             {
                                 c=getchar();
                             }
-
 
                             if (c=='e' || c=='E')
                             {
@@ -602,7 +601,7 @@ tToken nextToken()
         }
 
         case BEGCOM:
-        { do{
+        {
             char start[6]={0};
             char end[5]={0};
             for (int x=0;x<5;x++)
@@ -654,20 +653,16 @@ tToken nextToken()
                             c = getchar();
                         }
                     }
-                    c=getchar();
-                    while (isspace(c))
-                    {
-                        c=getchar();
-                    }
+
                     //identificator.type=BEGCOM;
-                    if (c !='=')
+                    //c=30000;
                     return nextToken();
                 }
             }
             else
             {
                 identificator.type=ERROR;
-            } }while (c == '=');
+            }
             break;
         }
 
@@ -712,7 +707,7 @@ int main()
 
         if (token.type == 1000)
         {
-            printf("%d \n",token.data.value_int);
+          //  printf("%d \n",token.data.value_int);
         }
     }
     return 0;
