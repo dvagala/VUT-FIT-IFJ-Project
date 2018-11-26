@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include "string.h"
 #include "symtable.h"
-#include "scanner.h"
+
 #include "errors.h"
 
 
@@ -84,23 +84,51 @@ Bnode Bsearch(Bnode rootPtr, char *key ) {
     else return NULL; // if it doesn't find anything
 }
 //updates bool "function: in data
-void update_function(Bnode *rootPtr,char *key, bool bulo){
-    Bsearch(*rootPtr,key)->data.function = bulo;
+void update_function(Bnode *rootPtr,char *key, bool function_bool){
+    Bsearch(*rootPtr,key)->data.function = function_bool;
 }
 //updates bool defined in data
-void update_defined(Bnode *rootPtr,char *key, bool bulo){
-    Bsearch(*rootPtr,key)->data.defined = bulo;
+void update_defined(Bnode *rootPtr,char *key, bool defined_bool){
+    Bsearch(*rootPtr,key)->data.defined = defined_bool;
 }
 //updates type in data
 void update_type(Bnode *rootPtr,char *key, Data_type type){
     Bsearch(*rootPtr,key)->data.type = type;
 }
 
-bool isDefined(Bnode rootPtr, char *key){
-    if(Bsearch(rootPtr,key)->data.defined)
+bool is_variable_defined(Bnode *actual_symtable, char *var_name){
+    if(Bsearch(*actual_symtable,var_name)->data.defined)
         return true;
     return false;
 }
+
+bool is_func_defined(Bnode *global_symtable, char *func_name){
+    Bnode pom = Bsearch(*global_symtable, func_name);
+    if(pom->data.function && pom->data.defined)
+        return true;
+    return false;
+}
+
+bool is_variable_already_in_func_params(Bnode *global_symtable, char *func_name, char *var_name){
+    if(is_element(Bsearch(*global_symtable,func_name)->data.list,var_name)){
+        return true;
+    }
+    return false;
+}
+
+
+bool has_func_same_name_as_global_variable(Bnode *global_symtable, char *func_name){
+    if(Bsearch(*global_symtable,func_name) != NULL)
+        return true;
+    return false;
+}
+bool has_variable_same_name_as_func(Bnode *global_symtable, char *var_name){
+    Bnode pom = Bsearch(*global_symtable,var_name);
+    if(pom != NULL && pom->data.function )
+        return true;
+    return false;
+}
+
 
 //adds function argument into list
 void add_param(Bnode *globalRoot, char *funcName, tToken *token){

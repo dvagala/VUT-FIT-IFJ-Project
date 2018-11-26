@@ -30,9 +30,10 @@ tToken enhanced_next_token(){
         return aheadToken;
     } else{
         tToken next_token = nextToken();
-        if(previousToken.type == EOL_CASE && next_token.type == EOL_CASE){
-            next_token = enhanced_next_token();
-        }
+        // Throw away multiplte eols
+//        if(previousToken.type == EOL_CASE && next_token.type == EOL_CASE){
+//            next_token = enhanced_next_token();
+//        }
 
         return next_token;
     }
@@ -52,7 +53,7 @@ tToken next_token_lookahead(){
 }
 
 /** Another fake function, if id token has name "id_var" act as it is variable*/
-bool isTokenVariable(){
+bool is_id_variable(char *var_name){
     if(strcmp(token.data.string, "id_var") == 0)
         return true;
     return false;
@@ -76,7 +77,7 @@ bool is_token_start_of_expr() {
 //
 //            return false;
 //        }
-        if(isTokenVariable()){
+        if(is_id_variable(token.data.string)){
             if(next_token_lookahead().type != ASSIGN && previousToken.type != LPAR && previousToken.type != COLON && previousToken.type != IDENTIFICATOR){
                 // There are only 3 cases when id_variable is not start of expression
                 // 1. id_variable = restOfCode
@@ -154,7 +155,7 @@ bool expr(){
 }
 
 
-bool more_param(){
+bool more_param(char *func_name){
     char non_term[] = "more_param";
     printf("Im in %s\n", non_term);
     printf("token type: %s\n", token_type_enum_string[token.type]);
@@ -166,8 +167,15 @@ bool more_param(){
     } else if(token.type == COLON){        // 32. More_params -> , id More_params
         pop();
         if(token.type == IDENTIFICATOR){
+
+            char *var_name = token.data.string;
+            // TODO Add var_name to func_name parameters, if var_name was already there error 3
+            // if(is_variable_already_in_func_params(global_symtable, func_name, var_name))
+            //      error_code = 3;
+            // add_variable_to_func_params(global_symtable, func_name, var_name);
+
             pop();
-            return more_param();
+            return more_param(func_name);
         }
     }
 
@@ -175,15 +183,22 @@ bool more_param(){
     return false;
 }
 
-bool param(){
+bool param(char *func_name){
     char non_term[] = "param";
     printf("Im in %s\n", non_term);
     printf("token type: %s\n", token_type_enum_string[token.type]);
 
     // 31. Param -> id More_params
     if(token.type == IDENTIFICATOR){
+
+        char *var_name = token.data.string;
+        // TODO Add var_name to func_name parameters, if var_name was already there error 3
+        // if(is_variable_already_in_func_params(global_symtable, func_name, var_name))
+        //      error_code = 3;
+        // add_variable_to_func_params(global_symtable, func_name, var_name);
+
         pop();
-        return more_param();
+        return more_param(func_name);
     } else if(token.type == RPAR){        // 30. Param -> eps
         printf("%s returning: %d\n", non_term, 1);
         return true;
@@ -203,12 +218,24 @@ bool def_func(){
         pop();
         if (token.type == IDENTIFICATOR) {
 
-//            if(define_func(token) == 1) error;
+            char *func_name = token.data.string;
+
+            // TODO: Check redefinition of func, if yes -> error 3
+            // TODO: Check if func_name isnt previously declared global variable, if yes -> error 3
+            // TODO> Add id_func to symtable
+
+            // if(is_func_already_defined(global_symtable, func_name))
+            //      error_code = 3;
+            //
+            // if(has_func_same_name_as_global_variable(global_symtable, func_name))
+            //      error_code = 3;
+            //
+            // add_func_to_symtable(global_symtable)
 
             pop();
             if (token.type == LPAR) {
                 pop();
-                if (!param())
+                if (!param(func_name))
                     return false;
                 if (token.type == RPAR) {
                     pop();
@@ -261,6 +288,13 @@ bool term(){
 
     // 18. Term -> id
     if(token.type == IDENTIFICATOR){
+
+        char *var_name = token.data.string;
+
+        // TODO: Check if var_name was defined as variable, if not error 3
+        // if(!is_variable_defined(actual_symtable, var_name))
+        //      error_code = 3;
+
         pop();
         printf("%s returning: %d\n", non_term, 1);
         return true;
@@ -347,18 +381,20 @@ bool call_func(){
     // 8. Call_func -> id Call_func_args
     if(token.type == IDENTIFICATOR){
 
-        // TODO
-        // id_func == token
-        // Check if function was defined, if not error 3
-
         char *func_name = token.data.string;
         pop();
+
+        // TODO: Check if func_name was defined before calling, if not error 3
+        // if(!is_func_defined(global_symtable, func_name))
+        //      error_code = 3;
 
         int num_of_args = 0;
         // num_of_args is handed by pointer, so sub_functions can later increment its value if there is another argument
         bool sub_analysis_result = call_func_args(&num_of_args);
 
         // TODO: Check if num_of_args == func_name.defined.parameters, if not error 5
+        // if(num_of_args != get_num_of_defined_func_params(global_symtable, func_name))
+        //      error_code = 5;
 
         printf("\n\n Function: %s is calling with: %d arguments.\n\n", func_name, num_of_args);
 
@@ -395,27 +431,34 @@ bool after_id() {
     if(token.type == IDENTIFICATOR || token.type == EOL_CASE || token.type == LPAR ||
        token.type == INT || token.type == FLOAT || token.type == STRING || token.type == NIL){
 
-        // TODO
-        // Check if function was defined, if not error 3
-
         // previous_token == id_func      // cause we are in after_id
         char *func_name = previousToken.data.string;
+
+        // TODO: Check if func_name was defined before calling, if not error 3
+        // if(!is_func_defined(global_symtable, func_name))
+        //      error_code = 3;
 
         int num_of_args = 0;
         // num_of_args is handed by pointer, so sub_functions can later increment its value if there is another argument
         bool sub_analysis_result = call_func_args(&num_of_args);
 
         // TODO: Check if num_of_args == func_name.defined.parameters, if not error 5
+        // if(num_of_args != get_num_of_defined_func_params(global_symtable, func_name))
+        //      error_code = 5;
 
         printf("\n\n Function: %s is calling with: %d arguments.\n\n", func_name, num_of_args);
 
         return sub_analysis_result;
     }else if(token.type == ASSIGN){        // 6. After_id -> = Func_or_expr
 
-        // TODO
         // previous_token == id_var      // cause we are in after_id
-        // Check if id_var isnt previously declared function -> error 3
-        // Add id_var to symtable if not already
+        char *var_name = previousToken.data.string;
+
+        // TODO: Check if var_name isnt previously declared function -> error 3
+        // TODO: Add var_name to symtable if not already
+        // if(!has_variable_same_name_as_func(global_symtable, var_name))
+        //      error_code = 3;
+        // add_variable_to_symtable(actual_symtable)
 
         pop();
         return func_or_expr();
@@ -565,8 +608,8 @@ void test_scanner(){
     printf("\nTest scanner:\n\n");
 
     while(token.type != EOF_CASE){
-        token = enhanced_next_token();
-//        token = nextToken();
+//        token = enhanced_next_token();
+        token = nextToken();
         printf("%s ", token_type_enum_string[token.type]);
         if(token.type == EOL_CASE)
             printf("\n");
@@ -592,11 +635,11 @@ int main(){
         return 1;
     }
     else if(analysis_result == false){
-        printf("\n!!! Analysis error!\n\n");
+        printf("\nAnalysis error!\n\n");
         return 2;
     }
 
-    printf("\nAnalysis success! \n\n");
+    printf("\nSuccess! \n\n");
 
     return 0;
 
