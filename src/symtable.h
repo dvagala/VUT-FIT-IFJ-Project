@@ -42,6 +42,7 @@ void BDispose(Bnode *rootPtr);
 
 // TODO Functions for parser
 
+bool is_id_variable(char *var_name);
 bool is_variable_defined(Bnode *actual_symtable, char *var_name);
 bool is_func_defined(Bnode *global_symtable, char *func_name);
 bool is_variable_already_in_func_params(Bnode *global_symtable, char *func_name, char *var_name);
