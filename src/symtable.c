@@ -47,11 +47,11 @@ bool Binsert(Bnode *rootPtr, char *id, bool func_bool){
         Bnode new = malloc(sizeof(struct Node));
         if(new) {
             new->key = id;
-            new->data.defined = false;
             new->data.function = func_bool;
             new->Lptr = NULL;
             new->Rptr = NULL;
             new->data.list = malloc(sizeof(List));
+            new->data.list->element_count =0;
             listInit(new->data.list);
             *rootPtr = new;
         }
@@ -86,15 +86,10 @@ Bnode Bsearch(Bnode rootPtr, char *key ) {
 void update_function(Bnode *rootPtr,char *key, bool function_bool){
     Bsearch(*rootPtr,key)->data.function = function_bool;
 }
-//updates bool defined in data
-void update_defined(Bnode *rootPtr,char *key, bool defined_bool){
-    Bsearch(*rootPtr,key)->data.defined = defined_bool;
-}
 
 bool is_variable_defined(Bnode *actual_symtable, char *var_name){
     Bnode pom = Bsearch(*actual_symtable,var_name);
     if(pom) {
-        if(pom->data.defined)
             return true;
     }
     return false;
@@ -103,7 +98,7 @@ bool is_variable_defined(Bnode *actual_symtable, char *var_name){
 bool is_func_defined(Bnode *global_symtable, char *func_name){
     Bnode pom = Bsearch(*global_symtable, func_name);
     if(pom) {
-        if (pom->data.function && pom->data.defined)
+        if (pom->data.function)
             return true;
     }
     return false;
@@ -171,30 +166,28 @@ void free_symtable(Bnode *symtable){
         Binit(&(*symtable));
     }
 }
+
 //int main(){
-//    Bnode *tree;
+//    Bnode *tree ;
 //    Binit(tree);
-//    tToken *token = malloc(sizeof(tToken));
-//    token->type = FLOAT;
-//    id = "olo";
-//    Binsert(tree,token);
+//    if(is_variable_defined(tree,"orech"))
+//        printf("%s\n", "je");
+//    add_variable_to_symtable(tree, "orech");
+//    if(is_variable_defined(tree,"orech"))
+//        printf("%s\n", "je");
+//    add_variable_to_symtable(tree, "orecho");
+//    add_variable_to_symtable(tree, "oreche");
+//    add_func_to_symtable(tree, "orechi");
 //
-//    tToken *token2 = malloc(sizeof(tToken));
-//    token2->type = STRING;
-//    token2->data.string = "oloe";
-//    Binsert(tree,token2);
-//
-//    update_function(tree,"olo",true);
-//    add_param(tree,"olo",token);
-//    token->type = STRING;
-//    add_param(tree,"olo",token);
-//    printf("%s\n",Bsearch(*tree,"olo")->key);
-//    printf("%d\n",Bsearch(*tree,"olo")->data.list->First->type);
-//    printf("%d\n",get_type_of_nth_element(Bsearch(*tree,"olo")->data.list,1));
-//
-//    printf("%d\n",Bsearch(*tree,"oloe")->data.type);
-//    update_type(tree,"oloe",type_undefined);
-//    printf("%d\n",Bsearch(*tree,"oloe")->data.type);
-//
-//
+//    add_variable_to_func_params(tree,"orechi", "ondrej");
+//    if(is_variable_already_in_func_params(tree,"orechi","ondrej"))
+//        printf("%s\n", "je");
+//    printf("%d\n", get_num_of_defined_func_params(tree,"orechi"));
+//    if(has_func_same_name_as_global_variable(tree,"orechl"))
+//        printf("%s\n", "ma");
+//    if(has_variable_same_name_as_func(tree,"orechl"))
+//        printf("%s\n", "maa");
+//    free_symtable(tree);
+//    if(tree)
+//        printf("%s\n", "existuje");
 //}

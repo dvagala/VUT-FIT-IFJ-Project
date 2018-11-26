@@ -18,7 +18,6 @@
 typedef struct {
     bool function;
     List *list;
-    bool defined;
 }Bdata;
 
 typedef struct Node{
@@ -32,8 +31,6 @@ Data_type get_type_from_token(tToken *token);
 bool Binsert(Bnode *rootPtr,char *id, bool func_bool);
 
 void update_function(Bnode *rootPtr,char *key, bool function_bool);
-
-void update_defined(Bnode *rootPtr,char *key, bool defined_bool);
 
 bool is_id_variable(char *var_name);
 
