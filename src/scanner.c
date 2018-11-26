@@ -155,7 +155,7 @@ tToken nextToken()
                 {
                     if(strcmp(token,Keywords[j])==0)
                     {
-                        if (c==' '||c=='\n'||isspace(c)||c==EOF)
+                        if (!(isalpha(c)||isdigit(c)||c=='_'))
                         {
                             case KEYWORDCASES: //100 is word
                             {
@@ -594,7 +594,7 @@ tToken nextToken()
         }
 
         case BEGCOM:
-        {
+        { do{
             char start[6]={0};
             char end[5]={0};
             for (int x=0;x<5;x++)
@@ -652,14 +652,14 @@ tToken nextToken()
                         c=getchar();
                     }
                     //identificator.type=BEGCOM;
+                    if (c !='=')
                     return nextToken();
                 }
-                ;
             }
             else
             {
                 identificator.type=ERROR;
-            }
+            } }while (c == '=');
             break;
         }
 
