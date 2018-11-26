@@ -43,14 +43,15 @@ tToken nextToken()
 
     else if (c == '\n')
     {
+
         while (isspace(c))
         {
 
             c=getchar();
+            //decide between
             if (c == '=')
             {
                 state = BEGCOM;
-                printf("what's up");
                 break;
             }
             else
@@ -67,7 +68,7 @@ tToken nextToken()
 
     else if (isdigit(c))
     {
-        state= NUMBER;
+        state= INT;
     }
 
     else if(c == '+')
@@ -90,7 +91,7 @@ tToken nextToken()
     {
         if (state!=BEGCOM)
         {
-            state = EQUALCASES;
+            state = ASSIGN;
         }
     }
     else if(c == '{')
@@ -115,11 +116,11 @@ tToken nextToken()
     }
     else if(c == '<')
     {
-        state = LESSCASES;
+        state = LESS;
     }
     else if(c == '>')
     {
-        state = MORECASES;
+        state = MORE;
     }
     else if (c == '\"')
     {
@@ -329,7 +330,7 @@ tToken nextToken()
             }break;
         }
 
-        case LESSCASES:
+        case LESS:
         {
             c = getchar();
             if(c == '=')
@@ -343,23 +344,20 @@ tToken nextToken()
             }
             else
             {
-                case LESS:
-                {
                     identificator.type = LESS;
                     break;
-                }
             }
 
         }
 
-        case EQUALCASES:
+        case ASSIGN:
         {
             c = getchar();
             if(c == '=')
             {
                 case EQUAL:
                 {
-                    c=getchar();
+                    c = getchar();
                     identificator.type = EQUAL;
                     break;
                 }
@@ -367,16 +365,13 @@ tToken nextToken()
 
             else
             {
-                case ASSIGN:
-                {
                     identificator.type = ASSIGN;
                     break;
-                }
             }
 
         }
 
-        case MORECASES:
+        case MORE:
         {
             c = getchar();
             if(c == '=')
@@ -390,11 +385,8 @@ tToken nextToken()
             }
             else
             {
-                case MORE:
-                {
                     identificator.type = MORE;
                     break;
-                }
             }
         }
 
