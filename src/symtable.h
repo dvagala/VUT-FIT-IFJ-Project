@@ -50,7 +50,14 @@ bool has_variable_same_name_as_func(Bnode *global_symtable, char *var_name);
 
 int get_num_of_defined_func_params(Bnode *global_symtable, char *func_name);
 
-//These return false only when malloc fail creating new tree node,
+// These return false only when malloc fail creating new tree node,
 bool add_variable_to_symtable(Bnode *actual_symtable);
 bool add_func_to_symtable(Bnode *global_symtable);
 bool add_variable_to_func_params(Bnode *global_symtable, char *func_name, char *var_name);
+
+
+// Return pointer to new symtable, NULL when malloc fail or something
+Bnode* create_symtable();
+
+// Return false only when free fail or something (maybe not neccessary)
+bool free_symtable(Bnode *symtable);
