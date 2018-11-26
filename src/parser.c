@@ -12,6 +12,10 @@ tToken previousToken;       // always behind actual token
 tToken aheadToken;          // When I need to do lookahead what is after actual token, this is it
 bool tokenLookAheadFlag = false;
 
+// If we are in defintion of fucntion this is local_symtable of that function, otherwise == global_symtable
+Bnode *actual_symtable;
+Bnode *global_symtable;
+
 // Because I set token type as EXPR when I find out that is indeed start of expression, I need
 // somehow store this original type of token, so it can set back to original before calling analyze_expression()
 int original_token_type_backup;
@@ -34,7 +38,6 @@ tToken enhanced_next_token(){
 //        if(previousToken.type == EOL_CASE && next_token.type == EOL_CASE){
 //            next_token = enhanced_next_token();
 //        }
-
         return next_token;
     }
 }
@@ -69,14 +72,6 @@ bool is_token_start_of_expr() {
     printf("Checking if is_token_start_of_expr\n");
 
     if (token.type == IDENTIFICATOR) {
-//        if(next_token_lookahead().type == ASSIGN){
-//
-//            // TODO
-//            // Check if id_var isnt previously declared function -> error 3
-//            // Add id_var to symtable if not already
-//
-//            return false;
-//        }
         if(is_id_variable(token.data.string)){
             if(next_token_lookahead().type != ASSIGN && previousToken.type != LPAR && previousToken.type != COLON && previousToken.type != IDENTIFICATOR){
                 // There are only 3 cases when id_variable is not start of expression
@@ -115,6 +110,11 @@ void pop(){
     token = enhanced_next_token();
     printf("New token type: %s\n", token_type_enum_string[token.type]);
 
+    if(token.type == ERROR && error_code == 0){          // Check lex error
+        error_code = 1;
+        return;
+    }
+
     if(is_token_start_of_expr()){
         original_token_type_backup = token.type;      // Store original token type, so later i can be reverted and handed to expression analyzer
         token.type = EXPR;                   // override token type, so we can handle it easily with rules
@@ -123,7 +123,7 @@ void pop(){
 }
 
 /**Fake expression analyzer, just read epression and came back when expression ends*/
-tToken analyze_expression(tToken token, tToken aheadToken){
+tToken analyze_expression(tToken token, tToken aheadToken, bool lookahead_occured){
 
     tToken temp = nextToken();
 
@@ -147,12 +147,22 @@ bool expr(){
     // Set back original token type
     token.type = original_token_type_backup;
 
+//    typedef struct {
+//        tToken *token;
+//        bool error;
+//        int error_code;
+//    }ReturnData;
+
+
     // Fake expression analyzer, just read epression and came back when expression ends
-    token = analyze_expression(token, aheadToken);
+    token = analyze_expression(token, aheadToken, tokenLookAheadFlag);
+
+
 
     printf("%s returning: %d\n", non_term, 1);
     return true;
 }
+
 
 
 bool more_param(char *func_name){
@@ -168,11 +178,20 @@ bool more_param(char *func_name){
         pop();
         if(token.type == IDENTIFICATOR){
 
-            char *var_name = token.data.string;
-            // TODO Add var_name to func_name parameters, if var_name was already there error 3
-            // if(is_variable_already_in_func_params(global_symtable, func_name, var_name))
-            //      error_code = 3;
-            // add_variable_to_func_params(global_symtable, func_name, var_name);
+//            // Semantics. Add var_name to func_name parameters, if var_name was already there error 3
+//            char *var_name = token.data.string;
+//
+//            if(is_variable_already_in_func_params(global_symtable, func_name, var_name)){
+//                // This ensures that only first error will be in error_code
+//                if(error_code == 0)
+//                    error_code = 3;
+//            }
+//
+//            if(!add_variable_to_func_params(global_symtable, func_name, var_name)){
+//                // This ensures that only first error will be in error_code
+//                if(error_code == 0)
+//                    error_code = 99;
+//            }
 
             pop();
             return more_param(func_name);
@@ -190,12 +209,22 @@ bool param(char *func_name){
 
     // 31. Param -> id More_params
     if(token.type == IDENTIFICATOR){
-
-        char *var_name = token.data.string;
-        // TODO Add var_name to func_name parameters, if var_name was already there error 3
-        // if(is_variable_already_in_func_params(global_symtable, func_name, var_name))
-        //      error_code = 3;
-        // add_variable_to_func_params(global_symtable, func_name, var_name);
+//
+//        // Semantics. Add var_name to func_name parameters, if var_name was already there error 3
+//        char *var_name = token.data.string;
+//
+//        if(is_variable_already_in_func_params(global_symtable, func_name, var_name)){
+//            // This ensures that only first error will be in error_code
+//            if(error_code == 0)
+//                error_code = 3;
+//        }
+//
+//        // return false when malloc fails
+//        if(!add_variable_to_func_params(global_symtable, func_name, var_name)){
+//            // This ensures that only first error will be in error_code
+//            if(error_code == 0)
+//                error_code = 99;
+//        }
 
         pop();
         return more_param(func_name);
@@ -219,18 +248,28 @@ bool def_func(){
         if (token.type == IDENTIFICATOR) {
 
             char *func_name = token.data.string;
-
-            // TODO: Check redefinition of func, if yes -> error 3
-            // TODO: Check if func_name isnt previously declared global variable, if yes -> error 3
-            // TODO> Add id_func to symtable
-
-            // if(is_func_already_defined(global_symtable, func_name))
-            //      error_code = 3;
-            //
-            // if(has_func_same_name_as_global_variable(global_symtable, func_name))
-            //      error_code = 3;
-            //
-            // add_func_to_symtable(global_symtable)
+//
+//            // Semantics. Check redefinition of func, if yes -> error 3
+//            // Semantics. Check if func_name isnt previously declared global variable, if yes -> error 3
+//            // Semantics. Add id_func to symtable, return false if malloc fail
+//
+//            if(is_func_defined(global_symtable, func_name)){
+//                // This ensures that only first error will be in error_code
+//                if(error_code == 0)
+//                    error_code = 3;
+//            }
+//
+//            if(has_func_same_name_as_global_variable(global_symtable, func_name)){
+//                // This ensures that only first error will be in error_code
+//                if(error_code == 0)
+//                    error_code = 3;
+//            }
+//
+//            if(!add_func_to_symtable(global_symtable)){
+//                // This ensures that only first error will be in error_code
+//                if(error_code == 0)
+//                    error_code = 99;
+//            }
 
             pop();
             if (token.type == LPAR) {
@@ -241,9 +280,15 @@ bool def_func(){
                     pop();
                     if (token.type == EOL_CASE) {
                         pop();
+
+//                        // New local symtable for this function
+//                        actual_symtable = create_symtable();
+
                         if (!st_list())
                             return false;
                         if (token.type == END) {
+//                            free_symtable(actual_symtable);
+//                            actual_symtable = global_symtable;              // switch context back to global
                             pop();
                             if (token.type == EOL_CASE) {
                                 pop();
@@ -289,11 +334,14 @@ bool term(){
     // 18. Term -> id
     if(token.type == IDENTIFICATOR){
 
-        char *var_name = token.data.string;
-
-        // TODO: Check if var_name was defined as variable, if not error 3
-        // if(!is_variable_defined(actual_symtable, var_name))
-        //      error_code = 3;
+//        char *var_name = token.data.string;
+//
+//        // Semantics. Check if var_name was defined as variable, if not error 3
+//        if(!is_variable_defined(actual_symtable, var_name)){
+//            // This ensures that only first error will be in error_code
+//            if(error_code == 0)
+//                error_code = 3;
+//        }
 
         pop();
         printf("%s returning: %d\n", non_term, 1);
@@ -384,19 +432,26 @@ bool call_func(){
         char *func_name = token.data.string;
         pop();
 
-        // TODO: Check if func_name was defined before calling, if not error 3
-        // if(!is_func_defined(global_symtable, func_name))
-        //      error_code = 3;
+//        // Semantics. Check if func_name was defined before calling, if not error 3
+//        if(!is_func_defined(global_symtable, func_name)){
+//            // This ensures that only first error will be in error_code
+//            if(error_code == 0)
+//                error_code = 3;
+//        }
+//             error_code = 3;
 
         int num_of_args = 0;
         // num_of_args is handed by pointer, so sub_functions can later increment its value if there is another argument
         bool sub_analysis_result = call_func_args(&num_of_args);
 
-        // TODO: Check if num_of_args == func_name.defined.parameters, if not error 5
-        // if(num_of_args != get_num_of_defined_func_params(global_symtable, func_name))
-        //      error_code = 5;
-
-        printf("\n\n Function: %s is calling with: %d arguments.\n\n", func_name, num_of_args);
+//        // Semantics. Check if num_of_args == func_name.defined.parameters, if not error 5
+//        if(num_of_args != get_num_of_defined_func_params(global_symtable, func_name)){
+//            // This ensures that only first error will be in error_code
+//            if(error_code == 0)
+//                error_code = 5;
+//        }
+//
+//        printf("\n\n Function: %s is calling with: %d arguments.\n\n", func_name, num_of_args);
 
         return sub_analysis_result;
     }
@@ -431,34 +486,49 @@ bool after_id() {
     if(token.type == IDENTIFICATOR || token.type == EOL_CASE || token.type == LPAR ||
        token.type == INT || token.type == FLOAT || token.type == STRING || token.type == NIL){
 
-        // previous_token == id_func      // cause we are in after_id
-        char *func_name = previousToken.data.string;
-
-        // TODO: Check if func_name was defined before calling, if not error 3
-        // if(!is_func_defined(global_symtable, func_name))
-        //      error_code = 3;
+//        // previous_token == id_func      // cause we are in after_id
+//        char *func_name = previousToken.data.string;
+//
+//        // Semantics. Check if func_name was defined before calling, if not error 3
+//        if(!is_func_defined(global_symtable, func_name)){
+//            // This ensures that only first error will be in error_code
+//            if(error_code == 0)
+//                error_code = 3;
+//        }
 
         int num_of_args = 0;
         // num_of_args is handed by pointer, so sub_functions can later increment its value if there is another argument
         bool sub_analysis_result = call_func_args(&num_of_args);
 
-        // TODO: Check if num_of_args == func_name.defined.parameters, if not error 5
-        // if(num_of_args != get_num_of_defined_func_params(global_symtable, func_name))
-        //      error_code = 5;
-
-        printf("\n\n Function: %s is calling with: %d arguments.\n\n", func_name, num_of_args);
+//        // Semantics. Check if num_of_args == func_name.defined.parameters, if not error 5
+//        if(num_of_args != get_num_of_defined_func_params(global_symtable, func_name)){
+//            // This ensures that only first error will be in error_code
+//            if(error_code == 0)
+//                error_code = 5;
+//        }
+//
+//        printf("\n\n Function: %s is calling with: %d arguments.\n\n", func_name, num_of_args);
 
         return sub_analysis_result;
     }else if(token.type == ASSIGN){        // 6. After_id -> = Func_or_expr
 
-        // previous_token == id_var      // cause we are in after_id
-        char *var_name = previousToken.data.string;
-
-        // TODO: Check if var_name isnt previously declared function -> error 3
-        // TODO: Add var_name to symtable if not already
-        // if(!has_variable_same_name_as_func(global_symtable, var_name))
-        //      error_code = 3;
-        // add_variable_to_symtable(actual_symtable)
+//        // previous_token == id_var      // cause we are in after_id
+//        char *var_name = previousToken.data.string;
+//
+//        // Semantics. Check if var_name isnt previously declared function -> error 3
+//        // Semantics. Add var_name to symtable if not already
+//        if(!has_variable_same_name_as_func(global_symtable, var_name)){
+//            // This ensures that only first error will be in error_code
+//            if(error_code == 0)
+//                error_code = 3;
+//        }
+//
+//        // return false when malloc fails
+//        if(!add_variable_to_symtable(actual_symtable)){
+//            // This ensures that only first error will be in error_code
+//            if(error_code == 0)
+//                error_code = 99;
+//        }
 
         pop();
         return func_or_expr();
@@ -578,8 +648,7 @@ bool main_body(){
         pop();
         printf("%s returning: %d\n", non_term,  1);
         return true;
-    } else if(token.type == ERROR)          // Check lex error
-        error_code = 1;
+    }
 
     printf("%s returning: %d\n", non_term, 0);
     return false;           // If no rule applied
@@ -594,8 +663,7 @@ bool prog(){
     if(token.type == IDENTIFICATOR || token.type == EXPR || token.type == IF ||
        token.type == WHILE || token.type == DEF || token.type == EOF_CASE){
         return main_body();
-    } else if(token.type == ERROR)          // Check lex error
-        error_code = 1;
+    }
 
     printf("%s returning: %d\n", non_term, 0);
     return false;       // If no rule applied
@@ -618,29 +686,56 @@ void test_scanner(){
     printf("\n");
 }
 
-
 int main(){
 
 //    test_scanner();
 
+    printf("nejebe\n\n");
+
+    global_symtable = create_symtable();
+    actual_symtable = global_symtable;
+
     pop();      // get first token
 
+    // Start analyser
     bool analysis_result = prog();
 
-    //  free_resources(global tree, local tree)
+    if(!analysis_result && error_code == 0){
+        error_code = 2;
+    }
+
+    free_symtable(global_symtable);
 
     // Error handling
-    if(error_code == 1){
-        printf("\nLex error!\n\n");
-        return 1;
+    switch(error_code){
+        case 1:
+            printf("\nLex error!\n\n");
+            return error_code;
+        case 2:
+            printf("\nAnalysis error!\n\n");
+            return error_code;
+        case 3:
+            printf("\nNon define variable/function or redefinition attempt error!\n\n");
+            return error_code;
+        case 4:
+            printf("\nWrong compatibility types in expression error!\n\n");
+            return error_code;
+        case 5:
+            printf("\nWrong number of parameters when calling function error!\n\n");
+            return error_code;
+        case 6:
+            printf("\nOther sematic error!\n\n");
+            return error_code;
+        case 9:
+            printf("\nDivide by zero error!\n\n");
+            return error_code;
+        case 99:
+            printf("\nInternal program error!\n\n");
+            return error_code;
+        default:
+            printf("\nSuccess!\n\n");
+            return error_code;
     }
-    else if(analysis_result == false){
-        printf("\nAnalysis error!\n\n");
-        return 2;
-    }
-
-    printf("\nSuccess! \n\n");
 
     return 0;
-
 }

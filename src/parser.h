@@ -6,6 +6,7 @@
 #define IFJ_PROJECT_PARSER_H
 
 #include "scanner.h"
+#include "symtable.h"
 
 int error_code;
 
@@ -44,6 +45,6 @@ bool param();
 bool more_param();
 bool st_list();
 
-tToken analyze_expression(tToken token, tToken aheadToken);
+tToken analyze_expression(tToken token, tToken aheadToken, bool lookahead_occured);
 
 #endif //IFJ_PROJECT_PARSER_H
