@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include "string.h"
 #include "symtable.h"
-#include "scanner.h"
+
 #include "errors.h"
 
 
