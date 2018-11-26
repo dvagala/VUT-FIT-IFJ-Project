@@ -4,6 +4,10 @@
 
 #ifndef IFJ_PROJECT_EXPRESSION_H
 #define IFJ_PROJECT_EXPRESSION_H
+
+#include <stdbool.h>
+#include "scanner.h"
+
 typedef enum prec_table_symbols{
     P_PLUS,   // +
     P_MINUS,  // -
@@ -33,7 +37,7 @@ typedef enum expr_rules{
     E_minus_E, //   E - E
     E_mul_E,   //   E * E
     E_div_E,    //  E / E
-    lbr_E_rbr,  //  E = (E)
+    lpar_E_rpar,  //  E = (E)
     E_eq_E,     //  E == E
     E_not_eq_E, //  E != E
     E_less_E,   //  E < E
@@ -45,4 +49,11 @@ typedef enum expr_rules{
 
 
 }Expr_rules_enum;
+
+typedef struct {
+    tToken token;
+    bool error;
+    int error_code;
+}ReturnData;
+
 #endif //IFJ_PROJECT_EXPRESSION_H
