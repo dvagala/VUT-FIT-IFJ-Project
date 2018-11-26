@@ -68,7 +68,7 @@ tToken nextToken()
 
     else if (isdigit(c))
     {
-        state= INT;
+        state= NUMBER;
     }
 
     else if(c == '+')
@@ -699,6 +699,11 @@ int main()
          //  printf("%s \n",token.data.string);
         }
         printf("Token type: %d \n",token.type);
+        /*
+        if (token.type == 1000)
+        {
+            printf("%d \n",token.data.value_int);
+        }*/
     }
     return 0;
 }
