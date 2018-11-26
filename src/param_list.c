@@ -29,6 +29,17 @@ int insert_element(List *list, char *id, Data_type type){
     list->Last = new;
     return 1;
 }
+
+bool is_element(List *list, char *var_name){
+    L_element *pom = list->First;
+    while(pom){
+        if(pom->id == var_name)
+            return true;
+        pom = pom->next;
+    }
+    return false;
+}
+
 //first element is 0
 Data_type get_type_of_nth_element(List *list, int n){
     L_element *pom=list->First;
