@@ -8,7 +8,8 @@ typedef enum {
     type_integer,
     type_float,
     type_string,
-    type_undefined
+    type_undefined,
+    type_boolean
 }Data_type;
 
 typedef struct symbol_element{

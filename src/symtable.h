@@ -5,7 +5,9 @@
 #ifndef IFJ_PROJECT_SYMTABLE_H
 #define IFJ_PROJECT_SYMTABLE_H
 #include "param_list.h"
+
 #include <stdbool.h>
+#include "expressions.h"
 
 #define TEQUAL 0
 #define TLESS  1
@@ -26,4 +28,12 @@ typedef struct Node{
     struct Node *Lptr;
     struct Node *Rptr;
 }*Bnode;
+
+int Binsert(Bnode *rootPtr,tToken *token);
+void update_function(Bnode *rootPtr,char *key, bool bulo);
+void update_defined(Bnode *rootPtr,char *key, bool bulo);
+void update_type(Bnode *rootPtr,char *key, Data_type type);
+bool isDefined(Bnode rootPtr, char *key);
+void add_param(Bnode *globalRoot, char *funcName, tToken *token);
+void BDispose(Bnode *rootPtr);
 #endif //IFJ_PROJECT_SYMTABLE_H
