@@ -123,7 +123,7 @@ ReturnData release_resources(int error_code, S_stack stack, Bnode *tree, ReturnD
     data.error=true;
     data.error_code = error_code;
     s_free(&stack);
-    BDispose(tree);
+    free_symtable(tree);
     return data;
 
 }
