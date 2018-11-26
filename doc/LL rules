@@ -1,0 +1,33 @@
+1. Prog -> Main_body
+2. Main_body -> State Main_body
+3. Main_body -> Def_func Main_body
+4. Main_body -> eps
+5. State -> id After_id eol
+6. After_id -> = Func_or_expr
+7. Func_or_expr -> Call_func
+8. Call_func -> id Call_func_args
+9. Func_or_expr -> Expr
+10. After_id -> Call_func_args
+11. Call_func_args -> eps
+12. Call_func_args -> ( Arg_in_brackets )
+13. Call_func_args -> Term More-args
+14. Arg_in_brackets -> eps
+15. Arg_in_brackets -> Term More-args
+16. More-args -> , Term More-args
+17. More-args -> eps
+18. Term -> id
+19. Term -> int
+20. Term -> double
+21. Term -> string
+22. Term -> nil
+23. Expr -> expr
+24. State -> Expr eol
+25. State -> if Expr then eol St_list else eol St_list end eol
+26. State -> while Expr do eol St_list end eol
+27. Def_func -> def id ( Param ) eol St_list end eol
+28. St_list -> State St_list
+29. St_list -> eps
+30. Param -> eps
+31. Param -> id More_params
+32. More_params -> , id More_params
+33. More_params -> eps
