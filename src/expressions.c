@@ -185,7 +185,7 @@ int semantics(int count, Expr_rules_enum rule, S_item *o1, S_item *o2, S_item *o
         case E_minus_E:
         case E_mul_E:
             if(o1->data_type == type_integer && o3->data_type == type_integer) {
-                *final_type = type_integer;
+                *final_type = type_integer; //int + int
                 break;
             }
             if(o1->data_type == type_string && rule == E_plus_E && o3->data_type == type_string) {
@@ -193,7 +193,7 @@ int semantics(int count, Expr_rules_enum rule, S_item *o1, S_item *o2, S_item *o
                 break;
             }
             if(o1->data_type == type_string || o3->data_type == type_string) {
-                return COMPATIBILITY_ERROR;
+                return COMPATIBILITY_ERROR; //string + not_a_string
             }
             *final_type = type_float;
             if(o1->data_type == type_float && o3->data_type == type_integer)
@@ -292,13 +292,13 @@ ReturnData expression(tToken token, Bnode *tree){
     if(!s_push(&stack,P_DOLLAR,type_undefined))
         return release_resources(INNER_ERROR, stack, tree, *data);
 
-    Prec_table_symbols_enum stack_top_terminal = get_top_terminal(&stack)->symbol;
+    Prec_table_symbols_enum stack_top_terminal_symbol = get_top_terminal(&stack)->symbol;
     data->token = token;
     Prec_table_symbols_enum new_symbol = token_to_symbol(token);
 
     bool enough = false;
     while(!enough){
-        switch(prec_table[stack_top_terminal][new_symbol]){
+        switch(prec_table[stack_top_terminal_symbol][new_symbol]){
             case R:
                 if((error = rule_reduction(data, stack))){
                     release_resources(error, stack, tree, *data);
@@ -317,11 +317,15 @@ ReturnData expression(tToken token, Bnode *tree){
                 new_symbol = token_to_symbol(data->token);
                 break;
             case X:
-
+                if ((data->token.type == EOL_CASE || data->token.type == THEN || data->token.type == DO) && stack_top_terminal_symbol == P_STOP)
+                    enough = true;
+                else return release_resources(SYNTAX_ERROR, stack, tree, *data);
                 break;
             case E:
-
+                if(!s_push(&stack,new_symbol,get_type_from_token(&data->token)))
+                    return release_resources(INNER_ERROR, stack, tree, *data);//malloc chceck
                 break;
+            default: break;
         }
 
     }
