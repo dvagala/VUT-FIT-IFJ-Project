@@ -37,3 +37,20 @@ bool isDefined(Bnode rootPtr, char *key);
 void add_param(Bnode *globalRoot, char *funcName, tToken *token);
 void BDispose(Bnode *rootPtr);
 #endif //IFJ_PROJECT_SYMTABLE_H
+
+
+
+// TODO Functions for parser
+
+bool is_variable_defined(Bnode *actual_symtable, char *var_name);
+bool is_func_defined(Bnode *global_symtable, char *func_name);
+bool is_variable_already_in_func_params(Bnode *global_symtable, char *func_name, char *var_name);
+bool has_func_same_name_as_global_variable(Bnode *global_symtable, char *func_name);
+bool has_variable_same_name_as_func(Bnode *global_symtable, char *var_name);
+
+int get_num_of_defined_func_params(Bnode *global_symtable, char *func_name);
+
+//These return false only when malloc fail creating new tree node,
+bool add_variable_to_symtable(Bnode *actual_symtable);
+bool add_func_to_symtable(Bnode *global_symtable);
+bool add_variable_to_func_params(Bnode *global_symtable, char *func_name, char *var_name);
