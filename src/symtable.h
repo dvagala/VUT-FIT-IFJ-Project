@@ -28,12 +28,11 @@ typedef struct Node{
     struct Node *Lptr;
     struct Node *Rptr;
 }*Bnode;
-
+Data_type get_type_from_token(tToken *token);
 int Binsert(Bnode *rootPtr,tToken *token);
-void update_function(Bnode *rootPtr,char *key, bool bulo);
-void update_defined(Bnode *rootPtr,char *key, bool bulo);
+void update_function(Bnode *rootPtr,char *key, bool function_bool);
+void update_defined(Bnode *rootPtr,char *key, bool defined_bool);
 void update_type(Bnode *rootPtr,char *key, Data_type type);
-bool isDefined(Bnode rootPtr, char *key);
 void add_param(Bnode *globalRoot, char *funcName, tToken *token);
 void BDispose(Bnode *rootPtr);
 #endif //IFJ_PROJECT_SYMTABLE_H
