@@ -68,7 +68,7 @@ tToken nextToken()
 
     else if (isdigit(c))
     {
-        state= NUMBER;
+        state= INT;
     }
 
     else if(c == '+')
@@ -181,7 +181,7 @@ tToken nextToken()
                 break;
             }
         } //CASE FOR FLOAT AND INT
-        case NUMBER:
+        case INT:
         {
             while (isdigit(c))
             {
@@ -313,19 +313,17 @@ tToken nextToken()
 
                 }
                 else if (!isdigit(c))
-                    case INT:
+                {
+                    if (!isalpha(c))
                     {
-                        if (!isalpha(c))
-                        {
-                            identificator.type = INT;
-                            identificator.data.value_int = atoi(token);
-                        }
-                        else
-                        {
-                            identificator.type = ERROR;
-                        }
-                        break;
+                        identificator.type = INT;
+                        identificator.data.value_int = atoi(token);
+                    } else
+                    {
+                        identificator.type = ERROR;
                     }
+                    break;
+                }
 
             }break;
         }
@@ -649,6 +647,10 @@ tToken nextToken()
                         }
                     }
                     c=getchar();
+                    while (isspace(c))
+                    {
+                        c=getchar();
+                    }
                     //identificator.type=BEGCOM;
                     return nextToken();
                 }
@@ -699,11 +701,11 @@ int main()
          //  printf("%s \n",token.data.string);
         }
         printf("Token type: %d \n",token.type);
-        /*
+
         if (token.type == 1000)
         {
             printf("%d \n",token.data.value_int);
-        }*/
+        }
     }
     return 0;
 }
