@@ -137,6 +137,15 @@ int get_num_of_defined_func_params(Bnode *global_symtable, char *func_name){
     return 0;
 }
 
+bool is_id_variable(Bnode *actual_symtable, char *var_name){
+    Bnode pom = Bsearch(*actual_symtable, var_name);
+    if(pom){
+        if(pom->data.function == false)
+            return true;
+    }
+    return false;
+}
+
 //---- These return false only when malloc fail creating new tree node,
 bool add_variable_to_symtable(Bnode *actual_symtable, char *var_name){
     if (Binsert(actual_symtable, var_name, false))

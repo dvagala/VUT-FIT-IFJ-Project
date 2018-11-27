@@ -35,7 +35,7 @@ void update_function(Bnode *rootPtr,char *key, bool function_bool);
 
 void symtable_init(Bnode *rootPtr);
 
-bool is_id_variable(char *var_name);
+bool is_id_variable(Bnode *actual_symtable, char *var_name);
 
 bool is_variable_defined(Bnode *actual_symtable, char *var_name);
 
