@@ -28,7 +28,7 @@ typedef struct {
 bool is_element(List *list, char *var_name);
 int insert_element(List *list, char *id, Data_type type);
 void listInit(List *list);
-Data_type get_type_of_nth_element(List *list, int n);
+L_element *get_nth_element(List *list, int n);
 void list_disposal(List *list);
 
 #endif //IFJ_PROJECT_PARAM_LIST_H
