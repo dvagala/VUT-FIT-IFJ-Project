@@ -181,7 +181,7 @@ void free_symtable(Bnode *symtable){
         free_symtable(&(*symtable)->Rptr);
         free_symtable(&(*symtable)->Lptr);
         free(*symtable);
-        Binit(&(*symtable));
+        symtable_init(&(*symtable));
     }
 }
 
