@@ -41,14 +41,14 @@ bool is_element(List *list, char *var_name){
 }
 
 //first element is 0
-Data_type get_type_of_nth_element(List *list, int n){
+L_element *get_nth_element(List *list, int n){
     L_element *pom=list->First;
     if (n >= list->element_count)
-        return DIFF_ERROR;
+        return NULL;
     for(int i = 0;i<n;i++){
         pom = pom->next;
     }
-    return pom->type;
+    return pom;
 }
 
 void list_disposal(List *list){

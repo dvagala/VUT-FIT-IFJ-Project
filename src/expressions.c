@@ -123,7 +123,7 @@ ReturnData release_resources(int error_code, S_stack stack, Bnode *tree, ReturnD
     data.error=true;
     data.error_code = error_code;
     s_free(&stack);
-    BDispose(tree);
+    free_symtable(tree);
     return data;
 
 }
@@ -282,7 +282,7 @@ int rule_reduction(ReturnData *data, S_stack stack){
 }
 
 
-ReturnData expression(tToken token, Bnode *tree){
+ReturnData analyze_expresssion(tToken token, tToken aheadToken, bool tokenLookAheadFlag, Bnode *tree){
     ReturnData *data = malloc(sizeof(ReturnData));
     data->error = false;
     int error;
@@ -313,7 +313,11 @@ ReturnData expression(tToken token, Bnode *tree){
 
 //                if( new_symbol == INT || new_symbol == FLOAT || new_symbol == STRING || new_symbol == IDENTIFICATOR )
 //                    //TODO generate code
-                data->token = nextToken();
+                if(tokenLookAheadFlag){
+                    data->token = aheadToken;
+                    tokenLookAheadFlag = false;
+                }
+                else data->token = nextToken();
                 new_symbol = token_to_symbol(data->token);
                 break;
             case X:
