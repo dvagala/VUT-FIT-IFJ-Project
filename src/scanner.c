@@ -175,8 +175,9 @@ tToken nextToken()
                 {
                     token[i] = c;
                     c=getchar();
+                    i++;
                 }
-                token[i+1]='\0';
+                token[i]='\0';
                 identificator.type=IDENTIFICATOR;
                 identificator.data.string=token;
                 break;
