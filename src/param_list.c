@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include "param_list.h"
 #include "errors.h"
+#include "string.h"
 
 void listInit(List *list){
     list->First = NULL;
@@ -33,7 +34,7 @@ int insert_element(List *list, char *id, Data_type type){
 bool is_element(List *list, char *var_name){
     L_element *pom = list->First;
     while(pom){
-        if(pom->id == var_name)
+        if(strcmp(var_name, pom->id) == 0)
             return true;
         pom = pom->next;
     }
