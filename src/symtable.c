@@ -54,6 +54,7 @@ bool Binsert(Bnode *rootPtr, char *id, bool func_bool){
             new->data.list->element_count =0;
             listInit(new->data.list);
             *rootPtr = new;
+            return true;
         }
     }
         //key comparison
@@ -67,8 +68,10 @@ bool Binsert(Bnode *rootPtr, char *id, bool func_bool){
         else if((keyCmp((*rootPtr)->key, id, 0)==TMORE)){ // to right if it's more
             Binsert(&(*rootPtr)->Rptr, id, func_bool);
         }
+        else
+            return false;
     }
-    return false;
+
 }
 
 Bnode Bsearch(Bnode rootPtr, char *key ) {
@@ -156,6 +159,20 @@ bool add_variable_to_func_params(Bnode *global_symtable, char *func_name, char *
     }
     return false;
 }
+
+bool add_variables_from_func_params(Bnode *global_symtable, Bnode *actual_symtable, char *func_name){
+    Bnode pom = Bsearch(*global_symtable,func_name);
+    if (pom){
+        for(int i = 0; i < pom->data.list->element_count; i++){
+            if(!add_variable_to_symtable(actual_symtable, get_nth_element(pom->data.list,i)->id)) {
+                printf("%d",i);
+                return false;
+            }
+        }
+        return true;
+    }
+    return false;
+}
 //----
 
 void free_symtable(Bnode *symtable){
@@ -166,28 +183,26 @@ void free_symtable(Bnode *symtable){
         Binit(&(*symtable));
     }
 }
+Bnode create_symtable(){
+    Bnode tree;
+    Binit(&tree);
+    return tree;
+}
 
-//int main(){
-//    Bnode *tree ;
-//    Binit(tree);
-//    if(is_variable_defined(tree,"orech"))
-//        printf("%s\n", "je");
-//    add_variable_to_symtable(tree, "orech");
-//    if(is_variable_defined(tree,"orech"))
-//        printf("%s\n", "je");
-//    add_variable_to_symtable(tree, "orecho");
-//    add_variable_to_symtable(tree, "oreche");
-//    add_func_to_symtable(tree, "orechi");
-//
-//    add_variable_to_func_params(tree,"orechi", "ondrej");
-//    if(is_variable_already_in_func_params(tree,"orechi","ondrej"))
-//        printf("%s\n", "je");
-//    printf("%d\n", get_num_of_defined_func_params(tree,"orechi"));
-//    if(has_func_same_name_as_global_variable(tree,"orechl"))
-//        printf("%s\n", "ma");
-//    if(has_variable_same_name_as_func(tree,"orechl"))
-//        printf("%s\n", "maa");
-//    free_symtable(tree);
-//    if(tree)
-//        printf("%s\n", "existuje");
-//}
+int main(){
+    Bnode tree = create_symtable();
+    Bnode local_tree = create_symtable();
+    add_func_to_symtable(&tree, "orechi");
+    add_variable_to_func_params(&tree,"orechi","a");
+    add_variable_to_func_params(&tree,"orechi","b");
+    add_variable_to_func_params(&tree,"orechi","c");
+    if(add_variables_from_func_params(&tree,&local_tree,"orechi"))
+        printf("%s","juch");
+
+    if(is_variable_defined(&local_tree,"b"))
+        printf("%s","je");
+    if(is_variable_defined(&local_tree,"c"))
+        printf("%s","je");
+    printf("%d",Bsearch(tree,"orechi")->data.list->element_count);
+    free_symtable(&tree);
+}

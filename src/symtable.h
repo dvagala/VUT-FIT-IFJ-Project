@@ -26,6 +26,7 @@ typedef struct Node{
     struct Node *Lptr;
     struct Node *Rptr;
 }*Bnode;
+
 Data_type get_type_from_token(tToken *token);
 
 bool Binsert(Bnode *rootPtr,char *id, bool func_bool);
@@ -49,6 +50,10 @@ bool add_variable_to_symtable(Bnode *actual_symtable, char *var_name);
 bool add_func_to_symtable(Bnode *global_symtable, char *func_name);
 
 bool add_variable_to_func_params(Bnode *global_symtable, char *func_name, char *var_name);
+
+bool add_variables_from_func_params(Bnode *global_symtable, Bnode *actual_symtable, char *func_name);
+
+Bnode create_symtable();
 
 void free_symtable(Bnode *symtable);
 
