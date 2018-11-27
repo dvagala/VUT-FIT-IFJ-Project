@@ -25,9 +25,6 @@ Data_type get_type_from_token(tToken *token){
     }
 }
 
-void Binit(Bnode *rootPtr){
-    *rootPtr = NULL;
-}
 //used to decide position of next node
 int keyCmp(char *key1, char *key2, int letter_position ) {
     if (!strcmp(key1, key2)) {
@@ -88,6 +85,10 @@ Bnode Bsearch(Bnode rootPtr, char *key ) {
 //updates bool "function: in data
 void update_function(Bnode *rootPtr,char *key, bool function_bool){
     Bsearch(*rootPtr,key)->data.function = function_bool;
+}
+
+void symtable_init(Bnode *rootPtr){
+    *rootPtr = NULL;
 }
 
 bool is_variable_defined(Bnode *actual_symtable, char *var_name){
@@ -182,11 +183,6 @@ void free_symtable(Bnode *symtable){
         free(*symtable);
         Binit(&(*symtable));
     }
-}
-Bnode symtable_init(){
-    Bnode tree;
-    Binit(&tree);
-    return tree;
 }
 
 //int main(){

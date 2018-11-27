@@ -33,6 +33,8 @@ bool Binsert(Bnode *rootPtr,char *id, bool func_bool);
 
 void update_function(Bnode *rootPtr,char *key, bool function_bool);
 
+void symtable_init(Bnode *rootPtr);
+
 bool is_id_variable(char *var_name);
 
 bool is_variable_defined(Bnode *actual_symtable, char *var_name);
@@ -52,8 +54,6 @@ bool add_func_to_symtable(Bnode *global_symtable, char *func_name);
 bool add_variable_to_func_params(Bnode *global_symtable, char *func_name, char *var_name);
 
 bool add_variables_from_func_params(Bnode *global_symtable, Bnode *actual_symtable, char *func_name);
-
-Bnode symtable_init();
 
 void free_symtable(Bnode *symtable);
 
