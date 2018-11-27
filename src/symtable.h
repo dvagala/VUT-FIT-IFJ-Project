@@ -47,6 +47,8 @@ bool has_func_same_name_as_global_variable(Bnode *global_symtable, char *func_na
 
 bool has_variable_same_name_as_func(Bnode *global_symtable, char *var_name);
 
+int get_num_of_defined_func_params(Bnode *global_symtable, char *func_name);
+
 bool add_variable_to_symtable(Bnode *actual_symtable, char *var_name);
 
 bool add_func_to_symtable(Bnode *global_symtable, char *func_name);
