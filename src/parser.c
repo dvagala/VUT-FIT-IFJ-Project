@@ -13,8 +13,8 @@ tToken aheadToken;          // When I need to do lookahead what is after actual 
 bool tokenLookAheadFlag = false;
 
 // If we are in defintion of fucntion this is local_symtable of that function, otherwise == global_symtable
-Bnode *actual_symtable;
-Bnode *global_symtable;
+Bnode actual_symtable;
+Bnode global_symtable;
 
 // Because I set token type as EXPR when I find out that is indeed start of expression, I need
 // somehow store this original type of token, so it can set back to original before calling analyze_expression()
@@ -53,13 +53,6 @@ tToken next_token_lookahead(){
     tokenLookAheadFlag = true;
 
     return aheadToken;
-}
-
-/** Another fake function, if id token has name "id_var" act as it is variable*/
-bool is_id_variable(char *var_name){
-    if(strcmp(token.data.string, "id_var") == 0)
-        return true;
-    return false;
 }
 
 /**
@@ -686,14 +679,67 @@ void test_scanner(){
     printf("\n");
 }
 
+void test_symtable(){
+
+    symtable_init(&global_symtable);
+
+    printf("non define: %d\n", is_variable_defined(&global_symtable, "id_var1"));
+
+    add_variable_to_symtable(&global_symtable, "id_var1");
+    add_variable_to_symtable(&global_symtable, "id_var2");
+    add_variable_to_symtable(&global_symtable, "id_var3");
+
+    printf("is define: %d\n", is_variable_defined(&global_symtable, "id_var1"));
+    printf("is define: %d\n", is_variable_defined(&global_symtable, "id_var3"));
+    printf("noon define: %d\n", is_variable_defined(&global_symtable, "id_var4"));
+
+    printf("non define: %d\n", is_variable_defined(&global_symtable, "id_func1"));
+
+    add_func_to_symtable(&global_symtable, "id_func1");
+    add_func_to_symtable(&global_symtable, "id_func2");
+    add_func_to_symtable(&global_symtable, "id_func3");
+
+    printf("is define: %d\n", is_variable_defined(&global_symtable, "id_func1"));
+    printf("is define: %d\n", is_variable_defined(&global_symtable, "id_func3"));
+    printf("noon define: %d\n", is_variable_defined(&global_symtable, "id_func4"));
+
+    printf("is id variable: %d\n", is_id_variable("id_var3"));
+    printf("not id variable: %d\n", is_id_variable("id_var5"));
+    printf("not id variable: %d\n", is_id_variable("id_func3"));
+
+    add_variable_to_func_params(&global_symtable, "id_func1", "id_param1");
+    add_variable_to_func_params(&global_symtable, "id_func1", "id_param2");
+    add_variable_to_func_params(&global_symtable, "id_func2", "id_param3");
+
+    printf("is variable in func params: %d\n", is_variable_already_in_func_params(&global_symtable, "id_func1","id_param1"));
+    printf("is variable in func params: %d\n", is_variable_already_in_func_params(&global_symtable, "id_func1","id_param2"));
+    printf("is variable in func params: %d\n", is_variable_already_in_func_params(&global_symtable, "id_func2","id_param3"));
+    printf("is not variable in func params: %d\n", is_variable_already_in_func_params(&global_symtable, "id_func2","id_param4"));
+
+    printf("func has same name: %d\n",has_func_same_name_as_global_variable(&global_symtable, "id_var1"));
+    printf("func has same name: %d\n",has_func_same_name_as_global_variable(&global_symtable, "id_var3"));
+    printf("func has not same name: %d\n",has_func_same_name_as_global_variable(&global_symtable, "id_var5"));
+
+    printf(" var has same name: %d\n",has_variable_same_name_as_func(&global_symtable, "id_func1"));
+    printf(" var has same name: %d\n",has_variable_same_name_as_func(&global_symtable, "id_func3"));
+    printf(" var has not same name: %d\n",has_variable_same_name_as_func(&global_symtable, "id_func5"));
+
+    printf("Advanced\n");
+    add_variable_to_func_params(&global_symtable, "id_func6", "id_param3");
+    printf("is not variable in func params: %d\n", is_variable_already_in_func_params(&global_symtable, "id_func7","id_param1"));
+}
+
 int main(){
 
 //    test_scanner();
 
+    test_symtable();
+
+    return 0;
+
     printf("nejebe\n\n");
 
-    global_symtable = create_symtable();
-    actual_symtable = global_symtable;
+    symtable_init(&global_symtable);
 
     pop();      // get first token
 
@@ -704,7 +750,7 @@ int main(){
         error_code = 2;
     }
 
-    free_symtable(global_symtable);
+    free_symtable(&global_symtable);
 
     // Error handling
     switch(error_code){
