@@ -68,7 +68,7 @@ tToken nextToken()
 
     else if (isdigit(c))
     {
-        state= NUMBER;
+        state= INT;
     }
 
     else if(c == '+')
@@ -181,157 +181,80 @@ tToken nextToken()
                 break;
             }
         } //CASE FOR FLOAT AND INT
-        case NUMBER:
+        case INT:
         {
             while (isdigit(c))
             {
-                token[i] = c;
+                token[i]=c;
                 i++;
-                c = getchar();
-                if(c == '.')
+                c=getchar();
+            }
+
+            if (c == '.')
+            {
+                identificator.type=FLOAT;
+                token[i]=c;
+                i++;
+                c=getchar();
+                if (isdigit(c))
+                {
+                    while (isdigit(c))
+                    {
+                        token[i]=c;
+                        i++;
+                        c=getchar();
+                    }
+                }
+                else
+                {
+                    identificator.type=ERROR;
+                }
+            }
+            if (c=='e' || c == 'E')
+            {
+                identificator.type=FLOAT;
+                token[i]=c;
+                i++;
+                c=getchar();
+                if (c=='+' || c=='-')
                 {
                     token[i]=c;
                     i++;
-                    c = getchar();
-
-                    if(isdigit(c))
-                    {
-                        case FLOAT:
-                        {
-                            token[i]=c;
-                            i++;
-                            c=getchar();
-                            while (isdigit(c))
-                            {
-                                c=getchar();
-                            }
-
-                            if (c=='e' || c=='E')
-                            {
-                                token[i]=c;
-                                i++;
-                                c=getchar();
-                                if (c=='+'||c=='-')
-                                {
-                                    token[i]=c;
-                                    i++;
-                                    c=getchar();
-                                    if (isdigit(c))
-                                    {
-                                        while(isdigit(c))
-                                        {
-                                            token[i] = c;
-                                            i++;
-                                            c=getchar();
-                                        }
-                                    }
-                                    else
-                                    {
-                                        identificator.type=ERROR;
-                                        free(token);
-                                        return identificator;
-
-                                    }
-                                }
-                                else if (isdigit(c))
-                                {
-                                    while(isdigit(c))
-                                    {
-                                        token[i] = c;
-                                        i++;
-                                        c = getchar();
-                                    }
-                                }
-                                else
-                                {
-                                    identificator.type=ERROR;
-                                    free(token);
-                                    return identificator;
-
-                                }
-                            }
-                            else if (isdigit(c))
-                            {
-                                while (isdigit(c))
-                                {
-                                    token[i] = c;
-                                    i++;
-                                    c = getchar();
-                                }
-                            }
-                            identificator.type = FLOAT;
-                            identificator.data.value_double = atof(token);
-                            break;
-                        }
-
-                    }
-                    else
-                    {
-                        free(token);
-                        identificator.type=ERROR;
-                        return identificator;
-                    }
+                    c=getchar();
                 }
-                else if(c == 'e' || c == 'E')
+                if (isdigit(c))
                 {
-                    token[i]=c;
-                    i++;
-                    c = getchar();
-                    if(c == '+' || c == '-')
+                    while(isdigit(c))
                     {
-                        case FLOAT_EXPO:
-                        {
-                            token[i]=c;
-                            i++;
-                            c=getchar();
-                            if (!isdigit(c))
-                            {
-                                free(token);
-                                identificator.type=ERROR;
-                                break;
-
-                            }
-                            while(isdigit(c))
-                            {
-                                token[i]=c;
-                                i++;
-                                c=getchar();
-                            }
-                            identificator.type=FLOAT;
-                            identificator.data.value_double=atof(token);
-                            break;
-                        }
+                        token[i]=c;
+                        i++;
+                        c=getchar();
                     }
-                    else if (isdigit(c))
-                    {
-                        while (isdigit(c))
-                        {
-                            token[i]=c;
-                            i++;
-                            c=getchar();
-                        }
-                        identificator.type=FLOAT;
-                        identificator.data.value_double=atof(token);
-                        break;
-                    }
-
                 }
-                else if (!isdigit(c))
-                    case INT:
-                    {
-                        if (!isalpha(c))
-                        {
-                            identificator.type = INT;
-                            identificator.data.value_int = atoi(token);
-                        }
-                        else
-                        {
-                            identificator.type = ERROR;
-                        }
-                        break;
-                    }
+                else
+                {
+                    identificator.type=ERROR;
+                }
+            }
 
-            }break;
+            if (identificator.type == ERROR)
+            {
+                token=NULL;
+                free(token);
+                return identificator;
+            }
+            else if (identificator.type == FLOAT)
+            {
+                identificator.type=FLOAT;
+                identificator.data.value_double=atof(token);
+                break;
+            }
+            else
+            {
+                identificator.type=INT;
+                identificator.data.value_int=atoi(token);
+                break;
+            }
         }
 
 
