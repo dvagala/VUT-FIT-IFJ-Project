@@ -176,6 +176,7 @@ tToken nextToken()
                     token[i] = c;
                     c=getchar();
                 }
+                token[i+1]='\0';
                 identificator.type=IDENTIFICATOR;
                 identificator.data.string=token;
                 break;
@@ -575,6 +576,15 @@ tToken nextToken()
                         {
                             c = getchar();
                         }
+
+                        if (isEnd==0 && c==EOF)
+                        {
+                            printf("hello");
+                            identificator.type=ERROR;
+                            token=NULL;
+                            free(token);
+                            return identificator;
+                        }
                     }
 
                     //identificator.type=BEGCOM;
@@ -628,9 +638,9 @@ int main()
         }
         printf("Token type: %d \n",token.type);
 
-        if (token.type == 1000)
+        if (token.type == 1004)
         {
-          //  printf("%d \n",token.data.value_int);
+            printf("%s \n",token.data.string);
         }
     }
     return 0;
