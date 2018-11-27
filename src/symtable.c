@@ -183,26 +183,27 @@ void free_symtable(Bnode *symtable){
         Binit(&(*symtable));
     }
 }
-Bnode create_symtable(){
+Bnode symtable_init(){
     Bnode tree;
     Binit(&tree);
     return tree;
 }
 
-int main(){
-    Bnode tree = create_symtable();
-    Bnode local_tree = create_symtable();
-    add_func_to_symtable(&tree, "orechi");
-    add_variable_to_func_params(&tree,"orechi","a");
-    add_variable_to_func_params(&tree,"orechi","b");
-    add_variable_to_func_params(&tree,"orechi","c");
-    if(add_variables_from_func_params(&tree,&local_tree,"orechi"))
-        printf("%s","juch");
-
-    if(is_variable_defined(&local_tree,"b"))
-        printf("%s","je");
-    if(is_variable_defined(&local_tree,"c"))
-        printf("%s","je");
-    printf("%d",Bsearch(tree,"orechi")->data.list->element_count);
-    free_symtable(&tree);
-}
+//int main(){
+//    Bnode tree = symtable_init();
+//    Bnode local_tree = symtable_init();
+//    add_variable_to_symtable(&tree,"ondo");
+//    add_func_to_symtable(&tree, "orechi");
+//    add_variable_to_func_params(&tree,"orechi","a");
+//    add_variable_to_func_params(&tree,"orechi","b");
+//    add_variable_to_func_params(&tree,"orechi","c");
+//    if(add_variables_from_func_params(&tree,&local_tree,"orechi"))
+//        printf("%s","juch");
+//
+//    if(is_variable_defined(&local_tree,"b"))
+//        printf("%s","je");
+//    if(is_variable_defined(&local_tree,"c"))
+//        printf("%s","je");
+//    printf("%d",Bsearch(tree,"orechi")->data.list->element_count);
+//    free_symtable(&tree);
+//}
