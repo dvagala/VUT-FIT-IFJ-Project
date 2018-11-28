@@ -794,6 +794,7 @@ int main(){
 //
 //    return 0;
 
+
     global_symtable_init(&global_symtable);
     actual_symtable = global_symtable;
 

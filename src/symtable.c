@@ -128,6 +128,7 @@ void global_symtable_init(Bnode *rootPtr){
     pom = Bsearch(*rootPtr, "chr");
     pom->data.system_function = true;
     pom->data.list->element_count = 1;         // Number of defined parameters
+
 }
 
 void local_symtable_init(Bnode *rootPtr){

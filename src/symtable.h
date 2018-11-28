@@ -17,7 +17,7 @@
 
 typedef struct {
     bool function;              // function or variable
-    bool system_function;       // system function or (user function, variable)
+    bool system_function;       // system function or (user function, variable) 
     List *list;
 }Bdata;
 
