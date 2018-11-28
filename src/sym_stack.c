@@ -6,8 +6,10 @@
 #include "stdlib.h"
 
 
-void s_init(S_stack *stack){
+S_stack s_init(){
+    S_stack *stack = malloc(sizeof(S_stack));
     stack->top = NULL;
+    return *stack;
 };
 
 bool s_push(S_stack *stack, Prec_table_symbols_enum symbol, Data_type d_type ){
@@ -36,8 +38,8 @@ S_item *get_top_terminal(S_stack *stack){
         if(pom->symbol < P_STOP){
             return pom;
         }
-        return NULL;
     }
+    return NULL;
 }
 
 int get_count_after_stop(S_stack *stack, bool *stop){
@@ -93,3 +95,12 @@ void s_free (S_stack *stack){
         s_pop(stack);
     }
 }
+
+//int main(){
+//    S_stack stack = s_init();
+//    s_push(&stack, P_DOLLAR, type_undefined);
+//    s_push(&stack, P_NON_TERM, type_undefined);
+//    printf("%d", get_top_terminal(&stack)->symbol);
+//    insert_after_top_terminal(&stack, P_ID, type_undefined);
+//
+//}
