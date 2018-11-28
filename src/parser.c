@@ -804,9 +804,9 @@ int main(){
 //
 //    test_symtable();
 //
-//    test_code_list();
+    test_code_list();
 
-//    return 0;
+    return 0;
 
 
     global_symtable_init(&global_symtable);
