@@ -6,6 +6,9 @@
 #include "expressions.h"
 #include "errors.h"
 #include "sym_stack.h"
+#include "scanner.h"
+#include "postfix_data_managment.h"
+
 #define TABLE_SIZE 7
 #define SYNTAX_OK 0
 
@@ -119,11 +122,13 @@ static Prec_table_symbols_enum token_to_symbol (tToken token){
 }
 
 
-ReturnData release_resources(int error_code, S_stack stack, Bnode *tree, ReturnData data){
+ReturnData release_resources(int error_code, S_stack stack, Bnode *tree, Output_queue *q, Operator_stack operator_stack, ReturnData data){
     data.error=true;
     data.error_code = error_code;
     s_free(&stack);
     free_symtable(tree);
+    queue_dispose(q);
+    operator_stack_free(&operator_stack);
     return data;
 
 }
@@ -173,78 +178,6 @@ Expr_rules_enum test_rule(int count, S_item *o1, S_item *o2, S_item *o3){
     return no_rule;
 }
 
-int semantics(int count, Expr_rules_enum rule, S_item *o1, S_item *o2, S_item *o3, Data_type *final_type){
-    bool o1_to_float = false;
-    bool o3_to_float = false;
-    switch(rule){
-        case operand:
-            return o1->data_type;
-        case lpar_E_rpar:
-            return o2->data_type;
-        case E_plus_E:
-        case E_minus_E:
-        case E_mul_E:
-            if(o1->data_type == type_integer && o3->data_type == type_integer) {
-                *final_type = type_integer; //int + int
-                break;
-            }
-            if(o1->data_type == type_string && rule == E_plus_E && o3->data_type == type_string) {
-                *final_type = type_string;//string concat
-                break;
-            }
-            if(o1->data_type == type_string || o3->data_type == type_string) {
-                return COMPATIBILITY_ERROR; //string + not_a_string
-            }
-            *final_type = type_float;
-            if(o1->data_type == type_float && o3->data_type == type_integer)
-                o3_to_float = true;
-
-            if(o3->data_type == type_float && o1->data_type == type_integer)
-                o1_to_float = true;
-            break;
-
-        case E_div_E:
-            *final_type = type_float;
-
-            if(o1->data_type == type_float && o3->data_type == type_integer)
-                o3_to_float = true;
-
-            if(o3->data_type == type_float && o1->data_type == type_integer)
-                o1_to_float = true;
-
-            if(o1->data_type == type_string || o3->data_type == type_string)
-                return COMPATIBILITY_ERROR;
-            break;
-
-        case E_eq_E:
-        case E_not_eq_E:
-        case E_more_E:
-        case E_less_E:
-        case E_less_eq_E:
-        case E_more_eq_E:
-            *final_type = type_boolean;
-
-            if(o1->data_type == type_float && o3->data_type == type_integer) {
-                o3_to_float = true;
-                break;
-            }
-
-            if(o3->data_type == type_float && o1->data_type == type_integer) {
-                o1_to_float = true;
-                break;
-            }
-            if(o1->data_type != o3->data_type)
-                return COMPATIBILITY_ERROR;
-
-
-        default: break;
-    }
-
-//    if(o1_to_float); //TODO generate code
-//    if(o3_to_float); //TODO generate code
-    return SYNTAX_OK;
-}
-
 int rule_reduction(ReturnData *data, S_stack stack){
     bool stop = false;
     int count = get_count_after_stop(&stack, &stop);
@@ -269,28 +202,84 @@ int rule_reduction(ReturnData *data, S_stack stack){
     if (rule == no_rule){
         return SYNTAX_ERROR;
     }
-    else{
-        if((error=semantics(rule,count,o1,o2,o3,&final_type))) return error;
-    }
-
-    //TODO generate code
+//    else{
+//        if((error=semantics(rule,count,o1,o2,o3,&final_type))) return error;
+//    }
 
     stack_n_pop(&stack, count +1);
-    s_push(&stack, P_NON_TERM, final_type);
+    s_push(&stack, P_NON_TERM, type_undefined);
+    return SYNTAX_OK;
+
+}
+
+bool is_token_an_operator(tToken *token){
+    if(token_to_symbol(*token) < P_LEFT_PAR)
+        return true;
+    return false;
+}
+
+bool is_token_end_symbol(tToken *token){
+    switch (token->type){
+        case THEN:
+        case DO:
+        case EOL_CASE:
+            return true;
+        default: return false;
+    }
+}
+
+int generate_postfix(tToken *token, Operator_stack stack, Output_queue *q){
+
+    if(!is_token_end_symbol(token)) {
+        if (get_type_from_token(token) == type_float || get_type_from_token(token) == type_integer || get_type_from_token(token) == type_string || token->type == IDENTIFICATOR ){
+            if (!determine_type_and_insert(q, token))
+                return INNER_ERROR;
+        }
+
+        if (is_token_an_operator(token)) {
+            if (stack.top != NULL) {
+                prec_table_relations_enum relation = prec_table[get_prec_table_index(
+                        stack.top->operator)][get_prec_table_index(token_to_symbol(*token))];
+                while (stack.top != NULL &&(relation == R || relation == E) && stack.top->operator != P_LEFT_PAR) {
+                    pop_to_output_queue(&stack, q);
+                }
+                if (!operator_stack_push(&stack, token_to_symbol(*token)))
+                    return INNER_ERROR;
+            }
+        }
+        if (token_to_symbol(*token) == P_LEFT_PAR) {
+            if (!operator_stack_push(&stack, token_to_symbol(*token)))
+                return INNER_ERROR;
+        }
+        if (token_to_symbol(*token) == P_RIGHT_PAR) {
+            while (stack.top->operator != P_LEFT_PAR) {
+                pop_to_output_queue(&stack, q);
+            }
+            operator_pop(&stack);
+        }
+    }
+    //if there are no more tokens to read, we pop all the operators from the stack to output queue
+    else{
+        while(stack.top != NULL){
+            pop_to_output_queue(&stack, q);
+        }
+    }
     return SYNTAX_OK;
 
 }
 
 
-ReturnData analyze_expresssion(tToken token, tToken aheadToken, bool tokenLookAheadFlag, Bnode *tree){
+ReturnData analyze_expresssion(tToken token, tToken aheadToken, bool tokenLookAheadFlag, Bnode *tree ){
     ReturnData *data = malloc(sizeof(ReturnData));
     data->error = false;
     int error;
-    S_stack stack;
-    s_init(&stack);
+    S_stack stack = s_init();
+
+    Output_queue q = queue_inint();
+    Operator_stack o_stack = operator_stack_init();
 
     if(!s_push(&stack,P_DOLLAR,type_undefined))
-        return release_resources(INNER_ERROR, stack, tree, *data);
+        return release_resources(INNER_ERROR, stack, tree, &q, o_stack, *data);
 
     Prec_table_symbols_enum stack_top_terminal_symbol = get_top_terminal(&stack)->symbol;
     data->token = token;
@@ -298,41 +287,60 @@ ReturnData analyze_expresssion(tToken token, tToken aheadToken, bool tokenLookAh
 
     bool enough = false;
     while(!enough){
-        switch(prec_table[stack_top_terminal_symbol][new_symbol]){
+        switch(prec_table[get_prec_table_index(stack_top_terminal_symbol)][get_prec_table_index(new_symbol)]){
             case R:
                 if((error = rule_reduction(data, stack))){
-                    release_resources(error, stack, tree, *data);
+                    release_resources(error, stack, tree, &q ,o_stack, *data);
                 }
                 break;
             case S:
                 if(!insert_after_top_terminal(&stack,P_STOP,type_undefined))
-                    return release_resources(INNER_ERROR, stack, tree, *data);
+                    return release_resources(INNER_ERROR, stack, tree, &q ,o_stack, *data);
 
-                if(!s_push(&stack,P_STOP,type_undefined))
-                    return release_resources(INNER_ERROR, stack, tree, *data);
+                if(!s_push(&stack, new_symbol, get_type_from_token(&data->token)))
+                    return release_resources(INNER_ERROR, stack, tree, &q, o_stack, *data);
 
-//                if( new_symbol == INT || new_symbol == FLOAT || new_symbol == STRING || new_symbol == IDENTIFICATOR )
-//                    //TODO generate code
+                if(new_symbol == P_ID){
+                    if(!is_variable_defined(tree,token.data.string))
+                        return release_resources(SEMANTIC_ERROR,stack,tree, &q, o_stack, *data);
+                }
+//
+//              if( new_symbol == P_ID || new_symbol == P_INT_NUM || new_symbol == P_FLOAT_NUM || new_symbol == P_STRING )
+//                    //TODO PUSHS value of token
+                      //
+
                 if(tokenLookAheadFlag){
                     data->token = aheadToken;
+                    error = generate_postfix(&data->token, o_stack, &q);
+                    if(error != 0)
+                        return release_resources(error, stack, tree, &q, o_stack, *data);
                     tokenLookAheadFlag = false;
                 }
-                else data->token = nextToken();
+                else {
+                    data->token = nextToken();
+                    error = generate_postfix(&data->token, o_stack, &q);
+                    if(error != 0)
+                        return release_resources(error, stack, tree, &q, o_stack, *data);
+                }
                 new_symbol = token_to_symbol(data->token);
                 break;
             case X:
                 if ((data->token.type == EOL_CASE || data->token.type == THEN || data->token.type == DO) && stack_top_terminal_symbol == P_STOP)
                     enough = true;
-                else return release_resources(SYNTAX_ERROR, stack, tree, *data);
+                else return release_resources(SYNTAX_ERROR, stack, tree, &q, o_stack, *data);
                 break;
             case E:
                 if(!s_push(&stack,new_symbol,get_type_from_token(&data->token)))
-                    return release_resources(INNER_ERROR, stack, tree, *data);//malloc chceck
+                    return release_resources(INNER_ERROR, stack, tree, &q, o_stack, *data);//malloc chceck
                 break;
             default: break;
         }
 
     }
 
-
+   return release_resources(SYNTAX_OK, stack, tree, &q , o_stack, *data);
 };
+
+//int main(){
+//    printf("%s",nextToken().data.string);
+//}
