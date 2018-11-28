@@ -22,7 +22,7 @@ typedef struct symbol_element{
 typedef struct {
     L_element *First;
     L_element *Last;
-    int element_count; //count of elements in list
+    int element_count; //count of elements in list, -1 when elements can have variable count (for build in printf)
 }List;
 
 bool is_element(List *list, char *var_name);

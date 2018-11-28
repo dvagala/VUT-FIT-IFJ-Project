@@ -302,7 +302,7 @@ bool def_func(){
             printf("-Semantics: adding func: %s to symtable\n", func_name);
 
             // New local symtable for this function
-            symtable_init(&actual_symtable);
+            local_symtable_init(&actual_symtable);
             printf("-Semantics: switching context to local\n");
 
             pop();
@@ -477,7 +477,10 @@ bool call_func(){
         bool sub_analysis_result = call_func_args(&num_of_args);
 
         // Semantics. Check if num_of_args == func_name.defined.parameters, if not error 5
-        if(num_of_args != get_num_of_defined_func_params(&global_symtable, func_name)){
+        // If number of define_params == -1,
+        // it means number of parameters is variable (for system func print()), thus skip error scope
+        int defined_params = get_num_of_defined_func_params(&global_symtable, func_name);
+        if(num_of_args != defined_params && defined_params != -1){
             printf("-Semantics: %s: number of arg not quals params\n", func_name);
             // This ensures that only first error will be in error_code
             if(error_code == 0)
@@ -535,9 +538,12 @@ bool after_id() {
         bool sub_analysis_result = call_func_args(&num_of_args);
 
         // Semantics. Check if num_of_args == func_name.defined.parameters, if not error 5
-        if(num_of_args != get_num_of_defined_func_params(&global_symtable, func_name)){
-            // This ensures that only first error will be in error_code
+        // If number of define_params == -1,
+        // it means number of parameters is variable (for system func print()), thus skip error scope
+        int defined_params = get_num_of_defined_func_params(&global_symtable, func_name);
+        if(num_of_args != defined_params && defined_params != -1){
             printf("-Semantics: %s: number of arg not quals params\n", func_name);
+            // This ensures that only first error will be in error_code
             if(error_code == 0)
                 error_code = 5;
         }
@@ -732,7 +738,7 @@ void test_scanner(){
 
 void test_symtable(){
 
-    symtable_init(&global_symtable);
+    global_symtable_init(&global_symtable);
 
     printf("non define: %d\n", is_variable_defined(&global_symtable, "id_var1"));
 
@@ -788,7 +794,7 @@ int main(){
 //
 //    return 0;
 
-    symtable_init(&global_symtable);
+    global_symtable_init(&global_symtable);
     actual_symtable = global_symtable;
 
     pop();      // get first token

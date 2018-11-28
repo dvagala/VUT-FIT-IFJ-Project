@@ -16,7 +16,8 @@
 
 
 typedef struct {
-    bool function;
+    bool function;              // function or variable
+    bool system_function;       // system function or (user function, variable)
     List *list;
 }Bdata;
 
@@ -33,7 +34,9 @@ bool Binsert(Bnode *rootPtr,char *id, bool func_bool);
 
 void update_function(Bnode *rootPtr,char *key, bool function_bool);
 
-void symtable_init(Bnode *rootPtr);
+void global_symtable_init(Bnode *rootPtr);
+
+void local_symtable_init(Bnode *rootPtr);
 
 bool is_id_variable(Bnode *actual_symtable, char *var_name);
 

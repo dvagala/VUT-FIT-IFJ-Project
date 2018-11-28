@@ -87,7 +87,50 @@ void update_function(Bnode *rootPtr,char *key, bool function_bool){
     Bsearch(*rootPtr,key)->data.function = function_bool;
 }
 
-void symtable_init(Bnode *rootPtr){
+/**Same as local_symtable_init, but this add system functions to global_symtable*/
+void global_symtable_init(Bnode *rootPtr){
+    *rootPtr = NULL;
+
+    // Populate symtable with system functions
+    add_func_to_symtable(rootPtr, "inputs");
+    Bnode pom = Bsearch(*rootPtr, "inputs");
+    pom->data.system_function = true;
+
+    add_func_to_symtable(rootPtr, "inputi");
+    pom = Bsearch(*rootPtr, "inputi");
+    pom->data.system_function = true;
+
+    add_func_to_symtable(rootPtr, "inputf");
+    pom = Bsearch(*rootPtr, "inputf");
+    pom->data.system_function = true;
+
+    add_func_to_symtable(rootPtr, "print");
+    pom = Bsearch(*rootPtr, "print");
+    pom->data.system_function = true;
+    pom->data.list->element_count = -1;         // This means that number of print() parameters can vary
+
+    add_func_to_symtable(rootPtr, "lenght");
+    pom = Bsearch(*rootPtr, "lenght");
+    pom->data.system_function = true;
+    pom->data.list->element_count = 1;         // Number of defined parameters
+
+    add_func_to_symtable(rootPtr, "substr");
+    pom = Bsearch(*rootPtr, "substr");
+    pom->data.system_function = true;
+    pom->data.list->element_count = 3;         // Number of defined parameters
+
+    add_func_to_symtable(rootPtr, "ord");
+    pom = Bsearch(*rootPtr, "ord");
+    pom->data.system_function = true;
+    pom->data.list->element_count = 2;         // Number of defined parameters
+
+    add_func_to_symtable(rootPtr, "chr");
+    pom = Bsearch(*rootPtr, "chr");
+    pom->data.system_function = true;
+    pom->data.list->element_count = 1;         // Number of defined parameters
+}
+
+void local_symtable_init(Bnode *rootPtr){
     *rootPtr = NULL;
 }
 
@@ -142,6 +185,7 @@ bool is_id_variable(Bnode *actual_symtable, char *var_name){
     if(pom){
         if(pom->data.function == false)
             return true;
+
     }
     return false;
 }
@@ -190,7 +234,7 @@ void free_symtable(Bnode *symtable){
         free_symtable(&(*symtable)->Rptr);
         free_symtable(&(*symtable)->Lptr);
         free(*symtable);
-        symtable_init(&(*symtable));
+        local_symtable_init(&(*symtable));
     }
 }
 
