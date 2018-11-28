@@ -14,6 +14,7 @@ const char* token_type_enum_string[] = {
 
         "IF", "ELSE", "DEF", "DO", "END", "NOT", "NIL", "THEN", "WHILE", //012345678
         [20] = "WORD", "NUMBER", "EQUALCASES", "LESSCASES", "MORECASES", "KEYWORDCASES", //20,21,22,23,24,25
+        //"NUMBER", "EQUALCASES", "LESSCASES", "MORECASES", "FLOAT_EXPO" you can delete from parser.h and parser.c
         [500] = "EOL_CASE", "EOF_CASE", "ERROR", //500, 501, 502
         [1000] = "INT", "FLOAT", "STRING", "FLOAT_EXPO", "IDENTIFICATOR", //1000, 1001, 1002, 1003, 1004
         [100] = "PLUS", // + 100
