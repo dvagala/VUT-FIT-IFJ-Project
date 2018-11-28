@@ -20,7 +20,7 @@ typedef struct
     S_item *top;
 }S_stack;
 
-void s_init(S_stack *stack);
+S_stack s_init();
 
 bool s_push(S_stack *stack, Prec_table_symbols_enum symbol, Data_type d_type );
 
