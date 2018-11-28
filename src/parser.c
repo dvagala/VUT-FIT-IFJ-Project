@@ -4,6 +4,7 @@
 
 #include "parser.h"
 #include "scanner.h"
+#include "code_gen.h"
 
 int error_code = 0;
 
@@ -786,12 +787,25 @@ void test_symtable(){
     printf("is not variable in func params: %d\n", is_variable_already_in_func_params(&global_symtable, "id_func7","id_param1"));
 }
 
+void test_code_list(){
+    Tcode_list code_list;
+    init_code_list(&code_list);
+
+    add_line(&code_list, "DEFVAR", "GF@counter", NULL, NULL);
+    add_line(&code_list, "MOVE", "GF@counter", "string@", NULL);
+    add_line(&code_list, "LABEL", "GF@counter", "string@", NULL);
+
+    print_code(code_list);
+}
+
 int main(){
 
 //    test_scanner();
 //
 //    test_symtable();
 //
+//    test_code_list();
+
 //    return 0;
 
 
