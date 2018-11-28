@@ -14,6 +14,7 @@
 #include <stdbool.h>
 
 #define KEYWORD_COUNT  9
+#define CHUNK          50
 
 typedef enum {
 
@@ -69,6 +70,13 @@ typedef struct
         char*  string;
     }data;
 }tToken;
+
+typedef struct tokenstring
+{
+    char* string;
+    int index;
+    int chunk_amount;
+}*tokenstringptr;
 
 tToken nextToken();
 

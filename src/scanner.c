@@ -1,64 +1,72 @@
 #include "scanner.h"
-int c=30000;
+int c=30000; //global variable c, holding current character. We need to hold this value between function callings,
+// and setting is as global is the simplest solution.
 
+void bufferToken(tokenstringptr ts)
+{
+    if ((ts->index/ts->chunk_amount)==CHUNK)
+    {
+        ts->string=realloc(ts->string,(sizeof(ts->string)*2));
+        ts->chunk_amount=ts->chunk_amount*2;
+    }
+    ts->string[ts->index]=c;
+    ts->index=(ts->index)+1;
+}
+
+void freeString(tokenstringptr ts)
+{
+    ts->string=NULL;
+    free(ts->string);
+    free(ts);
+}
 static char* Keywords[KEYWORD_COUNT]={"if","else","def","do","end","not","nil","then","while"};
 tToken nextToken()
 {
 
     Tokens_Types state=0;
 
-    if (c == 30000)
+    if (c == 30000) //if we have yet to read a single character from given code:
     {
 
         c=getchar();
-        if (c == '=')
+        if (c == '=') //if it's =, the code starts with a multiline comment.
         {
             state=BEGCOM;
         }
-        else if (isspace(c))
-        {
-            while (isspace(c))
-            {
-                c=getchar();
-                if (c == '=')
-                {
-                    state=BEGCOM;
-
-                }
-            }
-        }
     }
-    char* token=malloc((sizeof(int)*50));
+    //allocating string space for cases STRING, INT, FLOAT, IDENTIFICATOR.
+    tokenstringptr TokenString = malloc(sizeof(struct tokenstring));
+    TokenString->string=malloc(sizeof(char)*CHUNK);
+    TokenString->index=0;
+    TokenString->chunk_amount=1;
     tToken identificator;
 
+    char* token=malloc(sizeof(char)*50);
 
+    //Getting rid of all whitespace characters between tokens
     while (isspace(c) && c!='\n')
     {
         c=getchar();
     }
+
     if ((c>='a'&&c<='z') || c=='_')
     {
         state = WORD;
     }
-
+///AN EXTENSIVE IF ELSE CONDITION CHECKING ALL POSSIBLE ROUTES FOR TOKEN SCANNING
     else if (c == '\n')
     {
-
-        while (isspace(c))
-        {
-
             c=getchar();
             //decide between
             if (c == '=')
             {
                 state = BEGCOM;
-                break;
             }
             else
             {
                 state = EOL_CASE;
             }
-        }
+
     }
 
     else if (c == EOF)
@@ -138,7 +146,6 @@ tToken nextToken()
     {
         state =ERROR;
     }
-    int i = 0;
 
     switch(state)
     {
@@ -147,21 +154,22 @@ tToken nextToken()
             int f=0;
             while (isalpha(c) || isdigit(c) || c=='_')
             {
+
                 f++;
-                token[i] = c;
+                bufferToken(TokenString);
                 c = getchar();
-                i++;
+
                 for (int j=0;j<KEYWORD_COUNT;j++)
                 {
-                    if(strcmp(token,Keywords[j])==0)
+                    if(strcmp(TokenString->string,Keywords[j])==0) //string is compared to an array of keywords
                     {
-                        if (!(isalpha(c)||isdigit(c)||c=='_'))
+                        if (!(isalpha(c)||isdigit(c)||c=='_'))  //if it was a keyword, and it is followed by anything that
+                                                                //can be used to extend identificator, name the keyword
                         {
-                            case KEYWORDCASES: //100 is word
+                            case KEYWORDCASES: //Therefore no need for token string, free it and return keyword.
                             {
                                 identificator.type=j;
-                                token=NULL;
-                                free(token);
+                                freeString(TokenString);
                                 return identificator;
                             }
                         }
@@ -169,41 +177,38 @@ tToken nextToken()
                 }
             }
 
-            case IDENTIFICATOR:
+            case IDENTIFICATOR: //in all other cases, it is an ID
             {
-                if (c == '?' || c == '!')
+                if (c == '?' || c == '!') //the IDs of functions can end in either, thus the condition.
                 {
-                    token[i] = c;
+                    bufferToken(TokenString);
                     c=getchar();
-                    i++;
                 }
-                token[i]='\0';
+                TokenString->string[(TokenString->index)+1]='\0';
                 identificator.type=IDENTIFICATOR;
-                identificator.data.string=token;
+                identificator.data.string=TokenString->string;
                 break;
             }
         } //CASE FOR FLOAT AND INT
         case INT:
         {
-            while (isdigit(c))
+
+            while (isdigit(c)) //repeat until you hit a non-digit character
             {
-                token[i]=c;
-                i++;
+                bufferToken(TokenString);
                 c=getchar();
             }
 
-            if (c == '.')
+            if (c == '.') //if it is a dot, we set type as float, because it can no longer be an integer
             {
                 identificator.type=FLOAT;
-                token[i]=c;
-                i++;
+                bufferToken(TokenString);
                 c=getchar();
-                if (isdigit(c))
+                if (isdigit(c))//There has to be atleast ONE digit following the dot, otherwise we'll return ERROR
                 {
-                    while (isdigit(c))
+                    while (isdigit(c)) //we collect all digits after dot
                     {
-                        token[i]=c;
-                        i++;
+                        bufferToken(TokenString);
                         c=getchar();
                     }
                 }
@@ -212,24 +217,21 @@ tToken nextToken()
                     identificator.type=ERROR;
                 }
             }
-            if (c=='e' || c == 'E')
+            if (c=='e' || c == 'E') //and start the exponent part of float, or end scanning
             {
                 identificator.type=FLOAT;
-                token[i]=c;
-                i++;
+                bufferToken(TokenString);
                 c=getchar();
-                if (c=='+' || c=='-')
+                if (c=='+' || c=='-') //exponent can be followed by non-required + or -
                 {
-                    token[i]=c;
-                    i++;
+                    bufferToken(TokenString);
                     c=getchar();
                 }
-                if (isdigit(c))
+                if (isdigit(c)) //Or atleast one digit in either case. Otherwise raise error.
                 {
                     while(isdigit(c))
                     {
-                        token[i]=c;
-                        i++;
+                        bufferToken(TokenString);
                         c=getchar();
                     }
                 }
@@ -239,28 +241,25 @@ tToken nextToken()
                 }
             }
 
-            if (identificator.type == ERROR)
+            if (identificator.type == ERROR) //if we raised error, free our resources and return
             {
-                token=NULL;
-                free(token);
+                freeString(TokenString);
                 return identificator;
             }
-            else if (identificator.type == FLOAT)
+            else if (identificator.type == FLOAT)//if we found float, we return value saved as a double
             {
-                identificator.type=FLOAT;
-                identificator.data.value_double=atof(token);
+                identificator.data.value_double=atof(TokenString->string);
                 break;
             }
-            else
+            else //otherwise we stayed in integer, so return that.
             {
                 identificator.type=INT;
-                identificator.data.value_int=atoi(token);
+                identificator.data.value_int=atoi(TokenString->string);
                 break;
             }
         }
 
-
-        case LESS:
+        case LESS: //< can be either followed by = to return LESS OR EQUAL, or simply LESS
         {
             c = getchar();
             if(c == '=')
@@ -280,7 +279,7 @@ tToken nextToken()
 
         }
 
-        case ASSIGN:
+        case ASSIGN: //can be followed by = for EQUAL
         {
             c = getchar();
             if(c == '=')
@@ -301,7 +300,7 @@ tToken nextToken()
 
         }
 
-        case MORE:
+        case MORE: //can be followed by = for MORE OR EQUAL
         {
             c = getchar();
             if(c == '=')
@@ -320,7 +319,7 @@ tToken nextToken()
             }
         }
 
-        case NOTEQUAL:
+        case NOTEQUAL: // !can ONLY be followed by =, otherwise we raise error
         {
             c=getchar();
             if (c == '=')
@@ -334,90 +333,87 @@ tToken nextToken()
             break;
         }
 
-        case STRING:
+        case STRING: //STRING CASE
         {
-            int mult_alloc=1;
+            //int mult_alloc=1;
             c=getchar();
-            char hexValue[3]={0};
-            int symbol;
+            char hexValue[3]={0}; //special array to save HEX value that follows after sequence '/x'
+            int symbol; //we'll save this value in int
             while (c !='\"')
             {
-                if (i==49*mult_alloc && i!=0)
+             /*   if (i==49*mult_alloc && i!=0)
                 {
                     mult_alloc++;
-                    token=malloc(sizeof(char)*49*mult_alloc);
-                }
-                if (c == '\\')
-                {
+                    token = realloc(token, sizeof(char)*mult_alloc*50);
+                }*/
+                if (c == '\\') // \ is the so called escape character for special symbols. For our case, we make a case for each and implement
+                {              //their proper behavior.
                     c=getchar();
                     switch(c)
                     {
-                        case 'n':
+                        case 'n': //n is newline
                         {
-                            token[i]='\n';
-                            i++;
+                            TokenString->string[TokenString->index]='\n';
+                            (TokenString->index)++;
                             break;
                         }
-                        case 't':
+                        case 't': //t is tab
                         {
-                            token[i]='\t';
-                            i++;
+                            TokenString->string[TokenString->index]='\t';
+                            (TokenString->index)++;
                             break;
                         }
-                        case 's':
+                        case 's': //s is space
                         {
-                            token[i]=' ';
-                            i++;
+                            TokenString->string[TokenString->index]=' ';
+                            (TokenString->index)++;
                             break;
                         }
-                        case '\\':
+                        case '\\': // is escaped escape character
                         {
-                            token[i]='\\';
-                            i++;
+                            TokenString->string[TokenString->index]='\\';
+                            (TokenString->index)++;
                             break;
                         }
-                        case '\"':
+                        case '\"': // is escaped "
                         {
-                            token[i]='\"';
-                            i++;
+                            TokenString->string[TokenString->index]='\"';
+                            (TokenString->index)++;
                             break;
                         }
-                        case 'x':
+                        case 'x': //is a hexadecimal value of a character in the ASCII table
                         {
                             c=getchar();
-                            if (isdigit(c)||(c>='A'&&c<='F'))
+                            if (isdigit(c)||(c>='A'&&c<='F')||(c>='a' && c<='f')) //hexadecimal number follows atleast ONCE, otherwise error
                             {
-                                hexValue[0]=c;
+                                hexValue[0]=c; //we save that character in hexvalue array, which we'll later translate to a hexadecimal int value
                                 c=getchar();
-                                if (isdigit(c)||(c>='A'&&c<='F'))
+                                if (isdigit(c)||(c>='A'&&c<='F')||(c>='a'&&c<='f')) //same for a second character, if applicable
                                 {
                                     hexValue[1]=c;
                                 }
-                                else
+                                else //however not required
                                 {
-                                    token[i]=c;
-                                    c++;
+                                    hexValue[1]='\0';
+                                    bufferToken(TokenString);
                                 }
                                 hexValue[2]='\0';
-                                symbol = strtol(hexValue,NULL,16);
-                                token[i]=symbol;
-                                i++;
-
+                                symbol = strtol(hexValue,NULL,16); //converting the value
+                                TokenString->string[TokenString->index]=symbol;
+                                (TokenString->index)++; //then putting in that value as a character in our array (gets converted to char) afterwards
                                 break;
                             }
                             else
                             {
                                 identificator.type=ERROR;
-                                token=NULL;
-                                free(token);
+                                freeString(TokenString);
                                 return identificator;
                             }
                         }
-                        default:
+                        default: //if \ wasn't followed by either, raise ERROR
                         {
                             identificator.type=ERROR;
-                            token=NULL;
-                            free(token);
+                            freeString(TokenString);
                             return identificator;
                         }
                     }
@@ -425,26 +421,24 @@ tToken nextToken()
                 }
                 else
                 {
-                    token[i] = c;
-                    i++;
-                    c = getchar();
+                    bufferToken(TokenString);
+                    c=getchar();
                 }
                 if (c == EOF)
                 {
                     identificator.type=ERROR;
-                    token=NULL;
-                    free(token);
+                    freeString(TokenString);
                     return identificator;
                 }
-            }
-            token[i]='\0';
+            } //cycle will be repeated until we reach an unescaped " after that string will be saved and token returned.
+            TokenString->string[(TokenString->index)+1]='\0';
             c=getchar();
             identificator.type = STRING;
-            identificator.data.string = token;
+            identificator.data.string = TokenString->string;
             break;
 
         }
-
+///Simple cases for one character tokens (arithmetic operations, and such).
         case MULT:
         {
             identificator.type = MULT;
@@ -506,7 +500,7 @@ tToken nextToken()
             identificator.type = RPAR;
             break;
         }
-
+        //SINGLE COMMENT case gathers all characters until either NEWLINE, or End of File values.
         case SINGLECOM:
         {
 
@@ -514,18 +508,11 @@ tToken nextToken()
             {
                 c=getchar();
             }
-            c=getchar();
-            while (isspace(c))
-            {
-                c=getchar();
-            }
-            if (c !='=')
-                return nextToken();
-            //identificator.type = SINGLECOM;
-            //break;
-        }
 
-        case BEGCOM:
+                return nextToken();
+        }
+        //BEGCOM, MULTILINE OR BLOCK COMMENT, can only start on the very start of a new line. (or start of the code.)
+        case BEGCOM://starting by = at the start of the line
         {
             char start[6]={0};
             char end[5]={0};
@@ -533,10 +520,9 @@ tToken nextToken()
             {
                 c=getchar();
                 start[x]=c;
-                i++;
             }
 
-            if (strcmp(start,"begin")==0)
+            if (strcmp(start,"begin")==0) //it is either followed exactly by "begin", or we raise ERROR
             {
                 c=getchar();
                 if (!isspace(c))
@@ -546,10 +532,10 @@ tToken nextToken()
                 else
                 {
                     int isEnd=0;
-                    while (!(isEnd==1 && (c=='\n'||c==EOF)))
-                    {
-                        int corrector=0;
-
+                    while (!(isEnd==1 && (c=='\n'||c==EOF))) //we scan all characters, until we find a string "=end" followed by whitespace
+                    {                                        // on the start of a line and then all characters on the rest of that line.
+                        int corrector=0; //value corrector exists for proper scanning of content at the start of the line,
+                                         // which we need to scan separatedly looking for =end
                         if (c=='\n' && isEnd==0)
                         {
                             for (int e=0;e<4;e++)
@@ -562,7 +548,7 @@ tToken nextToken()
                                 end[e]=c;
                             }
 
-                            if (strcmp(end,"=end")==0)
+                            if (strcmp(end,"=end")==0) //if we scanned end, we moved to the next state in cycle
                             {
                                 c=getchar();
                                 corrector=1;
@@ -578,18 +564,14 @@ tToken nextToken()
                             c = getchar();
                         }
 
-                        if (isEnd==0 && c==EOF)
+                        if (isEnd==0 && c==EOF) //if we reached the End of File without ever properly ending the comment, raise an error.
                         {
-                            printf("hello");
                             identificator.type=ERROR;
                             token=NULL;
                             free(token);
                             return identificator;
                         }
                     }
-
-                    //identificator.type=BEGCOM;
-                    //c=30000;
                     return nextToken();
                 }
             }
@@ -600,20 +582,19 @@ tToken nextToken()
             break;
         }
 
-        case EOL_CASE:
+        case EOL_CASE: //case for newline
         {
             identificator.type=EOL_CASE;
             break;
         }
 
-        case EOF_CASE:
+        case EOF_CASE: //case for end of file.
         {
             identificator.type=EOF_CASE;
             break;
         }
-        case ERROR:
+        case ERROR: //natural error case, if there's an unknown character in the code.
         {
-            printf("You really need to stop.");
             identificator.type=ERROR;
             c=getchar();
             break;
@@ -621,9 +602,8 @@ tToken nextToken()
         default:break;
     }
 
-    //printf("HERE IS TOKEN %s",token);
-    token=NULL;
-    free(token);
+    //free the token variable, as we saved it already into struct identificator, and return the token.
+    freeString(TokenString);
     return identificator;
 }
 
@@ -642,6 +622,14 @@ int main()
         if (token.type == 1004)
         {
             printf("%s \n",token.data.string);
+        }
+        else if (token.type == 1002)
+        {
+            printf("%s",token.data.string);
+        }
+        else if (token.type ==1000)
+        {
+            printf("%d",token.data.value_int);
         }
     }
     return 0;

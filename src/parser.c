@@ -12,7 +12,7 @@ tToken previousToken;       // always behind actual token
 tToken aheadToken;          // When I need to do lookahead what is after actual token, this is it
 bool tokenLookAheadFlag = false;
 
-// If we are in defintion of fucntion this is local_symtable of that function, otherwise == global_symtable
+// If we are in definition of function this is local_symtable of that function, otherwise == global_symtable
 Bnode actual_symtable;
 Bnode global_symtable;
 
