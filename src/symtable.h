@@ -7,7 +7,6 @@
 #include "param_list.h"
 
 #include "scanner.h"
-#include <stdbool.h>
 
 
 #define TEQUAL 0

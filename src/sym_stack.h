@@ -7,7 +7,6 @@
 
 
 #include "symtable.h"
-#include <stdbool.h>
 
 typedef struct stack_item{
     Prec_table_symbols_enum symbol;
