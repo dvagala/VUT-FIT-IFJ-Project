@@ -5,40 +5,30 @@
 #ifndef IFJ_PROJECT_STRING_DYNAMIC_H
 #define IFJ_PROJECT_STRING_DYNAMIC_H
 
-
-
-
-typedef struct{
+/**List of strings for code_generator, where I can do append, but only on last string on list
+ * Purpose of this list is mainly because, I need somehow store all strings,
+ * so I can free them later, when I generate whole code
+ * */
+typedef struct Sstring{
     char *text;
-    int allocated_space;
-    int free_space;
-}Tstring;
 
-typedef struct Sstring_pile_list{
-    Tstring string;
+    struct Sstring *prev;
+    struct Sstring *next;
+    struct Sstring *start;
+    struct Sstring *end;
+}*Tstring;
 
-    struct Sstring_pile_list *prev;
-    struct Sstring_pile_list *next;
-    struct Sstring_pile_list *start;
-    struct Sstring_pile_list *end;
-}*Tstring_pile_list;
+Tstring string_list;
 
-void create_string( Tstring *string, char *text);
+void print_list_of_strings();
 
-void print_pile_of_strings();
+char *append_to_string(char *text);
 
-void init_string(Tstring_pile_list *string_pile_list, Tstring *string);
+void print_list_of_strings_back();
 
-void add_string_to_pile_list(Tstring *string);
+void add_string_to_list(char* text);
 
-void append_to_string(Tstring *string ,char *text);
+void free_list_of_strings();
 
-void free_pile_of_strings();
-
-void print_pile_of_strings_back();
-
-void replace_string_in_pile_list(Tstring *old_string, Tstring *new_string);
-
-//void append_string(Tstring_dynamic *base, char *append);
 
 #endif //IFJ_PROJECT_STRING_DYNAMIC_H

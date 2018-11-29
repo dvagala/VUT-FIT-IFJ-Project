@@ -3,156 +3,96 @@
 //
 
 #include "string_dynamic.h"
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
-Tstring_pile_list string_pile_list = NULL;
-
-void create_string(Tstring *string, char *text){
-    string->allocated_space = 0;
-    string->text = NULL;
-    string->free_space = 0;
-
-    append_to_string(string, text);
-
-//    add_string_to_pile_list(string);
-}
-
-void append_to_string(Tstring *string, char *text){
-
-    printf("append_to_string, in: %s \n", string->text);
+void add_string_to_list(char* text){
 
     // First time
-    if(string->allocated_space == 0){
-        string->allocated_space += (strlen(text) + 1);
-        string->text = malloc( string->allocated_space * sizeof(char));
-        strcpy(string->text, text);
-        string->free_space = 0;
-    } else if(string->free_space == 0){     // If full
-        printf("strlen of string->text: %d\n", strlen(string->text));
-        char *old_string_text_pointer = string->text;
-        string->allocated_space += (strlen(text) + 1);
-//        string->text = realloc(string->text, string->allocated_space * sizeof(char));
-        string->text = malloc(string->allocated_space * sizeof(char));            // Just simulate scanario as if realloc change its address
+    if(string_list == NULL){
+        string_list = malloc(sizeof(struct Sstring));
+        string_list->start = string_list;
+        string_list->end = string_list;
 
-        if(old_string_text_pointer != string->text){
-            printf("Realloc change address, updating...\n");
-            strcpy(string->text, old_string_text_pointer);
-            free(old_string_text_pointer);
-        }
+        string_list->text = text;
 
-        strcat(string->text, text);
-        string->free_space = 0;
-    }
-
-    printf("append_to_string, out: %s \n", string->text);
- }
-
-void replace_string_in_pile_list(Tstring *old_string, Tstring *new_string){
-    Tstring_pile_list temp = string_pile_list->start;
-    Tstring_pile_list previous = temp;
-
-    int i = 0;
-
-    printf("=============\n");
-
-    while(temp != NULL){
-
-        printf("param pint: :%p\n", *old_string);
-
-        if(temp->string.text == old_string->text){
-            printf("nooow\n");
-
-            temp->next;
-            previous->next->string = *new_string;
-
-        }
-
-        printf("actual pint: :%p\n", temp->string);
-
-
-        previous = temp;
-        temp = temp->next;
-
-        i++;
-    }
-
-    printf("=============\n");
-}
-
-void print_pile_of_strings(){
-    Tstring_pile_list temp = string_pile_list->start;
-    Tstring_pile_list previous = temp;
-
-    while(temp != NULL){
-
-        printf("String->text pointer: %p\n", temp->string.text);
-        printf("String->text text: %s\n", temp->string.text);
-        temp = temp->next;
-    }
-}
-
-void print_pile_of_strings_back(){
-    Tstring_pile_list temp = string_pile_list->end;
-    Tstring_pile_list previous = temp;
-
-    while(temp != NULL){
-
-        printf("String->text pointer: %p\n", temp->string.text);
-        printf("String->text text: %s\n", temp->string.text);
-        temp = temp->prev;
-    }
-}
-
-void add_string_to_pile_list(Tstring *string){
-
-    // First time
-    if(string_pile_list == NULL){
-        printf("first timen\n");
-        string_pile_list = malloc(sizeof(struct Sstring_pile_list));
-        string_pile_list->start = string_pile_list;
-        string_pile_list->end = string_pile_list;
-
-        string_pile_list->string = *string;
-
-        string_pile_list->next = NULL;
-        string_pile_list->prev = NULL;
+        string_list->next = NULL;
+        string_list->prev = NULL;
 
         return;
     }
 
-    printf("second timen\n");
-    string_pile_list->end->next = malloc(sizeof(struct Sstring_pile_list));
-    string_pile_list->end->next->prev = string_pile_list->end;
-    string_pile_list->end->next->string = *string;
-    string_pile_list->end->next->next = NULL;
-    string_pile_list->end = string_pile_list->end->next;
+    string_list->end->next = malloc(sizeof(struct Sstring));
+    string_list->end->next->prev = string_list->end;
+    string_list->end->next->text = text;
+    string_list->end->next->next = NULL;
+    string_list->end = string_list->end->next;
+}
+
+
+char *append_to_string(char *text){
+
+    Tstring string = string_list->end;
+    char *old_text = string_list->end->text;
+    printf("old: %p\n", old_text);
+
+    char *appended = malloc(sizeof(char) * (strlen(string->text) + strlen(text)));
+    strcpy(appended, string->text);
+    strcat(appended, text);
+
+    string->text = appended;
+
+    printf("new: %p\n", appended);
+
+    free(old_text);
+
+    return appended;
 
 }
 
-//void remove_string_from_pile(Tstring *string){
-//    Tstring_pile_list temp = string_pile_list->start;
-//    Tstring_pile_list previous;
-//
-//    while(temp != NULL){
-//        previous = temp;
-//        temp = temp->next;
-//        printf("Freeing :%s\n", previous->string.text);
-//        free(previous->string.text);
-//        free(previous);
-//    }
-//}
-
-void free_pile_of_strings(){
-    Tstring_pile_list temp = string_pile_list->start;
-    Tstring_pile_list previous;
+void print_list_of_strings(){
+    Tstring temp = string_list->start;
 
     while(temp != NULL){
-        previous = temp;
+
+//        printf("String-t pointer: %p\n", temp);
+//        printf("String->text pointer: %p\n", temp->text);
+        printf("String->text text: %s\n", temp->text);
         temp = temp->next;
-        printf("Freeing :%s\n", previous->string.text);
-        free(previous->string.text);
-        free(previous);
     }
 }
+
+void print_list_of_strings_back(){
+    Tstring temp = string_list->end;
+
+    while(temp != NULL){
+//        printf("String-t pointer: %p\n", temp);
+//        printf("String->text pointer: %p\n", temp->text);
+        printf("String->text text: %s\n", temp->text);
+        temp = temp->prev;
+    }
+}
+
+void free_list_of_strings(){
+
+    while(string_list != NULL){
+
+        printf("freeint: %p\n", string_list);
+        printf("freeint text: %p\n", string_list->text);
+
+        if(string_list->next == NULL){
+            free(string_list);
+            free(string_list->text);
+            return;
+        }
+
+        string_list = string_list->next;
+
+        free(string_list->prev);
+        free(string_list->prev->text);
+    }
+
+    printf("end free\n");
+}
+
