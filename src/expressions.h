@@ -51,7 +51,7 @@ typedef enum expr_rules{
 }Expr_rules_enum;
 
 typedef struct {
-    tToken token;
+    tToken *token;
     bool error;
     int error_code;
 }ReturnData;
