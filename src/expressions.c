@@ -33,7 +33,7 @@ int prec_table[TABLE_SIZE][TABLE_SIZE] =
             //	| +-| */ | r | ( | ) | i | $ |
                 { R , S  , R , S , R , S , R }, /// +-
                 { R , R  , R , S , R , S , R }, /// */
-                { S , S  , X , S , R , S , R }, /// r  = <> <= < >= >
+                { S , S  , X , S , R , S , R }, /// r  == != <= < >= >
                 { S , S  , S , S , E , S , X }, /// (
                 { R , R  , R , X , R , X , R }, /// )
                 { R , R  , R , X , R , X , R }, /// i (id, int, float, string)
@@ -274,6 +274,13 @@ int rule_reduction( S_stack *stack){
     printf("%d\n",rule);
     stack_n_pop(stack, count +1);
     s_push(stack, P_NON_TERM);
+
+    printf("%s","top stack is: ");
+    printf("%d\n",stack->top->symbol);
+
+    printf("%s","top terminal is: ");
+    printf("%d\n",get_top_terminal(stack)->symbol);
+
     return SYNTAX_OK;
 
 }
@@ -303,6 +310,9 @@ ReturnData analyze_expresssion(tToken token, tToken aheadToken, bool tokenLookAh
 
     bool enough = false;
     while(!enough){
+
+        printf("%s","next token is: ");
+        printf("%d\n",new_symbol);
         stack_top_terminal_symbol = &get_top_terminal(stack)->symbol;
         if(new_symbol == P_ID && !is_token_end_symbol(&token)){
             if(!is_variable_defined(tree,token.data.string))
@@ -360,6 +370,12 @@ ReturnData analyze_expresssion(tToken token, tToken aheadToken, bool tokenLookAh
                 printf("%s\n","I'm in E!");
                 if(!s_push(stack,new_symbol))
                     return release_resources(INNER_ERROR, *stack, *tree, q, *o_stack, *data);
+                *data->token = nextToken();
+                new_symbol = token_to_symbol(*data->token);
+                error = generate_postfix(data->token, o_stack, q);
+                if(error != 0)
+                    return release_resources(error, *stack, *tree, q, *o_stack, *data);
+
                 break;
             default: break;
         }
@@ -369,21 +385,21 @@ ReturnData analyze_expresssion(tToken token, tToken aheadToken, bool tokenLookAh
    return release_resources(SYNTAX_OK, *stack, NULL, q , *o_stack, *data);
 };
 
-//int main(){
-//    tToken token = nextToken();
-//    Bnode tree;
-//    local_symtable_init(&tree);
-//
-//
-//    add_variable_to_symtable(&tree,"a");
-//    add_variable_to_symtable(&tree,"b");
-//    add_variable_to_symtable(&tree,"c");
-//    ReturnData data = analyze_expresssion(token,token,false,&tree);
-//    printf("%s%d\n","error code:", data.error_code);
-//
-//
-//    free_symtable(&tree);
-//
-//
-//}
+int main(){
+    tToken token = nextToken();
+    Bnode tree;
+    local_symtable_init(&tree);
+
+
+    add_variable_to_symtable(&tree,"a");
+    add_variable_to_symtable(&tree,"b");
+    add_variable_to_symtable(&tree,"c");
+    ReturnData data = analyze_expresssion(token,token,false,&tree);
+    printf("%s%d\n","error code:", data.error_code);
+
+
+    free_symtable(&tree);
+
+
+}
 
