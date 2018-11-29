@@ -4,10 +4,7 @@
 #include <stdio.h>
 #include <malloc.h>
 #include "expressions.h"
-#include "errors.h"
-#include "sym_stack.h"
-#include "scanner.h"
-#include "postfix_data_managment.h"
+
 
 #define TABLE_SIZE 7
 #define SYNTAX_OK 0
@@ -247,7 +244,6 @@ Expr_rules_enum test_rule(int count, S_item *o1, S_item *o2, S_item *o3){
 
 int rule_reduction( S_stack *stack){
     int count = get_count_after_stop(*stack);
-    int error;
     S_item *o1 = NULL;
     S_item *o2 = NULL;
     S_item *o3 = NULL;
@@ -273,9 +269,7 @@ int rule_reduction( S_stack *stack){
     if (rule == no_rule){
         return SYNTAX_ERROR;
     }
-//    else{
-//        if((error=semantics(rule,count,o1,o2,o3,&final_type))) return error;
-//    }
+
     printf("%s","the rule is: ");
     printf("%d\n",rule);
     stack_n_pop(stack, count +1);
@@ -285,6 +279,7 @@ int rule_reduction( S_stack *stack){
 }
 
 ReturnData analyze_expresssion(tToken token, tToken aheadToken, bool tokenLookAheadFlag, Bnode *tree ){
+    //allocating data managment
     ReturnData *data = malloc(sizeof(ReturnData));
     data->error = false;
     int error;
@@ -294,6 +289,7 @@ ReturnData analyze_expresssion(tToken token, tToken aheadToken, bool tokenLookAh
     queue_inint(q);
     Operator_stack *o_stack = malloc(sizeof(Operator_stack));
     operator_stack_init(o_stack);
+
 
     if(!s_push(stack,P_DOLLAR))
         return release_resources(INNER_ERROR, *stack, *tree, q, *o_stack, *data);
