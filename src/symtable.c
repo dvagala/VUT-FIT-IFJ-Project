@@ -229,7 +229,7 @@ bool add_variables_from_func_params(Bnode *global_symtable, Bnode *actual_symtab
     return false;
 }
 //----
-
+//TODO not working
 void free_symtable(Bnode *symtable){
     if(*symtable){
         free_symtable(&(*symtable)->Rptr);
