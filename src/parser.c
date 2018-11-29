@@ -5,6 +5,7 @@
 #include "parser.h"
 #include "scanner.h"
 #include "code_gen.h"
+#include "string_dynamic.h"
 
 int error_code = 0;
 
@@ -16,6 +17,9 @@ bool tokenLookAheadFlag = false;
 // If we are in definition of function this is local_symtable of that function, otherwise == global_symtable
 Bnode actual_symtable;
 Bnode global_symtable;
+
+Tcode_list code_list;
+Tstring_pile_list string_pile_list;
 
 // Because I set token type as EXPR when I find out that is indeed start of expression, I need
 // somehow store this original type of token, so it can set back to original before calling analyze_expression()
@@ -64,7 +68,7 @@ tToken next_token_lookahead(){
 bool is_token_start_of_expr() {
 
     printf("Checking if is_token_start_of_expr\n");
-    printf("---------------------------------------------------------\n");
+//    printf("---------------------------------------------------------\n");
 
     if (token.type == IDENTIFICATOR) {
         if(is_id_variable(&actual_symtable, token.data.string)){
@@ -144,7 +148,6 @@ tToken analyze_expression(tToken token, tToken aheadToken, bool lookahead_occure
 }
 
 
-
 /**----------RULES------------------------------------*/
 
 
@@ -168,8 +171,6 @@ bool expr(){
     printf("%s returning: %d\n", non_term, 1);
     return true;
 }
-
-
 
 bool more_param(char *func_name){
     char non_term[] = "more_param";
@@ -357,7 +358,6 @@ bool more_args(int *num_of_args){
     return false;
 }
 
-
 bool term(){
     char non_term[] = "term";
     printf("Im in %s\n", non_term);
@@ -453,7 +453,6 @@ bool call_func_args(int *num_of_args){
     return false;
 }
 
-
 bool call_func(){
     char non_term[] = "call_func";
     printf("Im in %s\n", non_term);
@@ -496,7 +495,6 @@ bool call_func(){
     printf("%s returning: %d\n", non_term, 0);
     return false;
 }
-
 
 bool func_or_expr(){
     char non_term[] = "func_or_expr";
@@ -570,6 +568,12 @@ bool after_id() {
                 error_code = 3;
         }
 
+        // TODO: Generate code for define variables
+        if(!is_variable_defined(&actual_symtable, var_name)){
+            if(actual_symtable == global_symtable){
+            }
+        }
+
         // return false when malloc fails
         if(!add_variable_to_symtable(&actual_symtable, var_name)){
             // This ensures that only first error will be in error_code
@@ -586,8 +590,6 @@ bool after_id() {
     printf("%s returning: %d\n", non_term, 0);
     return false;
 }
-
-
 
 bool st_list() {
     char non_term[] = "st_list";
@@ -788,26 +790,75 @@ void test_symtable(){
 }
 
 void test_code_list(){
-    Tcode_list code_list;
+
     init_code_list(&code_list);
+//
+//    add_code_line(&code_list, "DEFVAR", "GF@counter", NULL, NULL);
+//    add_code_line(&code_list, "MOVE", "GF@counter", "string@", NULL);
+//    add_code_line(&code_list, "LABEL", "GF@counter", "string@", NULL);
 
-    add_line(&code_list, "DEFVAR", "GF@counter", NULL, NULL);
-    add_line(&code_list, "MOVE", "GF@counter", "string@", NULL);
-    add_line(&code_list, "LABEL", "GF@counter", "string@", NULL);
+}
 
-    print_code(code_list);
+void test_strings(){
+
+    Tstring string;
+
+    create_string(&string, "first_");
+    append_to_string(&string, "hohoo");
+
+    printf("poin text: %p\n", (void*) string.text);
+
+    add_string_to_pile_list( &string);
+
+    Tstring string2;
+    string2.text = NULL;
+
+    create_string(&string2, "hohoo2");
+    append_to_string(&string2, "_append");
+
+    printf("poin text: %p\n", (void*) string2.text);
+
+    add_string_to_pile_list( &string2);
+
+    Tstring string3;
+    string3.text = NULL;
+
+    printf("..pointer to string:%p\n", string3);
+    printf("..pointer to tesxt:%p\n", string3.text);
+
+    create_string(&string3, "hohoo3");
+    printf("..pointer to string:%p\n", string3);
+    printf("..pointer to tesxt:%p\n", string3.text);
+    append_to_string(&string3, "_");
+    printf("..pointer to string:%p\n", string3);
+    printf("..pointer to tesxt:%p\n", string3.text);
+
+    append_to_string(&string3, "a");
+    printf("..pointer to string:%p\n", string3);
+    printf("..pointer to tesxt:%p\n", string3.text);
+    append_to_string(&string3, "bdddddddddddddddddddddddd");
+    printf("..pointer to string:%p\n", string3);
+    printf("..pointer to tesxt:%p\n", string3.text);
+
+    printf("poin text: %p\n", (void*) string3.text);
+    add_string_to_pile_list(&string3);
+
+
+    print_pile_of_strings();
+
+    free_pile_of_strings();
 }
 
 int main(){
 
 //    test_scanner();
-//
 //    test_symtable();
+//    test_code_list();
+//    test_strings();
 //
-    test_code_list();
+//    return 0;
 
-    return 0;
-
+    init_code_list(&code_list);
 
     global_symtable_init(&global_symtable);
     actual_symtable = global_symtable;
