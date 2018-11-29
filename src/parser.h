@@ -47,7 +47,7 @@ bool param();
 bool more_param();
 bool st_list();
 
-tToken analyze_expression(tToken token, tToken aheadToken, bool lookahead_occured);
+//tToken analyze_expression(tToken token, tToken aheadToken, bool lookahead_occured);
 
 
 #define LABEL "LABEL"

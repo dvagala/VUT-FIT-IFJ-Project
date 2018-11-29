@@ -6,6 +6,7 @@
 #include "scanner.h"
 #include "code_gen.h"
 #include "string_dynamic.h"
+#include "expressions.h"
 
 int error_code = 0;
 
@@ -32,17 +33,17 @@ int original_token_type_backup;
  *  so then do not read next token but return aheadToken*/
 tToken enhanced_next_token(){
 
-    previousToken = token;
 
+    previousToken = token;
     if(tokenLookAheadFlag){
         tokenLookAheadFlag = false;
         return aheadToken;
     } else{
         tToken next_token = nextToken();
-        // Throw away multiplte eols
-//        if(previousToken.type == EOL_CASE && next_token.type == EOL_CASE){
-//            next_token = enhanced_next_token();
-//        }
+//         Throw away multiplte eols
+        if(previousToken.type == EOL_CASE && next_token.type == EOL_CASE){
+            next_token = enhanced_next_token();
+        }
         return next_token;
     }
 }
@@ -123,29 +124,29 @@ void pop(){
     }
 }
 
-/**Fake expression analyzer, just read epression and came back when expression ends*/
-tToken analyze_expression(tToken token, tToken aheadToken, bool lookahead_occured){
-
-    printf("Analyzing expression start token: %s\n", token_type_enum_string[token.type]);
-    printf("Analyzing expression lookahead token: %s\n", token_type_enum_string[aheadToken.type]);
-
-
-    tToken temp = enhanced_next_token();
-
-    printf("iterating... 0\n");
-
-
-    while(temp.type != EOL_CASE && temp.type != THEN && temp.type != DO){
-        temp = nextToken();
-        printf("iterating... 0\n");
-    }
-
-    tokenLookAheadFlag = false;
-
-    printf("Expression analyzer returning token: %s\n", token_type_enum_string[temp.type]);
-
-    return temp;
-}
+///**Fake expression analyzer, just read epression and came back when expression ends*/
+//tToken analyze_expression(tToken token, tToken aheadToken, bool lookahead_occured){
+//
+//    printf("Analyzing expression start token: %s\n", token_type_enum_string[token.type]);
+//    printf("Analyzing expression lookahead token: %s\n", token_type_enum_string[aheadToken.type]);
+//
+//
+//    tToken temp = enhanced_next_token();
+//
+//    printf("iterating... 0\n");
+//
+//
+//    while(temp.type != EOL_CASE && temp.type != THEN && temp.type != DO){
+//        temp = nextToken();
+//        printf("iterating... 0\n");
+//    }
+//
+//    tokenLookAheadFlag = false;
+//
+//    printf("Expression analyzer returning token: %s\n", token_type_enum_string[temp.type]);
+//
+//    return temp;
+//}
 
 
 /**----------RULES------------------------------------*/
@@ -164,9 +165,22 @@ bool expr(){
 //        bool error;
 //        int error_code;
 //    }ReturnData;
+//
+    ReturnData returnData;
+    returnData = analyze_expresssion(token, aheadToken, tokenLookAheadFlag, &global_symtable);
+
+    token = (*returnData.token);
+
+    if(error_code == 0 && returnData.error){
+        printf("Error from expression\n");
+        error_code = returnData.error_code;
+    }
+
+    printf("after, epxresssoin\n");
+    printf("token type: %s\n", token_type_enum_string[token.type]);
 
     // Fake expression analyzer, just read epression and came back when expression ends
-    token = analyze_expression(token, aheadToken, tokenLookAheadFlag);
+//    token = analyze_expression(token, aheadToken, tokenLookAheadFlag);
 
     printf("%s returning: %d\n", non_term, 1);
     return true;
@@ -728,7 +742,7 @@ void test_scanner(){
 
     while(token.type != EOF_CASE){
 //        token = enhanced_next_token();
-        token = nextToken();
+        token = enhanced_next_token();
         printf("%s ", token_type_enum_string[token.type]);
 //        if(token.type == IDENTIFICATOR)
 //            printf("(token.data.string = \"%s\") ", token.data.string);
@@ -849,13 +863,23 @@ void test_strings(){
     free_pile_of_strings();
 }
 
+void test_expr(){
+
+    pop();
+//    analyze_expression(token, aheadToken, false );
+    analyze_expresssion(token, aheadToken, false, &global_symtable);
+}
+
 int main(){
+
+    // For throwing away EOL if is as start of file
+    token.type = EOL_CASE;
 
 //    test_scanner();
 //    test_symtable();
 //    test_code_list();
 //    test_strings();
-//
+//        test_expr();
 //    return 0;
 
     init_code_list(&code_list);
