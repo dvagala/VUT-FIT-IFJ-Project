@@ -49,9 +49,40 @@ void append_to_string(Tstring *string, char *text){
     printf("append_to_string, out: %s \n", string->text);
  }
 
+void replace_string_in_pile_list(Tstring *old_string, Tstring *new_string){
+    Tstring_pile_list temp = string_pile_list->start;
+    Tstring_pile_list previous = temp;
+
+    int i = 0;
+
+    printf("=============\n");
+
+    while(temp != NULL){
+
+        printf("param pint: :%p\n", *old_string);
+
+        if(temp->string.text == old_string->text){
+            printf("nooow\n");
+
+            temp->next;
+            previous->next->string = *new_string;
+
+        }
+
+        printf("actual pint: :%p\n", temp->string);
+
+
+        previous = temp;
+        temp = temp->next;
+
+        i++;
+    }
+
+    printf("=============\n");
+}
 
 void print_pile_of_strings(){
-    Tstring_pile_list temp = string_pile_list;
+    Tstring_pile_list temp = string_pile_list->start;
     Tstring_pile_list previous = temp;
 
     while(temp != NULL){
@@ -59,6 +90,18 @@ void print_pile_of_strings(){
         printf("String->text pointer: %p\n", temp->string.text);
         printf("String->text text: %s\n", temp->string.text);
         temp = temp->next;
+    }
+}
+
+void print_pile_of_strings_back(){
+    Tstring_pile_list temp = string_pile_list->end;
+    Tstring_pile_list previous = temp;
+
+    while(temp != NULL){
+
+        printf("String->text pointer: %p\n", temp->string.text);
+        printf("String->text text: %s\n", temp->string.text);
+        temp = temp->prev;
     }
 }
 
@@ -74,16 +117,17 @@ void add_string_to_pile_list(Tstring *string){
         string_pile_list->string = *string;
 
         string_pile_list->next = NULL;
+        string_pile_list->prev = NULL;
 
         return;
     }
 
     printf("second timen\n");
     string_pile_list->end->next = malloc(sizeof(struct Sstring_pile_list));
-
+    string_pile_list->end->next->prev = string_pile_list->end;
     string_pile_list->end->next->string = *string;
     string_pile_list->end->next->next = NULL;
-    string_pile_list->end = string_pile_list->next;
+    string_pile_list->end = string_pile_list->end->next;
 
 }
 

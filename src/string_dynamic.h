@@ -35,6 +35,10 @@ void append_to_string(Tstring *string ,char *text);
 
 void free_pile_of_strings();
 
+void print_pile_of_strings_back();
+
+void replace_string_in_pile_list(Tstring *old_string, Tstring *new_string);
+
 //void append_string(Tstring_dynamic *base, char *append);
 
 #endif //IFJ_PROJECT_STRING_DYNAMIC_H
