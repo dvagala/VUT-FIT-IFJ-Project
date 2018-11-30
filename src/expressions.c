@@ -9,7 +9,7 @@
 #define TABLE_SIZE 7
 #define SYNTAX_OK 0
 
-#define DEBUG_EXPRESSION_ANALYSIS 0         // Set to '1', if you want to print debug stuff
+#define DEBUG_EXPRESSION_ANALYSIS 1         // Set to '1', if you want to print debug stuff
 
 typedef enum prec_table_relations
 {
@@ -193,11 +193,16 @@ int generate_postfix(tToken *token, Operator_stack *stack, Output_queue *q){
                 return INNER_ERROR;
         }
         if (token_to_symbol(*token) == P_RIGHT_PAR) {
+            if(stack->top == NULL)
+                return SYNTAX_ERROR;
             while (stack->top->operator != P_LEFT_PAR ) {
-                if(stack->top==NULL)
-                    return SYNTAX_ERROR;
+
+                if(stack->top->operator == P_LEFT_PAR)
+                    par_found = true;
                 pop_to_output_queue(stack, q);
 
+                if(stack->top == NULL && !par_found)
+                    return SYNTAX_ERROR;
             }
             if(stack->top==NULL)
                 return SYNTAX_ERROR;
