@@ -6,11 +6,13 @@
 #define IFJ_PROJECT_CODE_GEN_H
 
 #include <stdio.h>
+#include <stdbool.h>
 
 
 typedef struct Sstring{
 
     char *text;
+    bool is_start_of_new_line;
 
     struct Sstring *next;
     struct Sstring *prev;

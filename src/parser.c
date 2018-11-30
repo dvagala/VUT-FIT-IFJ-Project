@@ -799,8 +799,6 @@ void test_code_list(){
 
     append_text_to_last_string_in_code_list("_append");
 
-    print_code();
-
     char *text2 = malloc(sizeof(char)*5);
     text2[0] = 'o';
     text2[1] = 'a';
@@ -810,9 +808,11 @@ void test_code_list(){
     add_allocated_string_to_code(text2);
 
     add_const_string_to_code("first");
+
     add_const_string_to_code("second");
     append_text_to_last_string_in_code_list("_append");
     append_text_to_last_string_in_code_list("_append2");
+    code_list->end->is_start_of_new_line = true;
 
     print_code();
 

@@ -6,22 +6,27 @@
 #include "code_gen.h"
 #include <string.h>
 
+#define DEBGUG_CODE_GEN 0
+
 void code_list_init(){
     code_list = NULL;
 }
 
 void print_code(){
 
-    printf("printing code...\n");
+    if(DEBGUG_CODE_GEN) printf("CODE_GEN: printing code...\n");
 
     Tstring temp = code_list;
 
     while(temp != NULL){
 
+        if(temp->is_start_of_new_line)
+            printf("\n");
         printf("%s ", temp->text);
-        printf("\n");
         temp = temp->next;
     }
+
+    printf("\n");
 
 }
 
@@ -29,8 +34,8 @@ char* append_text_to_last_string_in_code_list(char *text){
 
     Tstring end_string = code_list->end;
     char *old_text = code_list->end->text;
-    printf("Ive got: %p\n", old_text);
-    printf("Ive got: %s\n", old_text);
+    if(DEBGUG_CODE_GEN) printf("CODE_GEN: Ive got: %p\n", old_text);
+    if(DEBGUG_CODE_GEN) printf("CODE_GEN: Ive got: %s\n", old_text);
 
     char *appended = malloc(sizeof(char) * ((strlen(end_string->text) + strlen(text) + 1)));
     strcpy(appended, end_string->text);
@@ -38,8 +43,8 @@ char* append_text_to_last_string_in_code_list(char *text){
 
     end_string->text = appended;
 
-    printf("I send: %p\n", appended);
-    printf("I send: %s\n", appended);
+    if(DEBGUG_CODE_GEN) printf("CODE_GEN: I send: %p\n", appended);
+    if(DEBGUG_CODE_GEN) printf("CODE_GEN: I send: %s\n", appended);
     free(old_text);
 
     return appended;
@@ -59,6 +64,8 @@ void add_const_string_to_code(char *text){
         code_list->next = NULL;
         code_list->prev = NULL;
 
+        code_list->is_start_of_new_line = false;
+
         return;
     }
 
@@ -67,6 +74,8 @@ void add_const_string_to_code(char *text){
     code_list->end->next->text = text;
     code_list->end->next->next = NULL;
     code_list->end = code_list->end->next;
+
+    code_list->end->is_start_of_new_line = false;
 }
 
 // You only pass me pointer to char* that is already allocated, I handle all free stuff
@@ -83,6 +92,8 @@ void add_allocated_string_to_code(char *text){
         code_list->next = NULL;
         code_list->prev = NULL;
 
+        code_list->is_start_of_new_line = false;
+
         return;
     }
 
@@ -91,14 +102,16 @@ void add_allocated_string_to_code(char *text){
     code_list->end->next->text = text;
     code_list->end->next->next = NULL;
     code_list->end = code_list->end->next;
+
+    code_list->end->is_start_of_new_line = false;
 }
 
 void free_code_list(){
 
     while(code_list != NULL){
 
-        printf("freeint: %p\n", code_list);
-        printf("freeint text: %p\n", code_list->text);
+        if(DEBGUG_CODE_GEN) printf("CODE_GEN: freeint: %p\n", code_list);
+        if(DEBGUG_CODE_GEN) printf("CODE_GEN: freeint text: %p\n", code_list->text);
 
         if(code_list->next == NULL){
             free(code_list);
@@ -112,18 +125,3 @@ void free_code_list(){
         free(code_list->prev->text);
     }
 }
-
-//int main(){
-//
-//    Tcode_list code_list;
-//    code_list = NULL;
-//
-//    add_line(&code_list, "DEFVAR", "GF@counter", NULL, NULL);
-//    add_line(&code_list, "MOVE", "GF@counter", "string@", NULL);
-//    add_line(&code_list, "LABEL", "GF@counter", "string@", NULL);
-//
-//    print_code(code_list);
-//
-//    return 0;
-//}
-
