@@ -5,12 +5,11 @@
 #include "parser.h"
 #include "scanner.h"
 #include "code_gen.h"
-#include "string_dynamic.h"
 #include "expressions.h"
 
 // Set to '1', if you want to print debug stuff
-#define DEBUG_PARSER 0
-#define DEBUG_SEMATNICS 0
+#define DEBUG_PARSER 1
+#define DEBUG_SEMATNICS 1
 
 int error_code = 0;
 
@@ -23,7 +22,7 @@ bool tokenLookAheadFlag = false;
 Bnode actual_symtable;
 Bnode global_symtable;
 
-Tcode_list code_list;
+//Tcode_list code_list;
 
 // Because I set token type as EXPR when I find out that is indeed start of expression, I need
 // somehow store this original type of token, so it can set back to original before calling analyze_expression()
@@ -75,6 +74,7 @@ bool is_token_start_of_expr() {
 //    if(DEBUG_PARSER) printf("PARSER: ---------------------------------------------------------\n");
 
     if (token.type == IDENTIFICATOR) {
+        if(DEBUG_PARSER) printf("PARSER: Token.data.string: \"%s\"\n", token.data.string);
         if(is_id_variable(&actual_symtable, token.data.string)){
             aheadToken = next_token_lookahead();
             if(aheadToken.type != ASSIGN && previousToken.type != LPAR &&
@@ -139,13 +139,15 @@ bool expr(){
     // Set back original token type
     token.type = original_token_type_backup;
 
+    if(DEBUG_PARSER) printf("PARSER: token type send to expr: %s\n", token_type_enum_string[token.type]);
+
     ReturnData returnData;
     returnData = analyze_expresssion(token, aheadToken, tokenLookAheadFlag, &global_symtable);
 
     token = (*returnData.token);
 
     if(error_code == 0 && returnData.error){
-        if(DEBUG_PARSER) printf("PARSER: Error from expression\n");
+        if(DEBUG_PARSER) printf("PARSER: Expression sending me error: %d\n", returnData.error_code);
         error_code = returnData.error_code;
     }
 
@@ -551,11 +553,22 @@ bool after_id() {
                 error_code = 3;
         }
 
-        // TODO: Generate code for define variables
+        // TODO: Generate code for define variables, DEFVAR
         if(!is_variable_defined(&actual_symtable, var_name)){
-            if(actual_symtable == global_symtable){
-            }
+
+//            // Global variables
+//            if(actual_symtable == global_symtable){
+//                add_code_line(&code_list, "DEFVAR", join_strings("GF@", var_name), NULL, NULL);
+//            } else{         // Local variables
+//                add_code_line(&code_list, "DEFVAR", join_strings("LF@", var_name), NULL, NULL);
+//            }
         }
+
+        if(is_variable_defined(&actual_symtable, var_name)){
+            if(DEBUG_SEMATNICS) printf("SEMANTICS: variable \"%s\" is already in symtable, no need to add\n", var_name);
+        } else
+            if(DEBUG_SEMATNICS) printf("SEMANTICS: adding variable \"%s\" to symtable\n", var_name);
+
 
         // return false when malloc fails
         if(!add_variable_to_symtable(&actual_symtable, var_name)){
@@ -564,7 +577,7 @@ bool after_id() {
                 error_code = 99;
         }
 
-        if(DEBUG_SEMATNICS) printf("SEMANTICS: adding variable: %s to symtable\n", var_name);
+
 
         pop();
         return func_or_expr();
@@ -707,80 +720,103 @@ bool prog(){
  *  Print tokens as types, not numbers
  * */
 void test_scanner(){
-//    printf("\nTest scanner:\n\n");
-//
-//    while(token.type != EOF_CASE){
-////        token = enhanced_next_token();
+    printf("\nTest scanner:\n\n");
+
+    while(token.type != EOF_CASE){
 //        token = enhanced_next_token();
-//        printf("%s ", token_type_enum_string[token.type]);
-////        if(token.type == IDENTIFICATOR)
-////            printf("(token.data.string = \"%s\") ", token.data.string);
-//        if(token.type == EOL_CASE)
-//            printf("\n");
-//    }
-//    printf("\n");
-//    printf("\n");
-//}
-//
-//void test_symtable(){
-//
-//    global_symtable_init(&global_symtable);
-//
-//    printf("non define: %d\n", is_variable_defined(&global_symtable, "id_var1"));
-//
-//    add_variable_to_symtable(&global_symtable, "id_var1");
-//    add_variable_to_symtable(&global_symtable, "id_var2");
-//    add_variable_to_symtable(&global_symtable, "id_var3");
-//
-//    printf("is define: %d\n", is_variable_defined(&global_symtable, "id_var1"));
-//    printf("is define: %d\n", is_variable_defined(&global_symtable, "id_var3"));
-//    printf("noon define: %d\n", is_variable_defined(&global_symtable, "id_var4"));
-//
-//    printf("non define: %d\n", is_variable_defined(&global_symtable, "id_func1"));
-//
-//    add_func_to_symtable(&global_symtable, "id_func1");
-//    add_func_to_symtable(&global_symtable, "id_func2");
-//    add_func_to_symtable(&global_symtable, "id_func3");
-//
-//    printf("is define: %d\n", is_variable_defined(&global_symtable, "id_func1"));
-//    printf("is define: %d\n", is_variable_defined(&global_symtable, "id_func3"));
-//    printf("noon define: %d\n", is_variable_defined(&global_symtable, "id_func4"));
-//
-//    printf("is id variable: %d\n", is_id_variable(&global_symtable, "id_var3"));
-//    printf("not id variable: %d\n", is_id_variable(&global_symtable, "id_var5"));
-//    printf("not id variable: %d\n", is_id_variable(&global_symtable, "id_func3"));
-//
-//    add_variable_to_func_params(&global_symtable, "id_func1", "id_param1");
-//    add_variable_to_func_params(&global_symtable, "id_func1", "id_param2");
-//    add_variable_to_func_params(&global_symtable, "id_func2", "id_param3");
-//
-//    printf("is variable in func params: %d\n", is_variable_already_in_func_params(&global_symtable, "id_func1","id_param1"));
-//    printf("is variable in func params: %d\n", is_variable_already_in_func_params(&global_symtable, "id_func1","id_param2"));
-//    printf("is variable in func params: %d\n", is_variable_already_in_func_params(&global_symtable, "id_func2","id_param3"));
-//    printf("is not variable in func params: %d\n", is_variable_already_in_func_params(&global_symtable, "id_func2","id_param4"));
-//
-//    printf("func has same name: %d\n",has_func_same_name_as_global_variable(&global_symtable, "id_var1"));
-//    printf("func has same name: %d\n",has_func_same_name_as_global_variable(&global_symtable, "id_var3"));
-//    printf("func has not same name: %d\n",has_func_same_name_as_global_variable(&global_symtable, "id_var5"));
-//
-//    printf(" var has same name: %d\n",has_variable_same_name_as_func(&global_symtable, "id_func1"));
-//    printf(" var has same name: %d\n",has_variable_same_name_as_func(&global_symtable, "id_func3"));
-//    printf(" var has not same name: %d\n",has_variable_same_name_as_func(&global_symtable, "id_func5"));
-//
-//    printf("Advanced\n");
-//    add_variable_to_func_params(&global_symtable, "id_func6", "id_param3");
-//    printf("is not variable in func params: %d\n", is_variable_already_in_func_params(&global_symtable, "id_func7","id_param1"));
+        token = nextToken();
+        printf("%s ", token_type_enum_string[token.type]);
+//        if(token.type == IDENTIFICATOR)
+//            printf("(token.data.string = \"%s\") ", token.data.string);
+        if(token.type == EOL_CASE)
+            printf("\n");
+    }
+    printf("\n");
+    printf("\n");
+}
+
+void test_symtable(){
+
+    global_symtable_init(&global_symtable);
+
+    printf("non define: %d\n", is_variable_defined(&global_symtable, "id_var1"));
+
+    add_variable_to_symtable(&global_symtable, "id_var1");
+    add_variable_to_symtable(&global_symtable, "id_var2");
+    add_variable_to_symtable(&global_symtable, "id_var3");
+
+    printf("is define: %d\n", is_variable_defined(&global_symtable, "id_var1"));
+    printf("is define: %d\n", is_variable_defined(&global_symtable, "id_var3"));
+    printf("noon define: %d\n", is_variable_defined(&global_symtable, "id_var4"));
+
+    printf("non define: %d\n", is_variable_defined(&global_symtable, "id_func1"));
+
+    add_func_to_symtable(&global_symtable, "id_func1");
+    add_func_to_symtable(&global_symtable, "id_func2");
+    add_func_to_symtable(&global_symtable, "id_func3");
+
+    printf("is define: %d\n", is_variable_defined(&global_symtable, "id_func1"));
+    printf("is define: %d\n", is_variable_defined(&global_symtable, "id_func3"));
+    printf("noon define: %d\n", is_variable_defined(&global_symtable, "id_func4"));
+
+    printf("is id variable: %d\n", is_id_variable(&global_symtable, "id_var3"));
+    printf("not id variable: %d\n", is_id_variable(&global_symtable, "id_var5"));
+    printf("not id variable: %d\n", is_id_variable(&global_symtable, "id_func3"));
+
+    add_variable_to_func_params(&global_symtable, "id_func1", "id_param1");
+    add_variable_to_func_params(&global_symtable, "id_func1", "id_param2");
+    add_variable_to_func_params(&global_symtable, "id_func2", "id_param3");
+
+    printf("is variable in func params: %d\n", is_variable_already_in_func_params(&global_symtable, "id_func1","id_param1"));
+    printf("is variable in func params: %d\n", is_variable_already_in_func_params(&global_symtable, "id_func1","id_param2"));
+    printf("is variable in func params: %d\n", is_variable_already_in_func_params(&global_symtable, "id_func2","id_param3"));
+    printf("is not variable in func params: %d\n", is_variable_already_in_func_params(&global_symtable, "id_func2","id_param4"));
+
+    printf("func has same name: %d\n",has_func_same_name_as_global_variable(&global_symtable, "id_var1"));
+    printf("func has same name: %d\n",has_func_same_name_as_global_variable(&global_symtable, "id_var3"));
+    printf("func has not same name: %d\n",has_func_same_name_as_global_variable(&global_symtable, "id_var5"));
+
+    printf(" var has same name: %d\n",has_variable_same_name_as_func(&global_symtable, "id_func1"));
+    printf(" var has same name: %d\n",has_variable_same_name_as_func(&global_symtable, "id_func3"));
+    printf(" var has not same name: %d\n",has_variable_same_name_as_func(&global_symtable, "id_func5"));
+
+    printf("Advanced\n");
+    add_variable_to_func_params(&global_symtable, "id_func6", "id_param3");
+    printf("is not variable in func params: %d\n", is_variable_already_in_func_params(&global_symtable, "id_func7","id_param1"));
 }
 
 void test_code_list(){
 
-    init_code_list(&code_list);
+    char *text = malloc(sizeof(char)*5);
+    text[0] = 'h';
+    text[1] = 'o';
+    text[2] = 'h';
+    text[3] = 'o';
 
-    add_code_line(&code_list, "DEFVAR", "GF@counter", NULL, NULL);
-    add_code_line(&code_list, "MOVE", "GF@counter", "string@", NULL);
-    add_code_line(&code_list, "LABEL", "GF@counter", "string@", NULL);
+    add_allocated_string_to_code(text);
 
-    print_code(code_list);
+    append_text_to_last_string_in_code_list("_append22");
+
+    append_text_to_last_string_in_code_list("_append");
+
+    print_code();
+
+    char *text2 = malloc(sizeof(char)*5);
+    text2[0] = 'o';
+    text2[1] = 'a';
+    text2[2] = 't';
+    text2[3] = 'e';
+
+    add_allocated_string_to_code(text2);
+
+    add_const_string_to_code("first");
+    add_const_string_to_code("second");
+    append_text_to_last_string_in_code_list("_append");
+    append_text_to_last_string_in_code_list("_append2");
+
+    print_code();
+
+    free_code_list();
 
 }
 
@@ -791,40 +827,20 @@ void test_expr(){
     analyze_expresssion(token, aheadToken, false, &global_symtable);
 }
 
-void test_string_list(){
-
-    add_string_to_list("hoooo");
-    add_string_to_list("hoooo2");
-    add_string_to_list("hoooo3");
-    add_string_to_list("hoooo4");
-
-    append_to_string("_append");
-    append_to_string("_append2");
-
-    print_list_of_strings();
-
-    free_list_of_strings();
-}
-
-
-
 int main(){
 
     // For throwing away EOL if is as start of file
     token.type = EOL_CASE;
 
-    string_list = NULL;
-
-//    pop();
+    code_list_init();
 
 //    test_scanner();
 //    test_symtable();
-//    test_code_list();
-//    test_string_list();
-//        test_expr();
-//    return 0;
+//    test_expr();
+    test_code_list();
 
-    init_code_list(&code_list);
+    return 0;
+
 
     global_symtable_init(&global_symtable);
     actual_symtable = global_symtable;
@@ -839,6 +855,8 @@ int main(){
     }
 
     free_symtable(&global_symtable);
+
+    print_code(code_list);
 
     // Error handling
     switch(error_code){

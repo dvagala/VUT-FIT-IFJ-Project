@@ -8,36 +8,25 @@
 #include <stdio.h>
 
 
-typedef struct {
+typedef struct Sstring{
+
     char *text;
-    int alloc_size;
-}Tstring_dynamic;
 
-typedef struct code_list{
+    struct Sstring *next;
+    struct Sstring *prev;
+    struct Sstring *start;
+    struct Sstring *end;
 
-    char *instruct;
-    char *operand_1;
-    char *operand_2;
-    char *operand_3;
-//
-//    Tstring_dynamic instruct;
-//    Tstring_dynamic operand_1;
-//    Tstring_dynamic operand_2;
-//    Tstring_dynamic operand_3;
+}*Tstring;
 
-    struct code_list *next;
-    struct code_list *start;
-    struct code_list *end;
+Tstring code_list;
 
-}*Tcode_list;
-
-
-void print_code(Tcode_list code_list);
-void add_code_line(Tcode_list *code_list, char *instruct, char *operand_1, char *operand_2, char *operand_3);
-void init_code_list(Tcode_list *code_list);
-
-
-char *make_name_for_GF(char *var_name_source, char *var_name_out);
+void code_list_init();
+void print_code();
+char* append_text_to_last_string_in_code_list(char *string);
+void add_allocated_string_to_code(char *string);
+void add_const_string_to_code(char *string);
+void free_code_list();
 
 #endif //IFJ_PROJECT_CODE_GEN_H
 
