@@ -20,7 +20,6 @@ Bnode actual_symtable;
 Bnode global_symtable;
 
 Tcode_list code_list;
-Tstring_pile_list string_pile_list;
 
 // Because I set token type as EXPR when I find out that is indeed start of expression, I need
 // somehow store this original type of token, so it can set back to original before calling analyze_expression()
@@ -75,7 +74,7 @@ bool is_token_start_of_expr() {
         if(is_id_variable(&actual_symtable, token.data.string)){
             aheadToken = next_token_lookahead();
             if(aheadToken.type != ASSIGN && previousToken.type != LPAR &&
-                previousToken.type != COLON && previousToken.type != IDENTIFICATOR){
+               previousToken.type != COLON && previousToken.type != IDENTIFICATOR){
                 // There are only 3 cases when id_variable is not start of expression
                 // 1. id_variable = restOfCode
                 // 2. def id_func(id_variable, id_variable)
@@ -806,61 +805,13 @@ void test_symtable(){
 void test_code_list(){
 
     init_code_list(&code_list);
-//
-//    add_code_line(&code_list, "DEFVAR", "GF@counter", NULL, NULL);
-//    add_code_line(&code_list, "MOVE", "GF@counter", "string@", NULL);
-//    add_code_line(&code_list, "LABEL", "GF@counter", "string@", NULL);
 
-}
+    add_code_line(&code_list, "DEFVAR", "GF@counter", NULL, NULL);
+    add_code_line(&code_list, "MOVE", "GF@counter", "string@", NULL);
+    add_code_line(&code_list, "LABEL", "GF@counter", "string@", NULL);
 
-void test_strings(){
+    print_code(code_list);
 
-    Tstring string;
-
-    create_string(&string, "first_");
-    append_to_string(&string, "hohoo");
-
-    printf("poin text: %p\n", (void*) string.text);
-
-    add_string_to_pile_list( &string);
-
-    Tstring string2;
-    string2.text = NULL;
-
-    create_string(&string2, "hohoo2");
-    append_to_string(&string2, "_append");
-
-    printf("poin text: %p\n", (void*) string2.text);
-
-    add_string_to_pile_list( &string2);
-
-    Tstring string3;
-    string3.text = NULL;
-
-    printf("..pointer to string:%p\n", string3);
-    printf("..pointer to tesxt:%p\n", string3.text);
-
-    create_string(&string3, "hohoo3");
-    printf("..pointer to string:%p\n", string3);
-    printf("..pointer to tesxt:%p\n", string3.text);
-    append_to_string(&string3, "_");
-    printf("..pointer to string:%p\n", string3);
-    printf("..pointer to tesxt:%p\n", string3.text);
-
-    append_to_string(&string3, "a");
-    printf("..pointer to string:%p\n", string3);
-    printf("..pointer to tesxt:%p\n", string3.text);
-    append_to_string(&string3, "bdddddddddddddddddddddddd");
-    printf("..pointer to string:%p\n", string3);
-    printf("..pointer to tesxt:%p\n", string3.text);
-
-    printf("poin text: %p\n", (void*) string3.text);
-    add_string_to_pile_list(&string3);
-
-
-    print_pile_of_strings();
-
-    free_pile_of_strings();
 }
 
 void test_expr(){
@@ -870,17 +821,38 @@ void test_expr(){
     analyze_expresssion(token, aheadToken, false, &global_symtable);
 }
 
+void test_string_list(){
+
+    add_string_to_list("hoooo");
+    add_string_to_list("hoooo2");
+    add_string_to_list("hoooo3");
+    add_string_to_list("hoooo4");
+
+    append_to_string("_append");
+    append_to_string("_append2");
+
+    print_list_of_strings();
+
+    free_list_of_strings();
+}
+
+
+
 int main(){
 
     // For throwing away EOL if is as start of file
     token.type = EOL_CASE;
 
+    string_list = NULL;
+
+    pop();
+
 //    test_scanner();
 //    test_symtable();
-//    test_code_list();
-//    test_strings();
+    test_code_list();
+//    test_string_list();
 //        test_expr();
-//    return 0;
+    return 0;
 
     init_code_list(&code_list);
 
@@ -931,3 +903,4 @@ int main(){
 
     return 0;
 }
+
