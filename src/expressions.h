@@ -5,31 +5,12 @@
 #ifndef IFJ_PROJECT_EXPRESSION_H
 #define IFJ_PROJECT_EXPRESSION_H
 
-#include <stdbool.h>
-#include "scanner.h"
+#include "errors.h"
+#include "sym_stack.h"
+#include "postfix_data_managment.h"
 
-typedef enum prec_table_symbols{
-    P_PLUS,   // +
-    P_MINUS,  // -
-    P_MUL,    // *
-    P_DIV,    // /
-    P_EQ,     // ==
-    P_NOT_EQ, // !=
-    P_LESS_EQ,// <=
-    P_MORE_EQ,// >=
-    P_LESS,   // <
-    P_MORE,   // >
-    P_LEFT_PAR,// (
-    P_RIGHT_PAR,// )
-    P_ID,     // ID
-    P_INT_NUM,// int
-    P_FLOAT_NUM,// float
-    P_STRING,// string
-    P_DOLLAR,// $
-    P_STOP,
-    P_NON_TERM// non terminal
 
-}Prec_table_symbols_enum;
+
 
 typedef enum expr_rules{
                // E->
@@ -51,9 +32,10 @@ typedef enum expr_rules{
 }Expr_rules_enum;
 
 typedef struct {
-    tToken token;
+    tToken *token;
     bool error;
     int error_code;
 }ReturnData;
 
+ReturnData analyze_expresssion(tToken token, tToken aheadToken, bool tokenLookAheadFlag, Bnode *tree );
 #endif //IFJ_PROJECT_EXPRESSION_H

@@ -4,6 +4,15 @@
 
 #include <stdlib.h>
 #include "code_gen.h"
+#include <string.h>
+
+char *make_name_for_GF(char *var_name_source, char *var_name_out){
+//    char str[strlen(var_name+4)];
+    strcpy(var_name_out, "GF@");
+    strcat(var_name_out, var_name_source);
+
+    return var_name_out;
+}
 
 void print_code(Tcode_list code_list){
 
@@ -26,7 +35,7 @@ void print_code(Tcode_list code_list){
 
 }
 
-void add_line(Tcode_list *code_list, char *instruct, char *operand_1, char *operand_2, char *operand_3){
+void add_code_line(Tcode_list *code_list, char *instruct, char *operand_1, char *operand_2, char *operand_3){
 
     // First time
     if((*code_list) == NULL){
@@ -61,6 +70,9 @@ void init_code_list(Tcode_list *code_list){
     *code_list = NULL;
 }
 
+
+
+
 //int main(){
 //
 //    Tcode_list code_list;
@@ -74,3 +86,4 @@ void init_code_list(Tcode_list *code_list){
 //
 //    return 0;
 //}
+

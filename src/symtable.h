@@ -6,14 +6,35 @@
 #define IFJ_PROJECT_SYMTABLE_H
 #include "param_list.h"
 
-#include <stdbool.h>
-#include "expressions.h"
+#include "scanner.h"
+
 
 #define TEQUAL 0
 #define TLESS  1
 #define TMORE 2
 
+typedef enum prec_table_symbols{
+    P_PLUS,   // +
+    P_MINUS,  // -
+    P_MUL,    // *
+    P_DIV,    // /
+    P_EQ,     // ==
+    P_NOT_EQ, // !=
+    P_LESS_EQ,// <=
+    P_MORE_EQ,// >=
+    P_LESS,   // <
+    P_MORE,   // >
+    P_LEFT_PAR,// (
+    P_RIGHT_PAR,// )
+    P_ID,     // ID
+    P_INT_NUM,// int
+    P_FLOAT_NUM,// float
+    P_STRING,// string
+    P_DOLLAR,// $
+    P_STOP,
+    P_NON_TERM// non terminal
 
+}Prec_table_symbols_enum;
 
 typedef struct {
     bool function;              // function or variable

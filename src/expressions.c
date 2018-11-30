@@ -4,15 +4,13 @@
 #include <stdio.h>
 #include <malloc.h>
 #include "expressions.h"
-#include "errors.h"
-#include "sym_stack.h"
-#include "scanner.h"
-#include "postfix_data_managment.h"
+
 
 #define TABLE_SIZE 7
 #define SYNTAX_OK 0
 
-S_stack stack;
+#define DEBUG_EXPRESSION_ANALYSIS 1         // Set to '1', if you want to print debug stuff
+
 typedef enum prec_table_relations
 {
     R, // > reduce
@@ -37,7 +35,7 @@ int prec_table[TABLE_SIZE][TABLE_SIZE] =
             //	| +-| */ | r | ( | ) | i | $ |
                 { R , S  , R , S , R , S , R }, /// +-
                 { R , R  , R , S , R , S , R }, /// */
-                { S , S  , X , S , R , S , R }, /// r  = <> <= < >= >
+                { S , S  , X , S , R , S , R }, /// r  == != <= < >= >
                 { S , S  , S , S , E , S , X }, /// (
                 { R , R  , R , X , R , X , R }, /// )
                 { R , R  , R , X , R , X , R }, /// i (id, int, float, string)
@@ -120,22 +118,112 @@ static Prec_table_symbols_enum token_to_symbol (tToken token){
     }
 
 }
+bool is_token_end_symbol(tToken *token){
+    switch (token->type){
+        case THEN:
+        case DO:
+        case EOL_CASE:
+        case EOF_CASE:
+            return true;
+        default: return false;
+    }
+}
 
 
-ReturnData release_resources(int error_code, S_stack stack, Bnode *tree, Output_queue *q, Operator_stack operator_stack, ReturnData data){
+bool is_token_an_operator(tToken *token){
+    if(token_to_symbol(*token) < P_LEFT_PAR)
+        return true;
+    return false;
+}
+
+
+ReturnData release_resources(int error_code, S_stack stack, Bnode tree, Output_queue *q, Operator_stack operator_stack, ReturnData data){
     data.error=true;
     data.error_code = error_code;
     s_free(&stack);
-    free_symtable(tree);
+    if(tree)free_symtable(&tree);
     queue_dispose(q);
     operator_stack_free(&operator_stack);
     return data;
 
 }
+
+ReturnData release_resources_and_success(int error_code, S_stack stack, Bnode tree, Output_queue *q, Operator_stack operator_stack, ReturnData data){
+    data.error=false;
+    data.error_code = error_code;
+    s_free(&stack);
+    if(tree)free_symtable(&tree);
+    queue_dispose(q);
+    operator_stack_free(&operator_stack);
+    return data;
+
+}
+int generate_postfix(tToken *token, Operator_stack *stack, Output_queue *q){
+    bool par_found = false;
+    if(!is_token_end_symbol(token)) {
+        if (get_type_from_token(token) == type_float || get_type_from_token(token) == type_integer ||
+            get_type_from_token(token) == type_string || token->type == IDENTIFICATOR) {
+            if (!determine_type_and_insert(q, token))
+                return INNER_ERROR;
+            else if(DEBUG_EXPRESSION_ANALYSIS) printf("EXPRESSIONS: %s\n", "added operand to queue");
+        }
+
+        if (is_token_an_operator(token)) {
+            if(stack->top != NULL) {
+                prec_table_relations_enum relation = prec_table[get_prec_table_index(
+                        stack->top->operator)][get_prec_table_index(token_to_symbol(*token))];
+                while (stack->top != NULL && (relation == R || relation == E) && stack->top->operator != P_LEFT_PAR) {
+                    pop_to_output_queue(stack, q);
+                }
+                if (!operator_stack_push(stack, token_to_symbol(*token)))
+                    return INNER_ERROR;
+
+                else if(DEBUG_EXPRESSION_ANALYSIS) printf("EXPRESSIONS: %s\n", "added operator to stack");
+            }
+            else if (!operator_stack_push(stack, token_to_symbol(*token))) {
+                return INNER_ERROR;
+            } else {
+                if(DEBUG_EXPRESSION_ANALYSIS) printf("EXPRESSIONS: %s\n", "added operator to queue");
+
+            }
+        }
+
+        if (token_to_symbol(*token) == P_LEFT_PAR) {
+            if (!operator_stack_push(stack, token_to_symbol(*token)))
+                return INNER_ERROR;
+        }
+        if (token_to_symbol(*token) == P_RIGHT_PAR) {
+            if(stack->top == NULL)
+                return SYNTAX_ERROR;
+            while (stack->top->operator != P_LEFT_PAR ) {
+
+                if(stack->top->operator == P_LEFT_PAR)
+                    par_found = true;
+                pop_to_output_queue(stack, q);
+
+                if(stack->top == NULL && !par_found)
+                    return SYNTAX_ERROR;
+            }
+            if(stack->top==NULL)
+                return SYNTAX_ERROR;
+            operator_pop(stack);
+        }
+    }
+    else{    //if there are no more tokens to read, we pop all the operators from the stack to output queue
+        while(stack->top!=NULL){
+            pop_to_output_queue(stack, q);
+        }
+
+    }
+
+    return SYNTAX_OK;
+
+}
+
 Expr_rules_enum test_rule(int count, S_item *o1, S_item *o2, S_item *o3){
 
     if (count == 1){
-        if (o1->symbol == INT || o1->symbol == FLOAT || o1->symbol == STRING || o1->symbol == IDENTIFICATOR )
+        if (o1->symbol == P_INT_NUM|| o1->symbol == P_FLOAT_NUM || o1->symbol == P_STRING || o1->symbol == P_ID )
             return operand;//E -> i
         else return no_rule;
     }
@@ -178,23 +266,25 @@ Expr_rules_enum test_rule(int count, S_item *o1, S_item *o2, S_item *o3){
     return no_rule;
 }
 
-int rule_reduction(ReturnData *data, S_stack stack){
-    bool stop = false;
-    int count = get_count_after_stop(&stack, &stop);
-    int error;
+int rule_reduction( S_stack *stack){
+    int count = get_count_after_stop(*stack);
     S_item *o1 = NULL;
     S_item *o2 = NULL;
     S_item *o3 = NULL;
     Expr_rules_enum rule;
-    Data_type final_type;
-    if (count == 1 && stop){
-        o1 = stack.top;
+
+    if(DEBUG_EXPRESSION_ANALYSIS) printf("EXPRESSIONS: %s%d\n","count is: ",count);
+    if (count == 0){
+        return SYNTAX_ERROR;
+    }
+    if (count == 1){
+        o1 = stack->top;
         rule = test_rule(count,o1,o2,o3);
     }
-    else if (count == 3 && stop){
-            o1 = stack.top;
-            o2 = stack.top->next_item;
-            o3 = stack.top->next_item->next_item;
+    else if (count == 3 ){
+            o3 = stack->top;
+            o2 = stack->top->next_item;
+            o1 = stack->top->next_item->next_item;
             rule = test_rule(count, o1, o2, o3);
     }
     else return SYNTAX_ERROR;
@@ -202,145 +292,135 @@ int rule_reduction(ReturnData *data, S_stack stack){
     if (rule == no_rule){
         return SYNTAX_ERROR;
     }
-//    else{
-//        if((error=semantics(rule,count,o1,o2,o3,&final_type))) return error;
-//    }
 
-    stack_n_pop(&stack, count +1);
-    s_push(&stack, P_NON_TERM, type_undefined);
+    if(DEBUG_EXPRESSION_ANALYSIS) printf("EXPRESSIONS: %s%d\n","the rule is: ",rule);
+    stack_n_pop(stack, count +1);
+    s_push(stack, P_NON_TERM);
+
+    if(DEBUG_EXPRESSION_ANALYSIS) printf("EXPRESSIONS: %s%d\n","top stack is: ",stack->top->symbol);
+
+    if(DEBUG_EXPRESSION_ANALYSIS) printf("EXPRESSIONS: %s%d\n","top terminal is: ",get_top_terminal(stack)->symbol);
+
     return SYNTAX_OK;
 
 }
-
-bool is_token_an_operator(tToken *token){
-    if(token_to_symbol(*token) < P_LEFT_PAR)
-        return true;
-    return false;
-}
-
-bool is_token_end_symbol(tToken *token){
-    switch (token->type){
-        case THEN:
-        case DO:
-        case EOL_CASE:
-            return true;
-        default: return false;
-    }
-}
-
-int generate_postfix(tToken *token, Operator_stack stack, Output_queue *q){
-
-    if(!is_token_end_symbol(token)) {
-        if (get_type_from_token(token) == type_float || get_type_from_token(token) == type_integer || get_type_from_token(token) == type_string || token->type == IDENTIFICATOR ){
-            if (!determine_type_and_insert(q, token))
-                return INNER_ERROR;
-        }
-
-        if (is_token_an_operator(token)) {
-            if (stack.top != NULL) {
-                prec_table_relations_enum relation = prec_table[get_prec_table_index(
-                        stack.top->operator)][get_prec_table_index(token_to_symbol(*token))];
-                while (stack.top != NULL &&(relation == R || relation == E) && stack.top->operator != P_LEFT_PAR) {
-                    pop_to_output_queue(&stack, q);
-                }
-                if (!operator_stack_push(&stack, token_to_symbol(*token)))
-                    return INNER_ERROR;
-            }
-        }
-        if (token_to_symbol(*token) == P_LEFT_PAR) {
-            if (!operator_stack_push(&stack, token_to_symbol(*token)))
-                return INNER_ERROR;
-        }
-        if (token_to_symbol(*token) == P_RIGHT_PAR) {
-            while (stack.top->operator != P_LEFT_PAR) {
-                pop_to_output_queue(&stack, q);
-            }
-            operator_pop(&stack);
-        }
-    }
-    //if there are no more tokens to read, we pop all the operators from the stack to output queue
-    else{
-        while(stack.top != NULL){
-            pop_to_output_queue(&stack, q);
-        }
-    }
-    return SYNTAX_OK;
-
-}
-
 
 ReturnData analyze_expresssion(tToken token, tToken aheadToken, bool tokenLookAheadFlag, Bnode *tree ){
+    //allocating data managment
     ReturnData *data = malloc(sizeof(ReturnData));
     data->error = false;
     int error;
-    S_stack stack = s_init();
+    S_stack *stack =  malloc(sizeof(S_stack));
+    s_init(stack);
+    Output_queue *q = (Output_queue*)malloc(sizeof(Output_queue)) ;
+    queue_inint(q);
+    Operator_stack *o_stack = malloc(sizeof(Operator_stack));
+    operator_stack_init(o_stack);
 
-    Output_queue q = queue_inint();
-    Operator_stack o_stack = operator_stack_init();
 
-    if(!s_push(&stack,P_DOLLAR,type_undefined))
-        return release_resources(INNER_ERROR, stack, tree, &q, o_stack, *data);
+    if(!s_push(stack,P_DOLLAR))
+        return release_resources(INNER_ERROR, *stack, *tree, q, *o_stack, *data);
 
-    Prec_table_symbols_enum stack_top_terminal_symbol = get_top_terminal(&stack)->symbol;
-    data->token = token;
+    Prec_table_symbols_enum *stack_top_terminal_symbol;
+    data->token = &token;
     Prec_table_symbols_enum new_symbol = token_to_symbol(token);
+    error = generate_postfix(data->token, o_stack, q);
+    if(error != 0)
+        return release_resources(error, *stack, *tree, q, *o_stack, *data);
 
     bool enough = false;
     while(!enough){
-        switch(prec_table[get_prec_table_index(stack_top_terminal_symbol)][get_prec_table_index(new_symbol)]){
+
+        if(DEBUG_EXPRESSION_ANALYSIS) printf("EXPRESSIONS: %s%d\n","next token is: ",new_symbol);
+        stack_top_terminal_symbol = &get_top_terminal(stack)->symbol;
+        if(new_symbol == P_ID && !is_token_end_symbol(&token)){
+            if(!is_variable_defined(tree,token.data.string))
+                return release_resources(SEMANTIC_ERROR,*stack,*tree, q, *o_stack, *data);
+        }
+
+        if(stack->top == NULL)
+            return release_resources(INNER_ERROR, *stack, *tree, q ,*o_stack, *data);
+        switch(prec_table[get_prec_table_index(*stack_top_terminal_symbol)][get_prec_table_index(new_symbol)]){
             case R:
-                if((error = rule_reduction(data, stack))){
-                    release_resources(error, stack, tree, &q ,o_stack, *data);
+                if(DEBUG_EXPRESSION_ANALYSIS) printf("EXPRESSIONS: %s\n","I'm in R!");
+                if((error = rule_reduction(stack))){
+                    return release_resources(error, *stack, *tree, q ,*o_stack, *data);
                 }
                 break;
             case S:
-                if(!insert_after_top_terminal(&stack,P_STOP,type_undefined))
-                    return release_resources(INNER_ERROR, stack, tree, &q ,o_stack, *data);
+                if(DEBUG_EXPRESSION_ANALYSIS) printf("EXPRESSIONS: %s\n","I'm in S!");
+                if(!insert_after_top_terminal(stack,P_STOP))
+                    return release_resources(INNER_ERROR, *stack, *tree, q ,*o_stack, *data);
 
-                if(!s_push(&stack, new_symbol, get_type_from_token(&data->token)))
-                    return release_resources(INNER_ERROR, stack, tree, &q, o_stack, *data);
+                if(!s_push(stack, new_symbol))
+                    return release_resources(INNER_ERROR, *stack, *tree, q, *o_stack, *data);
 
                 if(new_symbol == P_ID){
                     if(!is_variable_defined(tree,token.data.string))
-                        return release_resources(SEMANTIC_ERROR,stack,tree, &q, o_stack, *data);
+                        return release_resources(SEMANTIC_ERROR,*stack,*tree, q, *o_stack, *data);
                 }
 //
 //              if( new_symbol == P_ID || new_symbol == P_INT_NUM || new_symbol == P_FLOAT_NUM || new_symbol == P_STRING )
-//                    //TODO PUSHS value of token
-                      //
+
 
                 if(tokenLookAheadFlag){
-                    data->token = aheadToken;
-                    error = generate_postfix(&data->token, o_stack, &q);
+                    data->token = &aheadToken;
+                    error = generate_postfix(data->token, o_stack, q);
                     if(error != 0)
-                        return release_resources(error, stack, tree, &q, o_stack, *data);
+                        return release_resources(error, *stack, *tree, q, *o_stack, *data);
                     tokenLookAheadFlag = false;
                 }
                 else {
-                    data->token = nextToken();
-                    error = generate_postfix(&data->token, o_stack, &q);
+                    *data->token = nextToken();
+                    error = generate_postfix(data->token, o_stack, q);
                     if(error != 0)
-                        return release_resources(error, stack, tree, &q, o_stack, *data);
+                        return release_resources(error, *stack, *tree, q, *o_stack, *data);
                 }
-                new_symbol = token_to_symbol(data->token);
+                new_symbol = token_to_symbol(*data->token);
+
                 break;
             case X:
-                if ((data->token.type == EOL_CASE || data->token.type == THEN || data->token.type == DO) && stack_top_terminal_symbol == P_STOP)
+                if(DEBUG_EXPRESSION_ANALYSIS) printf("EXPRESSIONS: %s\n","I'm in X!");
+                if (is_token_end_symbol(data->token) && *stack_top_terminal_symbol == P_DOLLAR) {
+                    if(DEBUG_EXPRESSION_ANALYSIS) printf("EXPRESSIONS: %s\n","ENOUGH!, very nice");
                     enough = true;
-                else return release_resources(SYNTAX_ERROR, stack, tree, &q, o_stack, *data);
+                }
+                else return release_resources(SYNTAX_ERROR, *stack, *tree, q, *o_stack, *data);
                 break;
             case E:
-                if(!s_push(&stack,new_symbol,get_type_from_token(&data->token)))
-                    return release_resources(INNER_ERROR, stack, tree, &q, o_stack, *data);//malloc chceck
+                if(DEBUG_EXPRESSION_ANALYSIS) printf("EXPRESSIONS: %s\n","I'm in E!");
+                if(!s_push(stack,new_symbol))
+                    return release_resources(INNER_ERROR, *stack, *tree, q, *o_stack, *data);
+                *data->token = nextToken();
+                new_symbol = token_to_symbol(*data->token);
+                error = generate_postfix(data->token, o_stack, q);
+                if(error != 0)
+                    return release_resources(error, *stack, *tree, q, *o_stack, *data);
+
                 break;
             default: break;
         }
 
     }
-
-   return release_resources(SYNTAX_OK, stack, tree, &q , o_stack, *data);
+    print_queue(*q);
+   return release_resources_and_success(SYNTAX_OK, *stack, NULL, q , *o_stack, *data);
 };
 
 //int main(){
-//    printf("%s",nextToken().data.string);
+//    tToken token = nextToken();
+//    Bnode tree;
+//    local_symtable_init(&tree);
+//
+//
+//    add_variable_to_symtable(&tree,"a");
+//    add_variable_to_symtable(&tree,"b");
+//    add_variable_to_symtable(&tree,"c");
+//    ReturnData data = analyze_expresssion(token,token,false,&tree);
+//    if(DEBUG_EXPRESSION_ANALYSIS) printf("EXPRESSIONS: %s%d\n","error code:", data.error_code);
+//
+//
+//    free_symtable(&tree);
+//
+//
 //}
+//
