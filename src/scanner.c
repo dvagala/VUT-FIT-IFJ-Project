@@ -40,6 +40,7 @@ tToken nextToken()
     //allocating string space for cases STRING, INT, FLOAT, IDENTIFICATOR. Doing this through a struct that has necessary elements
     //to do all the handling of dynamic allocation.
     tokenstringptr TokenString = malloc(sizeof(struct tokenstring));
+    TokenString->string=NULL;
     TokenString->string=malloc(sizeof(char)*CHUNK);
     TokenString->index=0;
     TokenString->chunk_amount=1;
