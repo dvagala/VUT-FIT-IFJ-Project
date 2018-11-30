@@ -2,12 +2,16 @@
 int c=30000; //global variable c, holding current character. We need to hold this value between function callings,
 // and setting is as global is the simplest solution.
 
+/*
+This is a function that saves characters scanned from code into a string. This string is dynamically allocated so we always
+ need to be sure to have enough space for the characters.
+*/
 void bufferToken(tokenstringptr ts)
 {
     if ((ts->index/ts->chunk_amount)==CHUNK)
     {
-        ts->string=realloc(ts->string,(sizeof(ts->string)*2));
-        ts->chunk_amount=ts->chunk_amount*2;
+        ts->chunk_amount=(ts->chunk_amount)+1;
+        ts->string=realloc(ts->string,sizeof(char)*CHUNK*(ts->chunk_amount));
     }
     ts->string[ts->index]=c;
     ts->index=(ts->index)+1;
@@ -22,26 +26,24 @@ void freeString(tokenstringptr ts)
 static char* Keywords[KEYWORD_COUNT]={"if","else","def","do","end","not","nil","then","while"};
 tToken nextToken()
 {
-
     Tokens_Types state=0;
 
     if (c == 30000) //if we have yet to read a single character from given code:
     {
-
         c=getchar();
         if (c == '=') //if it's =, the code starts with a multiline comment.
         {
             state=BEGCOM;
         }
     }
-    //allocating string space for cases STRING, INT, FLOAT, IDENTIFICATOR.
+
+    //allocating string space for cases STRING, INT, FLOAT, IDENTIFICATOR. Doing this through a struct that has necessary elements
+    //to do all the handling of dynamic allocation.
     tokenstringptr TokenString = malloc(sizeof(struct tokenstring));
     TokenString->string=malloc(sizeof(char)*CHUNK);
     TokenString->index=0;
     TokenString->chunk_amount=1;
     tToken identificator;
-
-    char* token=malloc(sizeof(char)*50);
 
     //Getting rid of all whitespace characters between tokens
     while (isspace(c) && c!='\n')
@@ -184,7 +186,7 @@ tToken nextToken()
                     bufferToken(TokenString);
                     c=getchar();
                 }
-                TokenString->string[(TokenString->index)+1]='\0';
+                TokenString->string[TokenString->index]='\0';
                 identificator.type=IDENTIFICATOR;
                 identificator.data.string=TokenString->string;
                 break;
@@ -431,7 +433,7 @@ tToken nextToken()
                     return identificator;
                 }
             } //cycle will be repeated until we reach an unescaped " after that string will be saved and token returned.
-            TokenString->string[(TokenString->index)+1]='\0';
+            TokenString->string[TokenString->index]='\0';
             c=getchar();
             identificator.type = STRING;
             identificator.data.string = TokenString->string;
@@ -567,8 +569,7 @@ tToken nextToken()
                         if (isEnd==0 && c==EOF) //if we reached the End of File without ever properly ending the comment, raise an error.
                         {
                             identificator.type=ERROR;
-                            token=NULL;
-                            free(token);
+                            freeString(TokenString);
                             return identificator;
                         }
                     }
@@ -603,7 +604,6 @@ tToken nextToken()
     }
 
     //free the token variable, as we saved it already into struct identificator, and return the token.
-    freeString(TokenString);
     return identificator;
 }
 
