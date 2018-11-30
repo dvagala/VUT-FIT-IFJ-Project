@@ -147,7 +147,19 @@ ReturnData release_resources(int error_code, S_stack stack, Bnode tree, Output_q
     return data;
 
 }
+
+ReturnData release_resources_and_success(int error_code, S_stack stack, Bnode tree, Output_queue *q, Operator_stack operator_stack, ReturnData data){
+    data.error=false;
+    data.error_code = error_code;
+    s_free(&stack);
+    if(tree)free_symtable(&tree);
+    queue_dispose(q);
+    operator_stack_free(&operator_stack);
+    return data;
+
+}
 int generate_postfix(tToken *token, Operator_stack *stack, Output_queue *q){
+    bool par_found = false;
     if(!is_token_end_symbol(token)) {
         if (get_type_from_token(token) == type_float || get_type_from_token(token) == type_integer ||
             get_type_from_token(token) == type_string || token->type == IDENTIFICATOR) {
@@ -181,9 +193,14 @@ int generate_postfix(tToken *token, Operator_stack *stack, Output_queue *q){
                 return INNER_ERROR;
         }
         if (token_to_symbol(*token) == P_RIGHT_PAR) {
-            while (stack->top->operator != P_LEFT_PAR) {
+            while (stack->top->operator != P_LEFT_PAR ) {
+                if(stack->top==NULL)
+                    return SYNTAX_ERROR;
                 pop_to_output_queue(stack, q);
+
             }
+            if(stack->top==NULL)
+                return SYNTAX_ERROR;
             operator_pop(stack);
         }
     }
@@ -251,8 +268,7 @@ int rule_reduction( S_stack *stack){
     S_item *o3 = NULL;
     Expr_rules_enum rule;
 
-    if(DEBUG_EXPRESSION_ANALYSIS) printf("EXPRESSIONS: %s","count is: ");
-    if(DEBUG_EXPRESSION_ANALYSIS) printf("EXPRESSIONS: %d\n",count);
+    if(DEBUG_EXPRESSION_ANALYSIS) printf("EXPRESSIONS: %s%d\n","count is: ",count);
     if (count == 0){
         return SYNTAX_ERROR;
     }
@@ -272,16 +288,13 @@ int rule_reduction( S_stack *stack){
         return SYNTAX_ERROR;
     }
 
-    if(DEBUG_EXPRESSION_ANALYSIS) printf("EXPRESSIONS: %s","the rule is: ");
-    if(DEBUG_EXPRESSION_ANALYSIS) printf("EXPRESSIONS: %d\n",rule);
+    if(DEBUG_EXPRESSION_ANALYSIS) printf("EXPRESSIONS: %s%d\n","the rule is: ",rule);
     stack_n_pop(stack, count +1);
     s_push(stack, P_NON_TERM);
 
-    if(DEBUG_EXPRESSION_ANALYSIS) printf("EXPRESSIONS: %s","top stack is: ");
-    if(DEBUG_EXPRESSION_ANALYSIS) printf("EXPRESSIONS: %d\n",stack->top->symbol);
+    if(DEBUG_EXPRESSION_ANALYSIS) printf("EXPRESSIONS: %s%d\n","top stack is: ",stack->top->symbol);
 
-    if(DEBUG_EXPRESSION_ANALYSIS) printf("EXPRESSIONS: %s","top terminal is: ");
-    if(DEBUG_EXPRESSION_ANALYSIS) printf("EXPRESSIONS: %d\n",get_top_terminal(stack)->symbol);
+    if(DEBUG_EXPRESSION_ANALYSIS) printf("EXPRESSIONS: %s%d\n","top terminal is: ",get_top_terminal(stack)->symbol);
 
     return SYNTAX_OK;
 
@@ -313,8 +326,7 @@ ReturnData analyze_expresssion(tToken token, tToken aheadToken, bool tokenLookAh
     bool enough = false;
     while(!enough){
 
-        if(DEBUG_EXPRESSION_ANALYSIS) printf("EXPRESSIONS: %s","next token is: ");
-        if(DEBUG_EXPRESSION_ANALYSIS) printf("EXPRESSIONS: %d\n",new_symbol);
+        if(DEBUG_EXPRESSION_ANALYSIS) printf("EXPRESSIONS: %s%d\n","next token is: ",new_symbol);
         stack_top_terminal_symbol = &get_top_terminal(stack)->symbol;
         if(new_symbol == P_ID && !is_token_end_symbol(&token)){
             if(!is_variable_defined(tree,token.data.string))
@@ -331,7 +343,7 @@ ReturnData analyze_expresssion(tToken token, tToken aheadToken, bool tokenLookAh
                 }
                 break;
             case S:
-
+                if(DEBUG_EXPRESSION_ANALYSIS) printf("EXPRESSIONS: %s\n","I'm in S!");
                 if(!insert_after_top_terminal(stack,P_STOP))
                     return release_resources(INNER_ERROR, *stack, *tree, q ,*o_stack, *data);
 
@@ -364,8 +376,10 @@ ReturnData analyze_expresssion(tToken token, tToken aheadToken, bool tokenLookAh
                 break;
             case X:
                 if(DEBUG_EXPRESSION_ANALYSIS) printf("EXPRESSIONS: %s\n","I'm in X!");
-                if (is_token_end_symbol(&token) && *stack_top_terminal_symbol == P_DOLLAR)
+                if (is_token_end_symbol(data->token) && *stack_top_terminal_symbol == P_DOLLAR) {
+                    if(DEBUG_EXPRESSION_ANALYSIS) printf("EXPRESSIONS: %s\n","ENOUGH!, very nice");
                     enough = true;
+                }
                 else return release_resources(SYNTAX_ERROR, *stack, *tree, q, *o_stack, *data);
                 break;
             case E:
@@ -384,7 +398,7 @@ ReturnData analyze_expresssion(tToken token, tToken aheadToken, bool tokenLookAh
 
     }
     print_queue(*q);
-   return release_resources(SYNTAX_OK, *stack, NULL, q , *o_stack, *data);
+   return release_resources_and_success(SYNTAX_OK, *stack, NULL, q , *o_stack, *data);
 };
 
 //int main(){
