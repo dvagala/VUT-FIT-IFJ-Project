@@ -7,11 +7,12 @@
 // Created by vinso on 28.11.2018.
 //
 
-#define DEBUG_POSTFIX 0         // Set to '1', if you want to print debug stuff
-
+#define DEBUG_POSTFIX 1         // Set to '1', if you want to print debug stuff
+//Operator stack
 void operator_stack_init(Operator_stack *stack){
     stack->top = NULL;
 };
+
 
 bool operator_stack_push(Operator_stack *stack,Prec_table_symbols_enum operator){
     Operator_item *item = (Operator_item*)malloc(sizeof(Operator_item));
@@ -58,8 +59,85 @@ void operator_stack_free (Operator_stack *stack){
         operator_pop(stack);
     }
 }
+//--------------------------------------------------
+//Postfix stack
+
+void p_stack_init(P_stack *stack){
+    stack->top = NULL;
+}
+
+bool p_stack_push(P_stack *stack, bool is_variable, int int_value, double float_value, char *string, Prec_table_symbols_enum type){
+    if(stack){
+        P_item *new = malloc(sizeof(P_item));
+        if(!new)
+            return false;
+        new->value_int = int_value;
+        new->value_double = float_value;
+        new->string = string;
+        new->operator = type;
+        new->next_item = stack->top;
+        new->is_variable = is_variable;
+        new->is_operator = false;
+        stack->top = new;
+        return true;
+    }
+    return false;
+
+}
+
+bool determine_type_and_push(P_stack *stack, P_item *item){
+    if(item->operator == P_ID){
+        if(p_stack_push(stack, true, 0,0, item->string, P_ID)) {
+            return true;
+        }
+        else
+            return false;
+    }
+
+    switch (item->operator){
+        case P_INT_NUM:
+            if(p_stack_push(stack,false, item->value_int, 0, NULL, P_INT_NUM)) {
+                return true;
+            }
+            else return false;
+        case P_FLOAT_NUM:
+            if(p_stack_push(stack, false , 0 ,item->value_double , NULL, P_FLOAT_NUM))
+                return true;
+            else return false;
+        case P_STRING:
+            if(p_stack_push(stack, false, 0, 0, item->string, P_STRING))
+                return true;
+            else return false;
+
+        default: break;
+
+    }
+
+    return false;
+}
+
+void p_stack_pop(P_stack *stack){
+    if(stack)
+        if(stack->top){
+            P_item *pom = stack->top;
+            stack->top = stack->top->next_item;
+            free(pom);
+        }
+}
+
+void p_stack_free(P_stack *stack){
+    if(stack){
+        while(stack->top){
+            p_stack_pop(stack);
+        }
+    }
+}
+
+
+
 
 //---------------------------------------------------
+//Output queue
 
 Output_queue queue_inint(Output_queue *q){
     q->first = NULL;
@@ -145,22 +223,33 @@ bool insert_operator(Output_queue *q, Prec_table_symbols_enum *operator){
 
 void print_queue(Output_queue q){
     P_item *item = q.first;
-    if(DEBUG_POSTFIX) printf("POSTFIX: %s","postfix: ");
+    if(DEBUG_POSTFIX) printf("POSTFIX: %s\n","postfix: ");
     while(item){
         if( item->operator == P_INT_NUM ) {
-            if(DEBUG_POSTFIX) printf("POSTFIX: %d", item->value_int);
+            if(DEBUG_POSTFIX) printf("%d", item->value_int);
         }
-        else if(item->operator == P_FLOAT_NUM)
-            if(DEBUG_POSTFIX) printf("POSTFIX: %f", item->value_double);
-        else  if((item->operator == P_STRING) || (item->is_variable)  )
-            if(DEBUG_POSTFIX) printf("POSTFIX: %s", item->string);
+        else if(item->operator == P_FLOAT_NUM) {
+            if (DEBUG_POSTFIX) printf("%f", item->value_double);
+        }
+        else if((item->operator == P_STRING) || (item->is_variable)  ) {
+            if (DEBUG_POSTFIX) printf("%s", item->string);
+        }
         else if(item->is_operator){
-            if(DEBUG_POSTFIX) printf("POSTFIX: %d",item->operator);
+            if(DEBUG_POSTFIX) printf("%d",item->operator);
         }
-        if(DEBUG_POSTFIX) printf("POSTFIX: %s"," ");
+        if(DEBUG_POSTFIX) printf("%s"," ");
         item = item->next_item;
     }
-    if(DEBUG_POSTFIX) printf("POSTFIX: %s\n","");
+    if(DEBUG_POSTFIX) printf("%s\n","");
+}
+void delete_first(Output_queue *q){
+    if(q){
+        if(q->first){
+            P_item *pom = q->first;
+            q->first = pom->next_item;
+            free(pom);
+        }
+    }
 }
 
 void queue_dispose(Output_queue *q) {
@@ -171,25 +260,34 @@ void queue_dispose(Output_queue *q) {
     }
 }
 
-//int main(){
-//    Operator_stack o_stack = operator_stack_init();
-//    Output_queue q = queue_inint();
-//    queue_insert(&q, false, type_undefined , NULL, NULL, "a", NULL);
-//    update_last_is_variable(&q);
-//    operator_stack_push(&o_stack,P_MINUS);
-//    if(DEBUG_POSTFIX) printf("POSTFIX: %d\n",o_stack.top->operator);
-//    pop_to_output_queue(&o_stack,&q);
-//    //insert_operator(&q,P_PLUS);
-//    //if(DEBUG_POSTFIX) printf("POSTFIX: %d",*q.last->operator);
-//    queue_insert(&q, false, type_undefined , NULL, NULL, "b", NULL);
-//    update_last_is_variable(&q);
+//------------------------------------------------------------
+
+bool first_from_queue_to_stack(Output_queue *q, P_stack *stack){
+    if(q && stack) {
+        if (!determine_type_and_push(stack, q->first))
+            return false;
+        delete_first(q);
+        return true;
+    }
+    return false;
+}
+
+//int main() {
+//    Output_queue *q = (Output_queue*)malloc(sizeof(Output_queue));
+//    queue_inint(q);
+//    P_stack *stack = malloc(sizeof(P_stack));
+//    p_stack_init(stack);
+//    queue_insert(q, false, 0, 0, "a", P_ID);
+//    queue_insert(q, false, 0, 0, "C", P_STRING);
+//    update_last_is_variable(q);
+//    queue_insert(q, false, 0, 0, "b", P_ID);
+//    update_last_is_variable(q);
 //
-//    queue_insert(&q, false, type_undefined , NULL, NULL, "c", NULL);
-////    queue_insert(&q, false, type_undefined , NULL, NULL, "c", NULL);
+////    determine_type_and_push(stack,q->first);
+//    first_from_queue_to_stack(q,stack);
+//    printf("%d",stack->top->operator);
 //
-//    update_last_is_variable(&q);
-//
-//
-//    print_queue(q);
+//    p_stack_free(stack);
+//    queue_dispose(q);
 //}
 

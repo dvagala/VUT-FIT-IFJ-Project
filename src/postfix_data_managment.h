@@ -20,6 +20,8 @@ typedef struct
     Operator_item *top;
 }Operator_stack;
 
+
+
 typedef struct postfix_stack_item{
     int    value_int;
     double value_double;
@@ -29,6 +31,11 @@ typedef struct postfix_stack_item{
     bool is_variable;
     struct postfix_stack_item *next_item;
 }P_item;
+
+typedef struct p_item_stack{
+    P_item *top;
+}P_stack;
+
 
 typedef struct {
     P_item *first;
@@ -42,10 +49,17 @@ bool pop_to_output_queue(Operator_stack *stack, Output_queue *q);
 void operator_stack_free (Operator_stack *stack);
 bool is_stack_top_not_null(Operator_stack *stack);
 
+void p_stack_init(P_stack *stack);
+bool determine_type_and_push(P_stack *stack, P_item *item);
+void p_stack_pop(P_stack *stack);
+void p_stack_free(P_stack *stack);
+
 void print_queue(Output_queue q);
 Output_queue queue_inint(Output_queue *q);
 bool queue_insert(Output_queue *q, bool is_operator, int int_value, double float_value, char *string, Prec_table_symbols_enum operator);
 bool insert_operator(Output_queue *q, Prec_table_symbols_enum *operator);
 void queue_dispose(Output_queue *q);
 bool determine_type_and_insert(Output_queue *q, tToken *token);
+
+bool first_from_queue_to_stack(Output_queue *q, P_stack *stack);
 #endif //IFJ_PROJECT_POSTFIX_STACK_H
