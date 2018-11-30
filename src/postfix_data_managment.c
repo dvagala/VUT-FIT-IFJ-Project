@@ -6,6 +6,9 @@
 //
 // Created by vinso on 28.11.2018.
 //
+
+#define DEBUG_POSTFIX 0         // Set to '1', if you want to print debug stuff
+
 void operator_stack_init(Operator_stack *stack){
     stack->top = NULL;
 };
@@ -16,8 +19,8 @@ bool operator_stack_push(Operator_stack *stack,Prec_table_symbols_enum operator)
 
     item->next = stack->top;
     item->operator = operator;
-    printf("%s","pushing operator to stack:");
-    printf("%d\n",item->operator);
+    if(DEBUG_POSTFIX) printf("POSTFIX: %s","pushing operator to stack:");
+    if(DEBUG_POSTFIX) printf("POSTFIX: %d\n",item->operator);
     stack->top = item;
     return true;
 }
@@ -42,8 +45,8 @@ bool pop_to_output_queue(Operator_stack *stack, Output_queue *q){
     if(!(stack && q) )
         return false;
     Prec_table_symbols_enum *operator = &stack->top->operator;
-    printf("%s","popin operator from stack:");
-    printf("%d\n",*operator);
+    if(DEBUG_POSTFIX) printf("POSTFIX: %s","popin operator from stack:");
+    if(DEBUG_POSTFIX) printf("POSTFIX: %d\n",*operator);
     if(insert_operator(q, operator))
         if(operator_pop(stack))
             return true;
@@ -142,22 +145,22 @@ bool insert_operator(Output_queue *q, Prec_table_symbols_enum *operator){
 
 void print_queue(Output_queue q){
     P_item *item = q.first;
-    printf("%s","postfix: ");
+    if(DEBUG_POSTFIX) printf("POSTFIX: %s","postfix: ");
     while(item){
         if( item->operator == P_INT_NUM ) {
-            printf("%d", item->value_int);
+            if(DEBUG_POSTFIX) printf("POSTFIX: %d", item->value_int);
         }
         else if(item->operator == P_FLOAT_NUM)
-            printf("%f", item->value_double);
+            if(DEBUG_POSTFIX) printf("POSTFIX: %f", item->value_double);
         else  if((item->operator == P_STRING) || (item->is_variable)  )
-            printf("%s", item->string);
+            if(DEBUG_POSTFIX) printf("POSTFIX: %s", item->string);
         else if(item->is_operator){
-            printf("%d",item->operator);
+            if(DEBUG_POSTFIX) printf("POSTFIX: %d",item->operator);
         }
-        printf("%s"," ");
+        if(DEBUG_POSTFIX) printf("POSTFIX: %s"," ");
         item = item->next_item;
     }
-    printf("%s\n","");
+    if(DEBUG_POSTFIX) printf("POSTFIX: %s\n","");
 }
 
 void queue_dispose(Output_queue *q) {
@@ -174,10 +177,10 @@ void queue_dispose(Output_queue *q) {
 //    queue_insert(&q, false, type_undefined , NULL, NULL, "a", NULL);
 //    update_last_is_variable(&q);
 //    operator_stack_push(&o_stack,P_MINUS);
-//    printf("%d\n",o_stack.top->operator);
+//    if(DEBUG_POSTFIX) printf("POSTFIX: %d\n",o_stack.top->operator);
 //    pop_to_output_queue(&o_stack,&q);
 //    //insert_operator(&q,P_PLUS);
-//    //printf("%d",*q.last->operator);
+//    //if(DEBUG_POSTFIX) printf("POSTFIX: %d",*q.last->operator);
 //    queue_insert(&q, false, type_undefined , NULL, NULL, "b", NULL);
 //    update_last_is_variable(&q);
 //

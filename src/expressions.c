@@ -9,6 +9,8 @@
 #define TABLE_SIZE 7
 #define SYNTAX_OK 0
 
+#define DEBUG_EXPRESSION_ANALYSIS 0         // Set to '1', if you want to print debug stuff
+
 typedef enum prec_table_relations
 {
     R, // > reduce
@@ -151,7 +153,7 @@ int generate_postfix(tToken *token, Operator_stack *stack, Output_queue *q){
             get_type_from_token(token) == type_string || token->type == IDENTIFICATOR) {
             if (!determine_type_and_insert(q, token))
                 return INNER_ERROR;
-            else printf("%s\n", "added operand to queue");
+            else if(DEBUG_EXPRESSION_ANALYSIS) printf("EXPRESSIONS: %s\n", "added operand to queue");
         }
 
         if (is_token_an_operator(token)) {
@@ -164,12 +166,12 @@ int generate_postfix(tToken *token, Operator_stack *stack, Output_queue *q){
                 if (!operator_stack_push(stack, token_to_symbol(*token)))
                     return INNER_ERROR;
 
-                else printf("%s\n", "added operator to stack");
+                else if(DEBUG_EXPRESSION_ANALYSIS) printf("EXPRESSIONS: %s\n", "added operator to stack");
             }
             else if (!operator_stack_push(stack, token_to_symbol(*token))) {
                 return INNER_ERROR;
             } else {
-                printf("%s\n", "added operator to queue");
+                if(DEBUG_EXPRESSION_ANALYSIS) printf("EXPRESSIONS: %s\n", "added operator to queue");
 
             }
         }
@@ -249,8 +251,8 @@ int rule_reduction( S_stack *stack){
     S_item *o3 = NULL;
     Expr_rules_enum rule;
 
-    printf("%s","count is: ");
-    printf("%d\n",count);
+    if(DEBUG_EXPRESSION_ANALYSIS) printf("EXPRESSIONS: %s","count is: ");
+    if(DEBUG_EXPRESSION_ANALYSIS) printf("EXPRESSIONS: %d\n",count);
     if (count == 0){
         return SYNTAX_ERROR;
     }
@@ -270,16 +272,16 @@ int rule_reduction( S_stack *stack){
         return SYNTAX_ERROR;
     }
 
-    printf("%s","the rule is: ");
-    printf("%d\n",rule);
+    if(DEBUG_EXPRESSION_ANALYSIS) printf("EXPRESSIONS: %s","the rule is: ");
+    if(DEBUG_EXPRESSION_ANALYSIS) printf("EXPRESSIONS: %d\n",rule);
     stack_n_pop(stack, count +1);
     s_push(stack, P_NON_TERM);
 
-    printf("%s","top stack is: ");
-    printf("%d\n",stack->top->symbol);
+    if(DEBUG_EXPRESSION_ANALYSIS) printf("EXPRESSIONS: %s","top stack is: ");
+    if(DEBUG_EXPRESSION_ANALYSIS) printf("EXPRESSIONS: %d\n",stack->top->symbol);
 
-    printf("%s","top terminal is: ");
-    printf("%d\n",get_top_terminal(stack)->symbol);
+    if(DEBUG_EXPRESSION_ANALYSIS) printf("EXPRESSIONS: %s","top terminal is: ");
+    if(DEBUG_EXPRESSION_ANALYSIS) printf("EXPRESSIONS: %d\n",get_top_terminal(stack)->symbol);
 
     return SYNTAX_OK;
 
@@ -311,8 +313,8 @@ ReturnData analyze_expresssion(tToken token, tToken aheadToken, bool tokenLookAh
     bool enough = false;
     while(!enough){
 
-        printf("%s","next token is: ");
-        printf("%d\n",new_symbol);
+        if(DEBUG_EXPRESSION_ANALYSIS) printf("EXPRESSIONS: %s","next token is: ");
+        if(DEBUG_EXPRESSION_ANALYSIS) printf("EXPRESSIONS: %d\n",new_symbol);
         stack_top_terminal_symbol = &get_top_terminal(stack)->symbol;
         if(new_symbol == P_ID && !is_token_end_symbol(&token)){
             if(!is_variable_defined(tree,token.data.string))
@@ -323,7 +325,7 @@ ReturnData analyze_expresssion(tToken token, tToken aheadToken, bool tokenLookAh
             return release_resources(INNER_ERROR, *stack, *tree, q ,*o_stack, *data);
         switch(prec_table[get_prec_table_index(*stack_top_terminal_symbol)][get_prec_table_index(new_symbol)]){
             case R:
-                printf("%s\n","I'm in R!");
+                if(DEBUG_EXPRESSION_ANALYSIS) printf("EXPRESSIONS: %s\n","I'm in R!");
                 if((error = rule_reduction(stack))){
                     return release_resources(error, *stack, *tree, q ,*o_stack, *data);
                 }
@@ -361,13 +363,13 @@ ReturnData analyze_expresssion(tToken token, tToken aheadToken, bool tokenLookAh
 
                 break;
             case X:
-                printf("%s\n","I'm in X!");
+                if(DEBUG_EXPRESSION_ANALYSIS) printf("EXPRESSIONS: %s\n","I'm in X!");
                 if (is_token_end_symbol(&token) && *stack_top_terminal_symbol == P_DOLLAR)
                     enough = true;
                 else return release_resources(SYNTAX_ERROR, *stack, *tree, q, *o_stack, *data);
                 break;
             case E:
-                printf("%s\n","I'm in E!");
+                if(DEBUG_EXPRESSION_ANALYSIS) printf("EXPRESSIONS: %s\n","I'm in E!");
                 if(!s_push(stack,new_symbol))
                     return release_resources(INNER_ERROR, *stack, *tree, q, *o_stack, *data);
                 *data->token = nextToken();
@@ -385,21 +387,21 @@ ReturnData analyze_expresssion(tToken token, tToken aheadToken, bool tokenLookAh
    return release_resources(SYNTAX_OK, *stack, NULL, q , *o_stack, *data);
 };
 
-int main(){
-    tToken token = nextToken();
-    Bnode tree;
-    local_symtable_init(&tree);
-
-
-    add_variable_to_symtable(&tree,"a");
-    add_variable_to_symtable(&tree,"b");
-    add_variable_to_symtable(&tree,"c");
-    ReturnData data = analyze_expresssion(token,token,false,&tree);
-    printf("%s%d\n","error code:", data.error_code);
-
-
-    free_symtable(&tree);
-
-
-}
-
+//int main(){
+//    tToken token = nextToken();
+//    Bnode tree;
+//    local_symtable_init(&tree);
+//
+//
+//    add_variable_to_symtable(&tree,"a");
+//    add_variable_to_symtable(&tree,"b");
+//    add_variable_to_symtable(&tree,"c");
+//    ReturnData data = analyze_expresssion(token,token,false,&tree);
+//    if(DEBUG_EXPRESSION_ANALYSIS) printf("EXPRESSIONS: %s%d\n","error code:", data.error_code);
+//
+//
+//    free_symtable(&tree);
+//
+//
+//}
+//
