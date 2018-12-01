@@ -18,7 +18,10 @@ void code_list_init(){
 void print_code(){
     if(DEBGUG_CODE_GEN) printf("CODE_GEN: printing code...\n");
 
-    printf("\nPrinting code...\n");
+    if(active_code_list == main_code_list)
+        printf("\nPrinting main code...\n");
+    else
+        printf("\nPrinting func code...\n");
 
     if(active_code_list == NULL)
         return;
@@ -124,6 +127,10 @@ void add_text_string_after_specific_string(Tstring specific_string, char *text){
         specific_string->next = new_string;
         new_string->next->prev = new_string;
     }
+
+    if(specific_string == main_code_list && functions_code_list != NULL)
+        main_code_list = active_code_list;
+
 }
 
 /**Every allocated char* that you send me will be freed, so be aware of that*/
@@ -162,6 +169,9 @@ void add_allocated_string_after_specific_string(Tstring specific_string, char *t
         specific_string->next = new_string;
         new_string->next->prev = new_string;
     }
+
+    if(specific_string == main_code_list && functions_code_list != NULL)
+        main_code_list = active_code_list;
 }
 
 // Return string what is before string that has "before_me_is_good_place_for_defvar" true

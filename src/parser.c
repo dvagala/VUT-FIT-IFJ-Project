@@ -8,8 +8,8 @@
 #include "expressions.h"
 
 // Set to '1', if you want to print debug stuff
-#define DEBUG_PARSER 1
-#define DEBUG_SEMATNICS 1
+#define DEBUG_PARSER 0
+#define DEBUG_SEMATNICS 0
 
 int error_code = 0;
 
@@ -251,6 +251,7 @@ bool def_func(){
 
     // 27. Def_func -> def id ( Param ) eol St_list end eol
     if(token.type == DEF) {
+        active_code_list = functions_code_list;     // Switch context
         pop();
         if (token.type == IDENTIFICATOR) {
 
@@ -300,6 +301,7 @@ bool def_func(){
                         if (token.type == END) {
                             free_symtable(&actual_symtable);
                             actual_symtable = global_symtable;              // switch context back to global
+                            active_code_list = main_code_list;
                             if(DEBUG_SEMATNICS) printf("SEMANTICS: switching context to global\n");
                             pop();
                             if (token.type == EOL_CASE) {
@@ -464,9 +466,26 @@ bool call_func(){
             // This ensures that only first error will be in error_code
             if(error_code == 0)
                 error_code = 5;
+            return false;
         }
 
         if(DEBUG_SEMATNICS) printf("SEMANTICS: Function: %s is calling with: %d arguments.\n", func_name, num_of_args);
+
+        printf("now pinrt\n");
+
+        add_text_string_after_specific_string(active_code_list->end, "CREATEFRAME");
+        active_code_list->end->is_start_of_new_line = true;
+        for (int i = 0; i < num_of_args; ++i) {
+            printf("is equal. %d\n", active_code_list == functions_code_list);
+            add_text_string_after_specific_string(active_code_list->end, "DEFVAR");
+            active_code_list->end->is_start_of_new_line = true;
+            add_text_string_after_specific_string(active_code_list->end, "TF@");
+            char *defined_param_name = get_name_of_defined_param_at_position(&global_symtable, func_name, i);
+            char *defined_param_name_copy = malloc(sizeof(char)*(strlen(defined_param_name) + 1));
+            strcpy(defined_param_name_copy, defined_param_name);
+            append_allocated_string_to_specific_string(active_code_list->end, defined_param_name_copy);
+            printf("Param: %s\n", defined_param_name_copy);
+        }
 
         return sub_analysis_result;
     }
@@ -566,11 +585,19 @@ bool after_id() {
 
         pop();
         bool result = func_or_expr();
-
-//        if(new_variable){
-//            add_text_string_after_specific_string(ac)
-//        }
 //
+//        if(new_variable){
+//            printf("ne_vari\n");
+//            add_text_string_after_specific_string(active_code_list->end, "DEFVAR");
+//            active_code_list->is_start_of_new_line = true;
+//
+//            if(active_code_list == main_code_list)
+//                add_text_string_after_specific_string(active_code_list->end, "GF@");
+//            else if(active_code_list == functions_code_list)
+//                add_text_string_after_specific_string(active_code_list->end, "LF@");
+//            add_allocated_string_after_specific_string(active_code_list->end, var_name);
+//        }
+
         return result;
     }
 
@@ -712,16 +739,24 @@ void init_parser(){
     token.type = EOL_CASE;
     code_list_init();
 
-    active_code_list = main_code_list;
-
     global_symtable_init(&global_symtable);
     actual_symtable = global_symtable;
 
-    add_text_string_after_specific_string(active_code_list, ".IFJcode18");
+    add_text_string_after_specific_string(functions_code_list, ".IFJcode18");
+
+    functions_code_list = active_code_list;
+
+    // Useless, but you get the point, function_code_list is now "active"
+    active_code_list = functions_code_list;
+
     active_code_list->start->is_start_of_new_line = true;
-    add_text_string_after_specific_string(active_code_list->end, "JUMP");
+    add_text_string_after_specific_string(active_code_list->end, "JUMP $$main");
     active_code_list->end->is_start_of_new_line = true;
-    add_text_string_after_specific_string(active_code_list->end, "$$main");
+
+    active_code_list = main_code_list;
+    add_text_string_after_specific_string(active_code_list, "LABEL $$main");
+    active_code_list->end->is_start_of_new_line = true;
+
 }
 
 /** Just test if scanner works properly
@@ -849,6 +884,14 @@ void test_expr(){
     analyze_expresssion(token, aheadToken, false, &global_symtable);
 }
 
+int add_5(int n){
+    return n+5;
+}
+
+int get_num(int n){
+    return n*2;
+}
+
 int main(){
 
     init_parser();
@@ -857,8 +900,7 @@ int main(){
 //    test_symtable();
 //    test_expr();
 //    test_code_list();
-//
-//    return 0;
+//    return 0
 
     pop();      // get first token
 
@@ -869,8 +911,6 @@ int main(){
         error_code = 2;
     }
 
-    free_symtable(&global_symtable);
-
     // Print functions definitions
     active_code_list = functions_code_list;
     print_code();
@@ -879,6 +919,7 @@ int main(){
     active_code_list = main_code_list;
     print_code();
 
+    free_symtable(&global_symtable);
     free_code_list();
 
     // Error handling
