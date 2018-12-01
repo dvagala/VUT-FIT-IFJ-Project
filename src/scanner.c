@@ -221,7 +221,10 @@ tToken nextToken()
             }
             if (c=='e' || c == 'E') //and start the exponent part of float, or end scanning
             {
-                identificator.type=FLOAT;
+                if (identificator.type != ERROR)
+                {
+                    identificator.type = FLOAT;
+                }
                 bufferToken(TokenString);
                 c=getchar();
                 if (c=='+' || c=='-') //exponent can be followed by non-required + or -
