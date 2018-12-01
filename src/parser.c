@@ -655,6 +655,11 @@ bool after_id() {
 
         if(DEBUG_SEMATNICS) printf("SEMANTICS: Function: %s is calling with: %d arguments.\n", func_name, num_of_args);
 
+        // Generate code
+        add_text_string_after_specific_string(active_code_list->end, "CALL");
+        active_code_list->end->is_start_of_new_line = true;
+        add_allocated_string_after_specific_string(active_code_list->end, func_name);
+
         return sub_analysis_result;
     }else if(token.type == ASSIGN){        // 6. After_id -> = Func_or_expr
 
