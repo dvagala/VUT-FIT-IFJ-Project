@@ -2,6 +2,9 @@
 int c=30000; //global variable c, holding current character. We need to hold this value between function callings,
 // and setting is as global is the simplest solution.
 
+// Set to '1', if you want to print debug stuff
+#define DEBUG_SCANNER 0
+
 /*
 This is a function that saves characters scanned from code into a string. This string is dynamically allocated so we always
  need to be sure to have enough space for the characters.
@@ -165,7 +168,7 @@ tToken nextToken()
 
                 for (int j=0;j<KEYWORD_COUNT;j++)
                 {
-                    printf("%s == %s \n",Keywords[1],TokenString->string);
+                    if(DEBUG_SCANNER) printf("%s == %s \n",Keywords[1],TokenString->string);
                     if(strcmp(TokenString->string,Keywords[j])==0) //string is compared to an array of keywords
                     {
                         if (!(isalpha(c)||isdigit(c)||c=='_'))  //if it was a keyword, and it is followed by anything that
