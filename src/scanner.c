@@ -15,6 +15,7 @@ void bufferToken(tokenstringptr ts)
     }
     ts->string[ts->index]=c;
     ts->index=(ts->index)+1;
+    ts->string[ts->index]='\0';
 }
 
 void freeString(tokenstringptr ts)
@@ -164,6 +165,7 @@ tToken nextToken()
 
                 for (int j=0;j<KEYWORD_COUNT;j++)
                 {
+                    printf("%s == %s \n",Keywords[1],TokenString->string);
                     if(strcmp(TokenString->string,Keywords[j])==0) //string is compared to an array of keywords
                     {
                         if (!(isalpha(c)||isdigit(c)||c=='_'))  //if it was a keyword, and it is followed by anything that
@@ -172,14 +174,12 @@ tToken nextToken()
                             case KEYWORDCASES: //Therefore no need for token string, free it and return keyword.
                             {
                                 identificator.type=j;
-                                freeString(TokenString);
                                 return identificator;
                             }
                         }
                     }
                 }
             }
-
             case IDENTIFICATOR: //in all other cases, it is an ID
             {
                 if (c == '?' || c == '!') //the IDs of functions can end in either, thus the condition.
@@ -187,7 +187,6 @@ tToken nextToken()
                     bufferToken(TokenString);
                     c=getchar();
                 }
-                TokenString->string[TokenString->index]='\0';
                 identificator.type=IDENTIFICATOR;
                 identificator.data.string=TokenString->string;
                 break;
@@ -222,7 +221,10 @@ tToken nextToken()
             }
             if (c=='e' || c == 'E') //and start the exponent part of float, or end scanning
             {
-                identificator.type=FLOAT;
+                if (identificator.type != ERROR)
+                {
+                    identificator.type = FLOAT;
+                }
                 bufferToken(TokenString);
                 c=getchar();
                 if (c=='+' || c=='-') //exponent can be followed by non-required + or -
@@ -243,6 +245,7 @@ tToken nextToken()
                     identificator.type=ERROR;
                 }
             }
+
 
             if (identificator.type == ERROR) //if we raised error, free our resources and return
             {
@@ -434,7 +437,6 @@ tToken nextToken()
                     return identificator;
                 }
             } //cycle will be repeated until we reach an unescaped " after that string will be saved and token returned.
-            TokenString->string[TokenString->index]='\0';
             c=getchar();
             identificator.type = STRING;
             identificator.data.string = TokenString->string;
@@ -607,7 +609,7 @@ tToken nextToken()
     //free the token variable, as we saved it already into struct identificator, and return the token.
     return identificator;
 }
-
+/*
 int main()
 {
 
@@ -634,4 +636,4 @@ int main()
         }
     }
     return 0;
-}
+}*/
