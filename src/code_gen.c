@@ -18,10 +18,10 @@ void code_list_init(){
 void print_code(){
     if(DEBGUG_CODE_GEN) printf("CODE_GEN: printing code...\n");
 
-    if(active_code_list == main_code_list)
-        printf("\nPrinting main code...\n");
-    else
-        printf("\nPrinting func code...\n");
+//    if(active_code_list == main_code_list)
+//        printf("\nPrinting main code...\n");
+//    else
+//        printf("\nPrinting func code...\n");
 
     if(active_code_list == NULL)
         return;
