@@ -22,7 +22,9 @@ typedef struct Sstring{
 
 }*Tstring;
 
-Tstring code_list;
+Tstring active_code_list;           // This is either main_code_list or functions_code_list
+Tstring main_code_list;
+Tstring functions_code_list;
 
 void code_list_init();
 void print_code();

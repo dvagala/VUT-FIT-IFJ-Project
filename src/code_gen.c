@@ -9,7 +9,9 @@
 #define DEBGUG_CODE_GEN 0
 
 void code_list_init(){
-    code_list = NULL;
+    active_code_list = NULL;
+    main_code_list = NULL;
+    functions_code_list = NULL;
 }
 
 /**Print code nicely formatted*/
@@ -18,10 +20,10 @@ void print_code(){
 
     printf("\nPrinting code...\n");
 
-    if(code_list == NULL)
+    if(active_code_list == NULL)
         return;
 
-    Tstring temp = code_list = code_list->start;
+    Tstring temp = active_code_list = active_code_list->start;
     while(temp != NULL){
         if(temp->is_start_of_new_line)
             printf("\n");
@@ -37,10 +39,10 @@ void print_code_backwards(){
 
     printf("\nPrinting code...\n");
 
-    if(code_list == NULL)
+    if(active_code_list == NULL)
         return;
 
-    Tstring temp = code_list->end;
+    Tstring temp = active_code_list->end;
     while(temp != NULL){
 
         if(temp->is_start_of_new_line)
@@ -100,22 +102,22 @@ void add_text_string_after_specific_string(Tstring specific_string, char *text){
     new_string->before_me_is_good_place_for_defvar = false;
 
     // First time
-    if(code_list == NULL){
+    if(active_code_list == NULL){
         new_string->prev = NULL;
-        code_list = new_string;
-        code_list->start = new_string;
+        active_code_list = new_string;
+        active_code_list->start = new_string;
         new_string->next = NULL;
-        code_list->end = new_string;
-    }else if(specific_string == NULL){              // Insert at the beggining of the code_list
+        active_code_list->end = new_string;
+    }else if(specific_string == NULL){              // Insert at the beggining of the active_code_list
         new_string->prev = NULL;
-        new_string->next = code_list->start;
-        code_list->start->prev = new_string;
-        code_list->start = new_string;
-    }else if(code_list->end == specific_string){    // instert at the end of code_list
+        new_string->next = active_code_list->start;
+        active_code_list->start->prev = new_string;
+        active_code_list->start = new_string;
+    }else if(active_code_list->end == specific_string){    // instert at the end of active_code_list
         new_string->next = NULL;
-        new_string->prev = code_list->end;
-        code_list->end->next = new_string;
-        code_list->end = new_string;
+        new_string->prev = active_code_list->end;
+        active_code_list->end->next = new_string;
+        active_code_list->end = new_string;
     }else{                                          // Insert somewhere in the middle
         new_string->prev = specific_string;
         new_string->next = specific_string->next;
@@ -138,22 +140,22 @@ void add_allocated_string_after_specific_string(Tstring specific_string, char *t
     new_string->before_me_is_good_place_for_defvar = false;
 
     // First time
-    if(code_list == NULL){
+    if(active_code_list == NULL){
         new_string->prev = NULL;
-        code_list = new_string;
-        code_list->start = new_string;
+        active_code_list = new_string;
+        active_code_list->start = new_string;
         new_string->next = NULL;
-        code_list->end = new_string;
-    }else if(specific_string == NULL){      // Insert at the beggining of the code_list
+        active_code_list->end = new_string;
+    }else if(specific_string == NULL){      // Insert at the beggining of the active_code_list
         new_string->prev = NULL;
-        new_string->next = code_list->start;
-        code_list->start->prev = new_string;
-        code_list->start = new_string;
-    }else if(code_list->end == specific_string){    // instert at the end of code_list
+        new_string->next = active_code_list->start;
+        active_code_list->start->prev = new_string;
+        active_code_list->start = new_string;
+    }else if(active_code_list->end == specific_string){    // instert at the end of active_code_list
         new_string->next = NULL;
-        new_string->prev = code_list->end;
-        code_list->end->next = new_string;
-        code_list->end = new_string;
+        new_string->prev = active_code_list->end;
+        active_code_list->end->next = new_string;
+        active_code_list->end = new_string;
     }else{                                           // Insert somewhere in the middle
         new_string->prev = specific_string;
         new_string->next = specific_string->next;
@@ -164,7 +166,7 @@ void add_allocated_string_after_specific_string(Tstring specific_string, char *t
 
 // Return string what is before string that has "before_me_is_good_place_for_defvar" true
 Tstring find_nearest_good_place_for_defvar(){
-    Tstring temp = code_list->end;
+    Tstring temp = active_code_list->end;
 
     while(temp != NULL){
         if(temp->before_me_is_good_place_for_defvar){
@@ -179,17 +181,17 @@ Tstring find_nearest_good_place_for_defvar(){
 
 void free_code_list(){
 
-    while(code_list != NULL){
-        if(DEBGUG_CODE_GEN) printf("CODE_GEN: freeint: %p\n", code_list);
-        if(DEBGUG_CODE_GEN) printf("CODE_GEN: freeint text: %p\n", code_list->text);
+    while(active_code_list != NULL){
+        if(DEBGUG_CODE_GEN) printf("CODE_GEN: freeint: %p\n", active_code_list);
+        if(DEBGUG_CODE_GEN) printf("CODE_GEN: freeint text: %p\n", active_code_list->text);
 
-        if(code_list->next == NULL){
-            free(code_list->text);
-            free(code_list);
+        if(active_code_list->next == NULL){
+            free(active_code_list->text);
+            free(active_code_list);
             return;
         }
-        code_list = code_list->next;
-        free(code_list->prev->text);
-        free(code_list->prev);
+        active_code_list = active_code_list->next;
+        free(active_code_list->prev->text);
+        free(active_code_list->prev);
     }
 }

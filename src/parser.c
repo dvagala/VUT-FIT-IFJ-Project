@@ -547,20 +547,9 @@ bool after_id() {
                 error_code = 3;
         }
 
-        // TODO: Generate code for define variables, DEFVAR
-        if(!is_variable_defined(&actual_symtable, var_name)){
-
-            // Global variables
-            if(actual_symtable == global_symtable){
-//                add_text_string_after_specific_string(code_list->end, "DEFVAR");
-//                code_list->end->is_start_of_new_line = true;
-//                add_text_string_after_specific_string(code_list->end, "int@");
-//                append_text_string_to_specific_string(code_list->end, var_name);
-
-            } else{         // Local variables
-//                add_code_line(&code_list, "DEFVAR", join_strings("LF@", var_name), NULL, NULL);
-            }
-        }
+        bool new_variable = false;
+        if(!is_variable_defined(&actual_symtable, var_name))
+            new_variable = true;
 
         if(is_variable_defined(&actual_symtable, var_name)){
             if(DEBUG_SEMATNICS) printf("SEMANTICS: variable \"%s\" is already in symtable, no need to add\n", var_name);
@@ -576,7 +565,13 @@ bool after_id() {
         }
 
         pop();
-        return func_or_expr();
+        bool result = func_or_expr();
+
+//        if(new_variable){
+//            add_text_string_after_specific_string(ac)
+//        }
+//
+        return result;
     }
 
     if(DEBUG_PARSER) printf("PARSER: %s returning: %d\n", non_term, 0);
@@ -717,12 +712,16 @@ void init_parser(){
     token.type = EOL_CASE;
     code_list_init();
 
-    add_text_string_after_specific_string(code_list, ".IFJcode18");
-    code_list->start->is_start_of_new_line = true;
+    active_code_list = main_code_list;
 
     global_symtable_init(&global_symtable);
     actual_symtable = global_symtable;
 
+    add_text_string_after_specific_string(active_code_list, ".IFJcode18");
+    active_code_list->start->is_start_of_new_line = true;
+    add_text_string_after_specific_string(active_code_list->end, "JUMP");
+    active_code_list->end->is_start_of_new_line = true;
+    add_text_string_after_specific_string(active_code_list->end, "$$main");
 }
 
 /** Just test if scanner works properly
@@ -798,23 +797,23 @@ void test_code_list(){
 
     char *not_alloc_text = "74 /";
 
-    add_text_string_after_specific_string(code_list, not_alloc_text);
+    add_text_string_after_specific_string(main_code_list, not_alloc_text);
 
-    add_text_string_after_specific_string(code_list, "5");
-    append_text_string_to_specific_string(code_list->end, " + ");
-    append_text_string_to_specific_string(code_list->end, "10");
+    add_text_string_after_specific_string(main_code_list, "5");
+    append_text_string_to_specific_string(main_code_list->end, " + ");
+    append_text_string_to_specific_string(main_code_list->end, "10");
 
-    add_text_string_after_specific_string(code_list->end, "while");
-    code_list->end->is_start_of_new_line = true;
-    code_list->end->before_me_is_good_place_for_defvar = true;
+    add_text_string_after_specific_string(main_code_list->end, "while");
+    main_code_list->end->is_start_of_new_line = true;
+    main_code_list->end->before_me_is_good_place_for_defvar = true;
 
-    add_text_string_after_specific_string(code_list->end, "5 == 5");
-    add_text_string_after_specific_string(code_list->end, "do");
-    add_text_string_after_specific_string(code_list->end, "end");
-    code_list->end->is_start_of_new_line = true;
+    add_text_string_after_specific_string(main_code_list->end, "5 == 5");
+    add_text_string_after_specific_string(main_code_list->end, "do");
+    add_text_string_after_specific_string(main_code_list->end, "end");
+    main_code_list->end->is_start_of_new_line = true;
 
-    add_text_string_after_specific_string(code_list->start->prev, "id_var =");
-    code_list->start->is_start_of_new_line = true;
+    add_text_string_after_specific_string(main_code_list->start->prev, "id_var =");
+    main_code_list->start->is_start_of_new_line = true;
 
     Tstring good_place = find_nearest_good_place_for_defvar();
     add_text_string_after_specific_string(good_place, "DEFVAR");
@@ -828,8 +827,8 @@ void test_code_list(){
     text[3] = 'o';
     text[4] = 0;
 
-    add_allocated_string_after_specific_string(code_list->end, text);
-    code_list->end->is_start_of_new_line = true;
+    add_allocated_string_after_specific_string(main_code_list->end, text);
+    main_code_list->end->is_start_of_new_line = true;
 
     char *text2 = malloc(sizeof(char)*5);
     text2[0] = '_';
@@ -838,7 +837,7 @@ void test_code_list(){
     text2[3] = 'n';
     text2[4] = 0;
 
-    append_allocated_string_to_specific_string(code_list->end, text2);
+    append_allocated_string_to_specific_string(main_code_list->end, text2);
 
     print_code();
     free_code_list();
@@ -872,6 +871,12 @@ int main(){
 
     free_symtable(&global_symtable);
 
+    // Print functions definitions
+    active_code_list = functions_code_list;
+    print_code();
+
+    // Print main body
+    active_code_list = main_code_list;
     print_code();
 
     free_code_list();
