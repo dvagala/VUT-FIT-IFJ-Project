@@ -15,6 +15,12 @@ void code_list_init(){
 /**Print code nicely formatted*/
 void print_code(){
     if(DEBGUG_CODE_GEN) printf("CODE_GEN: printing code...\n");
+
+    printf("\nPrinting code...\n");
+
+    if(code_list == NULL)
+        return;
+
     Tstring temp = code_list = code_list->start;
     while(temp != NULL){
         if(temp->is_start_of_new_line)
@@ -28,6 +34,12 @@ void print_code(){
 // Just for testing
 void print_code_backwards(){
     if(DEBGUG_CODE_GEN) printf("CODE_GEN: printing code...\n");
+
+    printf("\nPrinting code...\n");
+
+    if(code_list == NULL)
+        return;
+
     Tstring temp = code_list->end;
     while(temp != NULL){
 

@@ -553,7 +553,7 @@ bool after_id() {
             // Global variables
             if(actual_symtable == global_symtable){
 //                add_text_string_after_specific_string(code_list->end, "DEFVAR");
-//                code_list->start->is_start_of_new_line = true;
+//                code_list->end->is_start_of_new_line = true;
 //                add_text_string_after_specific_string(code_list->end, "int@");
 //                append_text_string_to_specific_string(code_list->end, var_name);
 
@@ -712,6 +712,19 @@ bool prog(){
     return false;       // If no rule applied
 }
 
+void init_parser(){
+    // For throwing away EOL if is as start of file
+    token.type = EOL_CASE;
+    code_list_init();
+
+    add_text_string_after_specific_string(code_list, ".IFJcode18");
+    code_list->start->is_start_of_new_line = true;
+
+    global_symtable_init(&global_symtable);
+    actual_symtable = global_symtable;
+
+}
+
 /** Just test if scanner works properly
  *  Print tokens as types, not numbers
  * */
@@ -839,20 +852,14 @@ void test_expr(){
 
 int main(){
 
-    // For throwing away EOL if is as start of file
-    token.type = EOL_CASE;
-    code_list_init();
-
+    init_parser();
 
 //    test_scanner();
 //    test_symtable();
 //    test_expr();
-    test_code_list();
-
-    return 0;
-
-    global_symtable_init(&global_symtable);
-    actual_symtable = global_symtable;
+//    test_code_list();
+//
+//    return 0;
 
     pop();      // get first token
 
@@ -865,7 +872,9 @@ int main(){
 
     free_symtable(&global_symtable);
 
-    print_code(code_list);
+    print_code();
+
+    free_code_list();
 
     // Error handling
     switch(error_code){
