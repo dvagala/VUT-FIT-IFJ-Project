@@ -22,8 +22,6 @@ bool tokenLookAheadFlag = false;
 Bnode actual_symtable;
 Bnode global_symtable;
 
-//Tcode_list code_list;
-
 // Because I set token type as EXPR when I find out that is indeed start of expression, I need
 // somehow store this original type of token, so it can set back to original before calling analyze_expression()
 int original_token_type_backup;
@@ -34,7 +32,6 @@ int original_token_type_backup;
  *  If someone used lookahead for token, tokenLookAhead flag is raised
  *  so then do not read next token but return aheadToken*/
 tToken enhanced_next_token(){
-
 
     previousToken = token;
     if(tokenLookAheadFlag){
@@ -71,8 +68,6 @@ tToken next_token_lookahead(){
 bool is_token_start_of_expr() {
 
     if(DEBUG_PARSER) printf("PARSER: Checking if is_token_start_of_expr\n");
-//    if(DEBUG_PARSER) printf("PARSER: ---------------------------------------------------------\n");
-
     if (token.type == IDENTIFICATOR) {
         if(DEBUG_PARSER) printf("PARSER: Token.data.string: \"%s\"\n", token.data.string);
         if(is_id_variable(&actual_symtable, token.data.string)){
@@ -103,7 +98,6 @@ bool is_token_start_of_expr() {
         if(DEBUG_PARSER) printf("PARSER: --Start of expr: Third\n");
         return true;
     }
-
     return false;
 }
 
@@ -128,7 +122,7 @@ void pop(){
 }
 
 
-/**----------RULES------------------------------------*/
+/**----------RECURSIVE DESCENT------------------------------------*/
 
 
 bool expr(){
@@ -556,12 +550,16 @@ bool after_id() {
         // TODO: Generate code for define variables, DEFVAR
         if(!is_variable_defined(&actual_symtable, var_name)){
 
-//            // Global variables
-//            if(actual_symtable == global_symtable){
-//                add_code_line(&code_list, "DEFVAR", join_strings("GF@", var_name), NULL, NULL);
-//            } else{         // Local variables
+            // Global variables
+            if(actual_symtable == global_symtable){
+//                add_text_string_after_specific_string(code_list->end, "DEFVAR");
+//                code_list->start->is_start_of_new_line = true;
+//                add_text_string_after_specific_string(code_list->end, "int@");
+//                append_text_string_to_specific_string(code_list->end, var_name);
+
+            } else{         // Local variables
 //                add_code_line(&code_list, "DEFVAR", join_strings("LF@", var_name), NULL, NULL);
-//            }
+            }
         }
 
         if(is_variable_defined(&actual_symtable, var_name)){
@@ -576,8 +574,6 @@ bool after_id() {
             if(error_code == 0)
                 error_code = 99;
         }
-
-
 
         pop();
         return func_or_expr();
@@ -787,43 +783,57 @@ void test_symtable(){
 
 void test_code_list(){
 
+    char *not_alloc_text = "74 /";
+
+    add_text_string_after_specific_string(code_list, not_alloc_text);
+
+    add_text_string_after_specific_string(code_list, "5");
+    append_text_string_to_specific_string(code_list->end, " + ");
+    append_text_string_to_specific_string(code_list->end, "10");
+
+    add_text_string_after_specific_string(code_list->end, "while");
+    code_list->end->is_start_of_new_line = true;
+    code_list->end->before_me_is_good_place_for_defvar = true;
+
+    add_text_string_after_specific_string(code_list->end, "5 == 5");
+    add_text_string_after_specific_string(code_list->end, "do");
+    add_text_string_after_specific_string(code_list->end, "end");
+    code_list->end->is_start_of_new_line = true;
+
+    add_text_string_after_specific_string(code_list->start->prev, "id_var =");
+    code_list->start->is_start_of_new_line = true;
+
+    Tstring good_place = find_nearest_good_place_for_defvar();
+    add_text_string_after_specific_string(good_place, "DEFVAR");
+    good_place->next->is_start_of_new_line = true;
+    add_text_string_after_specific_string(good_place->next, "int@a");
+
     char *text = malloc(sizeof(char)*5);
     text[0] = 'h';
     text[1] = 'o';
     text[2] = 'h';
     text[3] = 'o';
+    text[4] = 0;
 
-    add_allocated_string_to_code(text);
-
-    append_text_to_last_string_in_code_list("_append22");
-
-    append_text_to_last_string_in_code_list("_append");
-
-    char *text2 = malloc(sizeof(char)*5);
-    text2[0] = 'o';
-    text2[1] = 'a';
-    text2[2] = 't';
-    text2[3] = 'e';
-
-    add_allocated_string_to_code(text2);
-
-    add_const_string_to_code("first");
-
-    add_const_string_to_code("second");
-    append_text_to_last_string_in_code_list("_append");
-    append_text_to_last_string_in_code_list("_append2");
+    add_allocated_string_after_specific_string(code_list->end, text);
     code_list->end->is_start_of_new_line = true;
 
+    char *text2 = malloc(sizeof(char)*5);
+    text2[0] = '_';
+    text2[1] = 'a';
+    text2[2] = 'p';
+    text2[3] = 'n';
+    text2[4] = 0;
+
+    append_allocated_string_to_specific_string(code_list->end, text2);
+
     print_code();
-
     free_code_list();
-
 }
 
 void test_expr(){
 
     pop();
-//    analyze_expression(token, aheadToken, false );
     analyze_expresssion(token, aheadToken, false, &global_symtable);
 }
 
@@ -831,8 +841,8 @@ int main(){
 
     // For throwing away EOL if is as start of file
     token.type = EOL_CASE;
-
     code_list_init();
+
 
 //    test_scanner();
 //    test_symtable();
@@ -840,7 +850,6 @@ int main(){
     test_code_list();
 
     return 0;
-
 
     global_symtable_init(&global_symtable);
     actual_symtable = global_symtable;
