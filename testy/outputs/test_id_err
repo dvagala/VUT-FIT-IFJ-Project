@@ -1,0 +1,48 @@
+TokenT: 502 
+----------->ERROR 
+TokenT: 1004 
+----------->ID i 
+TokenT: 500 
+TokenT: 1000 
+----------->INT 1 
+TokenT: 502 
+----------->ERROR 
+TokenT: 500 
+TokenT: 502 
+----------->ERROR 
+TokenT: 500 
+TokenT: 1004 
+----------->ID _! 
+TokenT: 502 
+----------->ERROR 
+TokenT: 500 
+TokenT: 1004 
+----------->ID _1a? 
+TokenT: 502 
+----------->ERROR 
+TokenT: 500 
+TokenT: 1004 
+----------->ID _b2? 
+TokenT: 502 
+----------->ERROR 
+TokenT: 500 
+TokenT: 1004 
+----------->ID qwq 
+TokenT: 500 
+TokenT: 502 
+----------->ERROR 
+TokenT: 1004 
+----------->ID _! 
+TokenT: 500 
+TokenT: 502 
+----------->ERROR 
+TokenT: 1004 
+----------->ID test1 
+TokenT: 500 
+TokenT: 1004 
+----------->ID jdgk 
+TokenT: 502 
+----------->ERROR 
+TokenT: 1004 
+----------->ID agdkjsglsLGDljg123! 
+TokenT: 501 

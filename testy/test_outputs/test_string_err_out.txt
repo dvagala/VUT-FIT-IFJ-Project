@@ -1,0 +1,18 @@
+TokenT: 1002 
+----------->STRING hello 
+TokenT: 1004 
+----------->ID ggg 
+TokenT: 502 
+----------->ERROR 
+TokenT: 500 
+TokenT: 502 
+----------->ERROR 
+TokenT: 500 
+TokenT: 1004 
+----------->ID good 
+TokenT: 502 
+----------->ERROR 
+TokenT: 500 
+TokenT: 502 
+----------->ERROR 
+TokenT: 501 
