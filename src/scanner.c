@@ -168,7 +168,6 @@ tToken nextToken()
 
                 for (int j=0;j<KEYWORD_COUNT;j++)
                 {
-                    if(DEBUG_SCANNER) printf("%s == %s \n",Keywords[1],TokenString->string);
                     if(strcmp(TokenString->string,Keywords[j])==0) //string is compared to an array of keywords
                     {
                         if (!(isalpha(c)||isdigit(c)||c=='_'))  //if it was a keyword, and it is followed by anything that
