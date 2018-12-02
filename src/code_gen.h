@@ -27,7 +27,9 @@ Tstring active_code_list;           // This is either main_code_list or function
 Tstring main_code_list;
 Tstring functions_code_list;
 
-int system_func_count;
+// This is used to create unique names for generic labels, after every generic label append this number
+int generic_label_count;
+
 
 void code_list_init();
 void print_code();
@@ -45,6 +47,8 @@ bool top_value_gen_and_add(P_stack *post_stack);
 
 
 char* convert_string_to_correct_IFJcode18_format(char *input);
+
+void generate_system_functions();
 
 #endif //IFJ_PROJECT_CODE_GEN_H
 

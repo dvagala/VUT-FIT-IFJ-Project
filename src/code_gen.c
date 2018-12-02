@@ -19,10 +19,10 @@ void code_list_init(){
 void print_code(){
     if(DEBGUG_CODE_GEN) if(DEBGUG_CODE_GEN) printf("CODE_GEN: printing code...\n");
 
-//    if(active_code_list == main_code_list)
-//        if(DEBGUG_CODE_GEN) printf("\nPrinting main code...\n");
-//    else
-//        if(DEBGUG_CODE_GEN) printf("\nPrinting func code...\n");
+    if(active_code_list == main_code_list)
+        if(DEBGUG_CODE_GEN) printf("\nPrinting main code...\n");
+    else
+        if(DEBGUG_CODE_GEN) printf("\nPrinting func code...\n");
 
     if(active_code_list == NULL)
         return;
@@ -31,6 +31,15 @@ void print_code(){
     while(temp != NULL){
         if(temp->is_start_of_new_line)
             printf("\n");
+        if(strcmp(temp->text, "LABEL") == 0){
+            printf("\n");                       // This will nicely separate LABELS
+            if(temp->next != NULL){
+                if(temp->next->text != NULL){
+                    if(temp->next->text[0] != '$')
+                        printf("\n");      // This will nicely separate functions, their names doesnt start with $
+                }
+            }
+        }
         printf("%s ", temp->text);
         temp = temp->next;
     }
@@ -202,7 +211,6 @@ void free_code_lists(){
     functions_code_list = NULL;
 }
 
-
 bool declare_defvar_restype(){
     insert_simple_instruction("DEFVAR");
     add_string_after_specific_string(active_code_list->end, "LF@%res$type");
@@ -299,8 +307,6 @@ bool top_value_gen_and_add(P_stack *post_stack){
     return true;
 }
 
-
-
 /**Convert input to this format:
  * string@retezec\032s\032lomitkem\032\092\032a\010novym\035radkem
  * */
@@ -311,11 +317,10 @@ char* convert_string_to_correct_IFJcode18_format(char *input)
     char number[3];
     int index=0;
     char* output=malloc(sizeof(char)*chunk*amount);
-    if(DEBGUG_CODE_GEN) printf("mallocing: %p\n", output);
 
     for (int i=0;input[i]!='\0';i++) {
         if ((input[i]>=0 && input[i]<=32) || input[i]==35 || input[i]==92) {
-            if(DEBGUG_CODE_GEN) printf(number,"%d",input[i]);
+            sprintf(number,"%d",input[i]);
             output[index]='\\';
             index++;
 
@@ -323,7 +328,6 @@ char* convert_string_to_correct_IFJcode18_format(char *input)
                 amount++;
                 char *old_output = output;
                 output=realloc(output, sizeof(char)*chunk*amount);
-                // If realloc returned different address, free that old one
                 if(output != old_output)
                     free(old_output);
             }
@@ -343,7 +347,6 @@ char* convert_string_to_correct_IFJcode18_format(char *input)
                         amount++;
                         char *old_output = output;
                         output=realloc(output, sizeof(char)*chunk*amount);
-                        // If realloc returned different address, free that old one
                         if(output != old_output)
                             free(old_output);
                     }
@@ -368,4 +371,255 @@ char* convert_string_to_correct_IFJcode18_format(char *input)
     }
     output[index]='\0';
     return output;
+}
+
+//TODO: type checks
+
+void generate_inputs_func(){
+    add_string_after_specific_string(active_code_list->end, "LABEL");
+    active_code_list->end->is_start_of_new_line = true;
+    add_string_after_specific_string(active_code_list->end, "inputs");
+    add_string_after_specific_string(active_code_list->end, "PUSHFRAME");
+    active_code_list->end->is_start_of_new_line = true;
+
+    add_string_after_specific_string(active_code_list->end, "DEFVAR");
+    active_code_list->end->is_start_of_new_line = true;
+    add_string_after_specific_string(active_code_list->end, "LF@%retval");
+    add_string_after_specific_string(active_code_list->end, "MOVE");
+    active_code_list->end->is_start_of_new_line = true;
+    add_string_after_specific_string(active_code_list->end, "LF@%retval");
+    add_string_after_specific_string(active_code_list->end, "nil@nil");
+
+    add_string_after_specific_string(active_code_list->end, "READ");
+    active_code_list->end->is_start_of_new_line = true;
+    add_string_after_specific_string(active_code_list->end, "LF@%retval");
+    add_string_after_specific_string(active_code_list->end, "string");
+
+    add_string_after_specific_string(active_code_list->end, "POPFRAME");
+    active_code_list->end->is_start_of_new_line = true;
+    add_string_after_specific_string(active_code_list->end, "RETURN");
+    active_code_list->end->is_start_of_new_line = true;
+}
+
+void generate_inputi_func(){
+    add_string_after_specific_string(active_code_list->end, "LABEL");
+    active_code_list->end->is_start_of_new_line = true;
+    add_string_after_specific_string(active_code_list->end, "inputi");
+    add_string_after_specific_string(active_code_list->end, "PUSHFRAME");
+    active_code_list->end->is_start_of_new_line = true;
+
+    add_string_after_specific_string(active_code_list->end, "DEFVAR");
+    active_code_list->end->is_start_of_new_line = true;
+    add_string_after_specific_string(active_code_list->end, "LF@%retval");
+    add_string_after_specific_string(active_code_list->end, "MOVE");
+    active_code_list->end->is_start_of_new_line = true;
+    add_string_after_specific_string(active_code_list->end, "LF@%retval");
+    add_string_after_specific_string(active_code_list->end, "nil@nil");
+
+    add_string_after_specific_string(active_code_list->end, "READ");
+    active_code_list->end->is_start_of_new_line = true;
+    add_string_after_specific_string(active_code_list->end, "LF@%retval");
+    add_string_after_specific_string(active_code_list->end, "int");
+
+    add_string_after_specific_string(active_code_list->end, "POPFRAME");
+    active_code_list->end->is_start_of_new_line = true;
+    add_string_after_specific_string(active_code_list->end, "RETURN");
+    active_code_list->end->is_start_of_new_line = true;
+}
+
+void generate_inputf_func(){
+    add_string_after_specific_string(active_code_list->end, "LABEL");
+    active_code_list->end->is_start_of_new_line = true;
+    add_string_after_specific_string(active_code_list->end, "inputf");
+    add_string_after_specific_string(active_code_list->end, "PUSHFRAME");
+    active_code_list->end->is_start_of_new_line = true;
+
+    add_string_after_specific_string(active_code_list->end, "DEFVAR");
+    active_code_list->end->is_start_of_new_line = true;
+    add_string_after_specific_string(active_code_list->end, "LF@%retval");
+    add_string_after_specific_string(active_code_list->end, "MOVE");
+    active_code_list->end->is_start_of_new_line = true;
+    add_string_after_specific_string(active_code_list->end, "LF@%retval");
+    add_string_after_specific_string(active_code_list->end, "nil@nil");
+
+    add_string_after_specific_string(active_code_list->end, "READ");
+    active_code_list->end->is_start_of_new_line = true;
+    add_string_after_specific_string(active_code_list->end, "LF@%retval");
+    add_string_after_specific_string(active_code_list->end, "float");
+
+    add_string_after_specific_string(active_code_list->end, "POPFRAME");
+    active_code_list->end->is_start_of_new_line = true;
+    add_string_after_specific_string(active_code_list->end, "RETURN");
+    active_code_list->end->is_start_of_new_line = true;
+}
+
+//id = length(s)
+//STRLEN LF@id LF@s
+//# LF@s must be string
+void generate_length_func(){
+    add_string_after_specific_string(active_code_list->end, "LABEL");
+    active_code_list->end->is_start_of_new_line = true;
+    add_string_after_specific_string(active_code_list->end, "length");
+    add_string_after_specific_string(active_code_list->end, "PUSHFRAME");
+    active_code_list->end->is_start_of_new_line = true;
+
+    add_string_after_specific_string(active_code_list->end, "DEFVAR");
+    active_code_list->end->is_start_of_new_line = true;
+    add_string_after_specific_string(active_code_list->end, "LF@%retval");
+    add_string_after_specific_string(active_code_list->end, "MOVE");
+    active_code_list->end->is_start_of_new_line = true;
+    add_string_after_specific_string(active_code_list->end, "LF@%retval");
+    add_string_after_specific_string(active_code_list->end, "nil@nil");
+
+    add_string_after_specific_string(active_code_list->end, "STRLEN");
+    active_code_list->end->is_start_of_new_line = true;
+    add_string_after_specific_string(active_code_list->end, "LF@%retval");
+    add_string_after_specific_string(active_code_list->end, "LF@s");
+
+    add_string_after_specific_string(active_code_list->end, "POPFRAME");
+    active_code_list->end->is_start_of_new_line = true;
+    add_string_after_specific_string(active_code_list->end, "RETURN");
+    active_code_list->end->is_start_of_new_line = true;
+}
+
+//out = substr(s, i, n)
+//# s must be string
+//# i,n int
+void generate_substr_func(){
+    add_string_after_specific_string(active_code_list->end, "LABEL");
+    active_code_list->end->is_start_of_new_line = true;
+    add_string_after_specific_string(active_code_list->end, "substr");
+    add_string_after_specific_string(active_code_list->end, "PUSHFRAME");
+    active_code_list->end->is_start_of_new_line = true;
+
+    add_string_after_specific_string(active_code_list->end, "DEFVAR");
+    active_code_list->end->is_start_of_new_line = true;
+    add_string_after_specific_string(active_code_list->end, "LF@%retval");
+    add_string_after_specific_string(active_code_list->end, "MOVE");
+    active_code_list->end->is_start_of_new_line = true;
+    add_string_after_specific_string(active_code_list->end, "LF@%retval");
+    add_string_after_specific_string(active_code_list->end, "string@");
+
+    add_string_after_specific_string(active_code_list->end, "DEFVAR");
+    active_code_list->end->is_start_of_new_line = true;
+    add_string_after_specific_string(active_code_list->end, "LF@new_char");
+
+    add_string_after_specific_string(active_code_list->end, "LABEL");
+    active_code_list->end->is_start_of_new_line = true;
+    add_string_after_specific_string(active_code_list->end, "$$substr_while");
+
+    add_string_after_specific_string(active_code_list->end, "GETCHAR");
+    active_code_list->end->is_start_of_new_line = true;
+    add_string_after_specific_string(active_code_list->end, "LF@new_char");
+    add_string_after_specific_string(active_code_list->end, "LF@s");
+    add_string_after_specific_string(active_code_list->end, "LF@i");
+
+    add_string_after_specific_string(active_code_list->end, "CONCAT");
+    active_code_list->end->is_start_of_new_line = true;
+    add_string_after_specific_string(active_code_list->end, "LF@%retval");
+    add_string_after_specific_string(active_code_list->end, "LF@%retval");
+    add_string_after_specific_string(active_code_list->end, "LF@new_char");
+
+    add_string_after_specific_string(active_code_list->end, "JUMPIFEQ");
+    active_code_list->end->is_start_of_new_line = true;
+    add_string_after_specific_string(active_code_list->end, "$$substr_end");
+    add_string_after_specific_string(active_code_list->end, "LF@i");
+    add_string_after_specific_string(active_code_list->end, "LF@n");
+
+    add_string_after_specific_string(active_code_list->end, "ADD");
+    active_code_list->end->is_start_of_new_line = true;
+    add_string_after_specific_string(active_code_list->end, "LF@i");
+    add_string_after_specific_string(active_code_list->end, "LF@i");
+    add_string_after_specific_string(active_code_list->end, "int@1");
+
+    add_string_after_specific_string(active_code_list->end, "JUMP");
+    active_code_list->end->is_start_of_new_line = true;
+    add_string_after_specific_string(active_code_list->end, "$$substr_while");
+
+    add_string_after_specific_string(active_code_list->end, "LABEL");
+    active_code_list->end->is_start_of_new_line = true;
+    add_string_after_specific_string(active_code_list->end, "$$substr_end");
+
+    add_string_after_specific_string(active_code_list->end, "POPFRAME");
+    active_code_list->end->is_start_of_new_line = true;
+    add_string_after_specific_string(active_code_list->end, "RETURN");
+    active_code_list->end->is_start_of_new_line = true;
+}
+
+// id = ord(s, i)
+// STRI2INT LF@id LF@s LF@i
+void generate_ord_func(){
+
+    add_string_after_specific_string(active_code_list->end, "LABEL");
+    active_code_list->end->is_start_of_new_line = true;
+    add_string_after_specific_string(active_code_list->end, "ord");
+    add_string_after_specific_string(active_code_list->end, "PUSHFRAME");
+    active_code_list->end->is_start_of_new_line = true;
+
+    add_string_after_specific_string(active_code_list->end, "DEFVAR");
+    active_code_list->end->is_start_of_new_line = true;
+    add_string_after_specific_string(active_code_list->end, "LF@%retval");
+    add_string_after_specific_string(active_code_list->end, "MOVE");
+    active_code_list->end->is_start_of_new_line = true;
+    add_string_after_specific_string(active_code_list->end, "LF@%retval");
+    add_string_after_specific_string(active_code_list->end, "nil@nil");
+
+    add_string_after_specific_string(active_code_list->end, "STRI2INT");
+    active_code_list->end->is_start_of_new_line = true;
+    add_string_after_specific_string(active_code_list->end, "LF@%retval");
+    add_string_after_specific_string(active_code_list->end, "LF@s");
+    add_string_after_specific_string(active_code_list->end, "LF@i");
+
+    add_string_after_specific_string(active_code_list->end, "POPFRAME");
+    active_code_list->end->is_start_of_new_line = true;
+    add_string_after_specific_string(active_code_list->end, "RETURN");
+    active_code_list->end->is_start_of_new_line = true;
+}
+
+//id = chr(i)
+//INT2CHAR LF@id LF@i
+//# i is int <0, 255> if not error 58
+//#
+void generate_chr_func(){
+    add_string_after_specific_string(active_code_list->end, "LABEL");
+    active_code_list->end->is_start_of_new_line = true;
+    add_string_after_specific_string(active_code_list->end, "chr");
+    add_string_after_specific_string(active_code_list->end, "PUSHFRAME");
+    active_code_list->end->is_start_of_new_line = true;
+
+    add_string_after_specific_string(active_code_list->end, "DEFVAR");
+    active_code_list->end->is_start_of_new_line = true;
+    add_string_after_specific_string(active_code_list->end, "LF@%retval");
+    add_string_after_specific_string(active_code_list->end, "MOVE");
+    active_code_list->end->is_start_of_new_line = true;
+    add_string_after_specific_string(active_code_list->end, "LF@%retval");
+    add_string_after_specific_string(active_code_list->end, "nil@nil");
+
+    add_string_after_specific_string(active_code_list->end, "INT2CHAR");
+    active_code_list->end->is_start_of_new_line = true;
+    add_string_after_specific_string(active_code_list->end, "LF@%retval");
+    add_string_after_specific_string(active_code_list->end, "LF@i");
+
+    add_string_after_specific_string(active_code_list->end, "POPFRAME");
+    active_code_list->end->is_start_of_new_line = true;
+    add_string_after_specific_string(active_code_list->end, "RETURN");
+    active_code_list->end->is_start_of_new_line = true;
+}
+
+void generate_system_functions(){
+
+    add_string_after_specific_string(active_code_list->end, "# Start declaring system function");
+    active_code_list->end->is_start_of_new_line = true;
+
+    generate_inputf_func();
+    generate_inputi_func();
+    generate_inputs_func();
+    generate_ord_func();
+    generate_chr_func();
+    generate_length_func();
+    generate_substr_func();
+
+    add_string_after_specific_string(active_code_list->end, "# End declaring system function");
+    active_code_list->end->is_start_of_new_line = true;
+
 }

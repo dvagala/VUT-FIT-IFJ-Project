@@ -109,25 +109,28 @@ void global_symtable_init(Bnode *rootPtr){
     pom->data.system_function = true;
     pom->data.list->element_count = -1;         // This means that number of print() parameters can vary
 
-    add_func_to_symtable(rootPtr, "lenght");
-    pom = Bsearch(*rootPtr, "lenght");
+    add_func_to_symtable(rootPtr, "length");
+    pom = Bsearch(*rootPtr, "length");
     pom->data.system_function = true;
-    pom->data.list->element_count = 1;         // Number of defined parameters
+    add_variable_to_func_params(rootPtr, "length", "s");
 
     add_func_to_symtable(rootPtr, "substr");
     pom = Bsearch(*rootPtr, "substr");
     pom->data.system_function = true;
-    pom->data.list->element_count = 3;         // Number of defined parameters
+    add_variable_to_func_params(rootPtr, "substr", "s");
+    add_variable_to_func_params(rootPtr, "substr", "i");
+    add_variable_to_func_params(rootPtr, "substr", "n");
 
     add_func_to_symtable(rootPtr, "ord");
     pom = Bsearch(*rootPtr, "ord");
     pom->data.system_function = true;
-    pom->data.list->element_count = 2;         // Number of defined parameters
+    add_variable_to_func_params(rootPtr, "ord", "s");
+    add_variable_to_func_params(rootPtr, "ord", "i");
 
     add_func_to_symtable(rootPtr, "chr");
     pom = Bsearch(*rootPtr, "chr");
     pom->data.system_function = true;
-    pom->data.list->element_count = 1;         // Number of defined parameters
+    add_variable_to_func_params(rootPtr, "chr", "i");
 
 }
 

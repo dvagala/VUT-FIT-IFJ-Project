@@ -121,6 +121,27 @@ void pop(){
     }
 }
 
+/**Fake expression analyzer, just read epression and came back when expression ends*/
+ReturnData fake_analyze_expresssion(tToken token, tToken aheadToken, bool lookahead_occured, Bnode *tree ){
+
+    ReturnData returnData;
+    returnData.error_code = 0;
+    returnData.error = false;
+
+    if(DEBUG_PARSER) printf("Analyzing expression start token: %s\n", token_type_enum_string[token.type]);
+    if(DEBUG_PARSER) printf("Analyzing expression lookahead token: %s\n", token_type_enum_string[aheadToken.type]);
+
+    tToken temp = enhanced_next_token();
+    while(temp.type != EOL_CASE && temp.type != THEN && temp.type != DO){
+        temp = nextToken();
+    }
+
+    tokenLookAheadFlag = false;
+    if(DEBUG_PARSER) printf("Expression analyzer returning token: %s\n", token_type_enum_string[temp.type]);
+    returnData.token = &temp;
+
+    return returnData;
+}
 
 /**----------RECURSIVE DESCENT------------------------------------*/
 
@@ -135,7 +156,10 @@ bool expr(){
     if(DEBUG_PARSER) printf("PARSER: token type send to expr: %s\n", token_type_enum_string[token.type]);
 
     ReturnData returnData;
-    returnData = analyze_expresssion(token, aheadToken, tokenLookAheadFlag, &global_symtable);
+
+    // TODO: Change this if you want to have just fake_analyze_expresssion
+//    returnData = analyze_expresssion(token, aheadToken, tokenLookAheadFlag, &global_symtable);
+    returnData = fake_analyze_expresssion(token, aheadToken, tokenLookAheadFlag, &global_symtable);
 
     token = (*returnData.token);
 
@@ -143,6 +167,9 @@ bool expr(){
         if(DEBUG_PARSER) printf("PARSER: Expression sending me error: %d\n", returnData.error_code);
         error_code = returnData.error_code;
     }
+
+    add_string_after_specific_string(active_code_list->end, "# Doing some calculations");
+    active_code_list->end->is_start_of_new_line = true;
 
     if(DEBUG_PARSER) printf("PARSER: after, epxresssoin\n");
     if(DEBUG_PARSER) printf("PARSER: token type: %s\n", token_type_enum_string[token.type]);
@@ -372,7 +399,7 @@ bool term(int *num_of_args, char *func_name){
     if(DEBUG_PARSER) printf("PARSER: token type: %s\n", token_type_enum_string[token.type]);
 
     // Generate code
-    if(!is_system_function(&global_symtable, func_name)){
+    if(strcmp(func_name, "print") != 0){
         add_string_after_specific_string(active_code_list->end, "DEFVAR");
         active_code_list->end->is_start_of_new_line = true;
         add_string_after_specific_string(active_code_list->end, "TF@");
@@ -383,9 +410,9 @@ bool term(int *num_of_args, char *func_name){
         add_string_after_specific_string(active_code_list->end, "TF@");
         append_text_to_specific_string(active_code_list->end, defined_param_name);
     } else{
-        printf("system func....\n");
+        add_string_after_specific_string(active_code_list->end, "WRITE");
+        active_code_list->end->is_start_of_new_line = true;
     }
-
 
     // This is not by ll rules, when is minus before number in call func args, this will handle it
     if(token.type == MINUS){
@@ -413,17 +440,8 @@ bool term(int *num_of_args, char *func_name){
             return false;
         }
 
-        // Generate code for pushing arument when calling func
-        if(!is_system_function(&global_symtable, func_name)){
-            add_string_after_specific_string(active_code_list->end, "LF@");
-            append_text_to_specific_string(active_code_list->end, var_name);
-        }else{
-            if(strcmp(func_name, "print") == 0){
-                add_string_after_specific_string(active_code_list->end, "WRITE");
-                active_code_list->end->is_start_of_new_line = true;
-                add_string_after_specific_string(active_code_list->end, "LF@");
-            }
-        }
+        add_string_after_specific_string(active_code_list->end, "LF@");
+        append_text_to_specific_string(active_code_list->end, var_name);
 
         pop();
         if(DEBUG_PARSER) printf("PARSER: %s returning: %d\n", non_term, 1);
@@ -433,18 +451,9 @@ bool term(int *num_of_args, char *func_name){
         char str[12];       // 12 because 32bit int cant have higher value
         sprintf(str, "%d", token.data.value_int);
 
-        // Generate code for pushing arument when calling func
-        if(!is_system_function(&global_symtable, func_name)){
-            add_string_after_specific_string(active_code_list->end, "int@");
-            append_text_to_specific_string(active_code_list->end, str);
-        }else{
-            if(strcmp(func_name, "print") == 0){
-                add_string_after_specific_string(active_code_list->end, "WRITE");
-                active_code_list->end->is_start_of_new_line = true;
-                add_string_after_specific_string(active_code_list->end, "int@");
-                append_text_to_specific_string(active_code_list->end, str);
-            }
-        }
+        add_string_after_specific_string(active_code_list->end, "int@");
+        append_text_to_specific_string(active_code_list->end, str);
+
         pop();
 
         if(DEBUG_PARSER) printf("PARSER: %s returning: %d\n", non_term, 1);
@@ -464,7 +473,7 @@ bool term(int *num_of_args, char *func_name){
 
         // Generate code
         add_string_after_specific_string(active_code_list->end, "string@");
-        append_text_to_specific_string(active_code_list->end, token.data.string);
+        append_text_to_specific_string(active_code_list->end, convert_string_to_correct_IFJcode18_format(token.data.string));
 
         pop();
         if(DEBUG_PARSER) printf("PARSER: %s returning: %d\n", non_term, 1);
@@ -524,11 +533,11 @@ bool call_func_args(int *num_of_args, char *func_name){
 
 
     // Generate code
-    if(!is_system_function(&global_symtable, func_name)){
+    if(strcmp(func_name, "print") == 0){
+
+    }else {
         add_string_after_specific_string(active_code_list->end, "CREATEFRAME");
         active_code_list->end->is_start_of_new_line = true;
-    }else{
-        system_func_count++;
     }
 
     // This is not by ll rules, when is minus before number in call func args, this will handle it
@@ -610,20 +619,13 @@ bool call_func(char *var_name, char **func_name_to_parent){
         if(DEBUG_SEMATNICS) printf("SEMANTICS: Function: %s is calling with: %d arguments.\n", func_name, num_of_args);
 
         // Generate code
-        if(!is_system_function(&global_symtable, func_name)){
+        if(strcmp(func_name, "print") == 0){
+
+        } else {
             add_string_after_specific_string(active_code_list->end, "CALL");
             active_code_list->end->is_start_of_new_line = true;
             add_string_after_specific_string(active_code_list->end, func_name);
-        } else{
-            // Define variable for return value
-
-            add_string_after_specific_string(active_code_list->end, "MOVE");
-            active_code_list->end->is_start_of_new_line = true;
-            add_string_after_specific_string(active_code_list->end, var_name);
-
-            add_string_after_specific_string(active_code_list->end, "nil@nil");
         }
-
 
         return sub_analysis_result;
     }
@@ -632,7 +634,7 @@ bool call_func(char *var_name, char **func_name_to_parent){
     return false;
 }
 
-bool func_or_expr(char *var_name, bool is_new_variable){
+bool func_or_expr(char *var_name, bool is_new_variable, char **func_name_to_parent){
     char non_term[] = "func_or_expr";
     if(DEBUG_PARSER) printf("PARSER: Im in %s\n", non_term);
     if(DEBUG_PARSER) printf("PARSER: token type: %s\n", token_type_enum_string[token.type]);
@@ -642,37 +644,15 @@ bool func_or_expr(char *var_name, bool is_new_variable){
         char *func_name = NULL;
         bool result =  call_func(var_name, &func_name);
 
-        // not bother do any chcecks if this
-        if(!result)
-            return false;
-
-        // Generate code
-        // if var_name where we want assign return value from function is new variable, define it
-        if(is_new_variable){
-            add_string_after_specific_string(active_code_list->end, "DEFVAR");
-            active_code_list->end->is_start_of_new_line = true;
-
-            add_string_after_specific_string(active_code_list->end, "LF@");
-            append_text_to_specific_string(active_code_list->end, var_name);
-        }
-
-        if(!is_system_function(&global_symtable, func_name)){
-            add_string_after_specific_string(active_code_list->end, "MOVE");
-            active_code_list->end->is_start_of_new_line = true;
-            add_string_after_specific_string(active_code_list->end, "LF@");
-            append_text_to_specific_string(active_code_list->end, var_name);
-            add_string_after_specific_string(active_code_list->end, "TF@%retval");
-        }else{
-            add_string_after_specific_string(active_code_list->end, "POPS");
-            active_code_list->end->is_start_of_new_line = true;
-            add_string_after_specific_string(active_code_list->end, "LF@");
-            append_text_to_specific_string(active_code_list->end, var_name);
-        }
+        // Pass func_name to parent
+        (*func_name_to_parent) = func_name;
 
         return result;
 
     } else if(token.type == EXPR){      // 9. Func_or_expr -> Expr
-        return expr();
+        bool result = expr();
+
+        return result;
     }
 
     if(DEBUG_PARSER) printf("PARSER: %s returning: %d\n", non_term, 0);
@@ -731,7 +711,7 @@ bool after_id() {
         if(DEBUG_SEMATNICS) printf("SEMANTICS: Function: %s is calling with: %d arguments.\n", func_name, num_of_args);
 
         // Generate code
-        if(!is_system_function(&global_symtable, func_name)){
+        if(strcmp(func_name, "print") != 0){
             add_string_after_specific_string(active_code_list->end, "CALL");
             active_code_list->end->is_start_of_new_line = true;
             add_string_after_specific_string(active_code_list->end, func_name);
@@ -777,7 +757,37 @@ bool after_id() {
 
         pop();
 
-        bool result = func_or_expr(var_name, is_new_variable);
+        char *func_name = NULL;
+
+        bool result = func_or_expr(var_name, is_new_variable, &func_name);
+//
+//        if(func_name == NULL)
+//            return false;
+
+        // Generate code
+        // if var_name where we want assign return value from function is new variable, define it
+        if(is_new_variable){
+            add_string_after_specific_string(active_code_list->end, "DEFVAR");
+            active_code_list->end->is_start_of_new_line = true;
+
+            add_string_after_specific_string(active_code_list->end, "LF@");
+            append_text_to_specific_string(active_code_list->end, var_name);
+        }
+
+        if(func_name != NULL) {
+            if(strcmp(func_name, "print") != 0) {
+                add_string_after_specific_string(active_code_list->end, "MOVE");
+                active_code_list->end->is_start_of_new_line = true;
+                add_string_after_specific_string(active_code_list->end, "LF@");
+                append_text_to_specific_string(active_code_list->end, var_name);
+                add_string_after_specific_string(active_code_list->end, "TF@%retval");
+            }
+        } else{ // So it was expression
+            add_string_after_specific_string(active_code_list->end, "POPS");
+            active_code_list->end->is_start_of_new_line = true;
+            add_string_after_specific_string(active_code_list->end, "LF@");
+            append_text_to_specific_string(active_code_list->end, var_name);
+        }
 
         return result;
     }
@@ -919,7 +929,7 @@ void init_parser(){
     // For throwing away EOL if is as start of file
     token.type = EOL_CASE;
     code_list_init();
-    system_func_count = 0;
+    generic_label_count = 0;
 
     global_symtable_init(&global_symtable);
     actual_symtable = global_symtable;
@@ -934,6 +944,8 @@ void init_parser(){
     active_code_list->start->is_start_of_new_line = true;
     add_string_after_specific_string(active_code_list->end, "JUMP $$main");
     active_code_list->end->is_start_of_new_line = true;
+
+    generate_system_functions();
 
     active_code_list = main_code_list;
     add_string_after_specific_string(active_code_list, "LABEL $$main");
@@ -960,6 +972,10 @@ void test_scanner(){
 //        if(token.type == FLOAT){
 //            printf("(value a= \"%a\") ", token.data.value_double);
 //            printf("(value f= \"%f\") ", token.data.value_double);
+//        if(token.type == STRING){
+//            printf("(string f= \"%s\") ", token.data.string);
+//            char *conv = convert_string_to_correct_IFJcode18_format(token.data.string);
+//            printf("converted: %s\n", conv );
 //        }
         if(token.type == EOL_CASE)
             printf("\n");
@@ -1125,31 +1141,31 @@ int main(){
     // Error handling
     switch(error_code){
         case 1:
-            printf("\nLex error!\n\n");
+            fprintf(stderr,"\nLex error!\n\n");
             return error_code;
         case 2:
-            printf("\nAnalysis error!\n\n");
+            fprintf(stderr,"\nAnalysis error!\n\n");
             return error_code;
         case 3:
-            printf("\nNon define variable/function or redefinition attempt error!\n\n");
+            fprintf(stderr,"\nNon define variable/function or redefinition attempt error!\n\n");
             return error_code;
         case 4:
-            printf("\nWrong compatibility types in expression error!\n\n");
+            fprintf(stderr,"\nWrong compatibility types in expression error!\n\n");
             return error_code;
         case 5:
-            printf("\nWrong number of parameters when calling function error!\n\n");
+            fprintf(stderr,"\nWrong number of parameters when calling function error!\n\n");
             return error_code;
         case 6:
-            printf("\nOther sematic error!\n\n");
+            fprintf(stderr,"\nOther sematic error!\n\n");
             return error_code;
         case 9:
-            printf("\nDivide by zero error!\n\n");
+            fprintf(stderr,"\nDivide by zero error!\n\n");
             return error_code;
         case 99:
-            printf("\nInternal program error!\n\n");
+            fprintf(stderr,"\nInternal program error!\n\n");
             return error_code;
         default:
-            printf("\nSuccess!\n\n");
+//            printf("\nSuccess!\n\n");
             return error_code;
     }
 

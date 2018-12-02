@@ -8,8 +8,6 @@
 #include "scanner.h"
 #include "symtable.h"
 
-
-
 int error_code;
 
 const char* token_type_enum_string[] = {
@@ -39,7 +37,6 @@ const char* token_type_enum_string[] = {
         "EXPR"     // Add-on for parser for cleaner code, in scanner is not used 202
 };
 
-
 bool state();
 bool expr();
 bool term();
@@ -48,65 +45,5 @@ bool more_param();
 bool st_list();
 
 //tToken analyze_expression(tToken token, tToken aheadToken, bool lookahead_occured);
-
-
-#define LABEL "LABEL"
-#define JUMP "JUMP"
-#define JUMPIFNEQ "JUMPIFNEQ"
-#define EXIT "EXIT"
-#define JUMPIFEQS "JUMPIFEQS"
-#define JUMPIFNEQS "JUMPIFNEQS"
-#define JUMPIFEQ "JUMPIFEQ"
-#define CREATEFRAME "CREATEFRAME"
-#define PUSHFRAME "PUSHFRAME"
-#define POPFRAME "POPFRAME"
-#define MOVE "MOVE"
-#define BREAK "BREAK"
-#define DPRINT "DPRINT"
-#define READ "READ"
-#define WRITE "WRITE"
-#define CONCAT "CONCAT"
-#define STRLEN "STRLEN"
-#define GETCHARSETCHAR "GETCHARSETCHAR"
-#define TYPE "TYPE"
-#define INT2FLOATS "INT2FLOATS"
-#define FLOAT2INTS "FLOAT2INTS"
-#define INT2CHARS "INT2CHARS"
-#define STRI2INTS "STRI2INTS"
-#define ANDS "ANDS"
-#define ORS "ORS"
-#define STRI2INT "STRI2INT"
-#define INT2FLOAT "INT2FLOAT"
-#define INT2CHAR "INT2CHAR"
-#define FLOAT2INT "FLOAT2INT"
-#define NOTS "NOTS"
-#define LTS "LTS"
-#define GTS "GTS"
-#define AND "AND"
-#define OR "OR"
-#define NOT "NOT"
-#define EQS "EQS"
-#define LT "LT"
-#define GT "GT"
-#define EQ "EQ"
-#define ADDS "ADDS"
-#define SUBS "SUBS"
-#define MULS "MULS"
-#define DIVS "DIVS"
-#define IDIVS "IDIVS"
-#define DEFVAR "DEFVAR"
-#define CALL "CALL"
-#define IDIV "IDIV"
-#define DIV "DIV"
-#define MUL "MUL"
-#define SUB "SUB"
-#define ADD "ADD"
-#define CLEARS "CLEARS"
-#define RETURN "RETURN"
-#define POPS "POPS"
-#define PUSHS "PUSHS"
-
-
-
 
 #endif //IFJ_PROJECT_PARSER_H
