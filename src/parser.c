@@ -998,7 +998,7 @@ void test_code_list(){
     free(text2);
 
     print_code();
-    free_code_list();
+    free_code_lists();
 }
 
 void test_expr(){

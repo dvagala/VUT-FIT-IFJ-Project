@@ -32,7 +32,7 @@ void print_code_backwards();
 char* append_text_to_specific_string(Tstring specific_string, char *text);
 Tstring find_nearest_good_place_for_defvar();
 void add_string_after_specific_string(Tstring specific_string, char *text);
-void free_code_list();
+void free_code_lists();
 
 char* convert_string_to_correct_IFJcode18_format(char *input);
 
