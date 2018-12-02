@@ -25,6 +25,7 @@ tToken token;
 tToken previousToken;       // always behind actual token
 tToken aheadToken;          // When I need to do lookahead what is after actual token, this is it
 bool tokenLookAheadFlag = false;
+bool im_in_while_loop = false;
 
 // If we are in definition of function this is local_symtable of that function, otherwise == global_symtable
 Bnode actual_symtable;
@@ -138,6 +139,25 @@ ReturnData fake_analyze_expresssion(tToken token, tToken aheadToken, bool lookah
 
     if(DEBUG_PARSER) printf("Analyzing expression start token: %s\n", token_type_enum_string[token.type]);
     if(DEBUG_PARSER) printf("Analyzing expression lookahead token: %s\n", token_type_enum_string[aheadToken.type]);
+
+    // If intead od expresion you type 1 you get bool@true
+    if(lookahead_occured){
+        if(aheadToken.data.value_int == 1){
+            add_string_after_specific_string(active_code_list->end, "PUSHS bool@true");
+            active_code_list->end->is_start_of_new_line = true;
+        }else{
+            add_string_after_specific_string(active_code_list->end, "PUSHS bool@false");
+            active_code_list->end->is_start_of_new_line = true;
+        }
+    } else{
+        if(token.data.value_int == 1){
+            add_string_after_specific_string(active_code_list->end, "PUSHS bool@true");
+            active_code_list->end->is_start_of_new_line = true;
+        }else{
+            add_string_after_specific_string(active_code_list->end, "PUSHS bool@false");
+            active_code_list->end->is_start_of_new_line = true;
+        }
+    }
 
     tToken temp = enhanced_next_token();
     while(temp.type != EOL_CASE && temp.type != THEN && temp.type != DO){
@@ -642,7 +662,7 @@ bool call_func(char *var_name, char **func_name_to_parent){
     return false;
 }
 
-bool func_or_expr(char *var_name, bool is_new_variable, char **func_name_to_parent){
+bool func_or_expr(char *var_name, char **func_name_to_parent){
     char non_term[] = "func_or_expr";
     if(DEBUG_PARSER) printf("PARSER: Im in %s\n", non_term);
     if(DEBUG_PARSER) printf("PARSER: token type: %s\n", token_type_enum_string[token.type]);
@@ -767,19 +787,26 @@ bool after_id() {
 
         char *func_name = NULL;
 
-        bool result = func_or_expr(var_name, is_new_variable, &func_name);
-//
-//        if(func_name == NULL)
-//            return false;
+        bool result = func_or_expr(var_name, &func_name);
 
         // Generate code
         // if var_name where we want assign return value from function is new variable, define it
         if(is_new_variable){
-            add_string_after_specific_string(active_code_list->end, "DEFVAR");
-            active_code_list->end->is_start_of_new_line = true;
-
-            add_string_after_specific_string(active_code_list->end, "LF@");
-            append_text_to_specific_string(active_code_list->end, var_name);
+            Tstring good_place_for_defvar;
+            if(im_in_while_loop){
+                printf("\n\nserching for good palce\n\n");
+                good_place_for_defvar = find_nearest_good_place_for_defvar()->prev;
+                printf("good place: %s\n", good_place_for_defvar->text);
+                add_string_after_specific_string(good_place_for_defvar, "DEFVAR");
+                good_place_for_defvar->next->is_start_of_new_line = true;
+                add_string_after_specific_string(good_place_for_defvar->next, "LF@");
+                append_text_to_specific_string(good_place_for_defvar->next->next, var_name);
+            }else{
+                add_string_after_specific_string(active_code_list->end, "DEFVAR");
+                active_code_list->end->is_start_of_new_line = true;
+                add_string_after_specific_string(active_code_list->end, "LF@");
+                append_text_to_specific_string(active_code_list->end, var_name);
+            }
         }
 
         if(func_name != NULL) {
@@ -845,16 +872,58 @@ bool state(){
         }
     } else if(token.type == IF){        // 25. State -> if Expr then eol St_list else eol St_list end eol
         pop();
+
+        add_string_after_specific_string(active_code_list->end, "DEFVAR");
+        active_code_list->end->is_start_of_new_line = true;
+        add_string_after_specific_string(active_code_list->end, "LF@condition_");
+        char str[12];       // 12 because 32bit int cant have higher value
+        int condition_num = generic_label_count++;
+        sprintf(str, "%d", condition_num);
+        append_text_to_specific_string(active_code_list->end, str);
+
         if(!expr())
             return false;
+
+        add_string_after_specific_string(active_code_list->end, "POPS");
+        active_code_list->end->is_start_of_new_line = true;
+        add_string_after_specific_string(active_code_list->end, "LF@condition_");
+        sprintf(str, "%d", condition_num);
+        append_text_to_specific_string(active_code_list->end, str);
+
+        add_string_after_specific_string(active_code_list->end, "JUMPIFNEQ");
+        active_code_list->end->is_start_of_new_line = true;
+        add_string_after_specific_string(active_code_list->end, "$else_");
+        int else_num = generic_label_count++;
+        sprintf(str, "%d", else_num );
+        append_text_to_specific_string(active_code_list->end, str);
+        add_string_after_specific_string(active_code_list->end, "LF@condition_");
+        sprintf(str, "%d", condition_num);
+        append_text_to_specific_string(active_code_list->end, str);
+        add_string_after_specific_string(active_code_list->end, "bool@true");
+
         if(token.type == THEN ) {
             pop();
             if(token.type == EOL_CASE ) {
                 pop();
                 if(!st_list())
                     return false;
+
+                add_string_after_specific_string(active_code_list->end, "JUMP");
+                active_code_list->end->is_start_of_new_line = true;
+                add_string_after_specific_string(active_code_list->end, "$if_end_");
+                int if_end_num = generic_label_count++;
+                sprintf(str, "%d", if_end_num);
+                append_text_to_specific_string(active_code_list->end, str);
+
                 if(token.type == ELSE ) {
                     pop();
+
+                    add_string_after_specific_string(active_code_list->end, "LABEL");
+                    active_code_list->end->is_start_of_new_line = true;
+                    add_string_after_specific_string(active_code_list->end, "$else_");
+                    sprintf(str, "%d", else_num);
+                    append_text_to_specific_string(active_code_list->end, str);
+
                     if(token.type == EOL_CASE ) {
                         pop();
                         if(!st_list())
@@ -863,6 +932,13 @@ bool state(){
                             pop();
                             if(token.type == EOL_CASE ) {
                                 pop();
+
+                                add_string_after_specific_string(active_code_list->end, "LABEL");
+                                active_code_list->end->is_start_of_new_line = true;
+                                add_string_after_specific_string(active_code_list->end, "$if_end_");
+                                sprintf(str, "%d", if_end_num);
+                                append_text_to_specific_string(active_code_list->end, str);
+
                                 if(DEBUG_PARSER) printf("PARSER: %s returning: %d\n", non_term, 1);
                                 return true;
                             }
@@ -872,9 +948,53 @@ bool state(){
             }
         }
     } else if(token.type == WHILE){        // 26. State -> while Expr do eol St_list end eol
+
+        // For nested while loops
+        bool im_parent_while_loop = false;
+
+        add_string_after_specific_string(active_code_list->end, "DEFVAR");
+        active_code_list->end->is_start_of_new_line = true;
+        add_string_after_specific_string(active_code_list->end, "LF@condition_");
+        if(!im_in_while_loop){
+            active_code_list->end->before_me_is_good_place_for_defvar = true;
+            im_parent_while_loop = true;
+        }
+
+        char str[12];       // 12 because 32bit int cant have higher value
+        int condition_num = generic_label_count++;
+        sprintf(str, "%d", condition_num);
+        append_text_to_specific_string(active_code_list->end, str);
+
+        im_in_while_loop = true;
+
+        add_string_after_specific_string(active_code_list->end, "LABEL");
+        active_code_list->end->is_start_of_new_line = true;
+        add_string_after_specific_string(active_code_list->end, "$while_");
+        int while_num = generic_label_count++;
+        sprintf(str, "%d", while_num);
+        append_text_to_specific_string(active_code_list->end, str);
+
         pop();
         if(!expr())
             return false;
+
+        add_string_after_specific_string(active_code_list->end, "POPS");
+        active_code_list->end->is_start_of_new_line = true;
+        add_string_after_specific_string(active_code_list->end, "LF@condition_");
+        sprintf(str, "%d", condition_num);
+        append_text_to_specific_string(active_code_list->end, str);
+
+        add_string_after_specific_string(active_code_list->end, "JUMPIFNEQ");
+        active_code_list->end->is_start_of_new_line = true;
+        add_string_after_specific_string(active_code_list->end, "$while_end_");
+        int while_end_num = generic_label_count++;
+        sprintf(str, "%d", while_end_num );
+        append_text_to_specific_string(active_code_list->end, str);
+        add_string_after_specific_string(active_code_list->end, "LF@condition_");
+        sprintf(str, "%d", condition_num);
+        append_text_to_specific_string(active_code_list->end, str);
+        add_string_after_specific_string(active_code_list->end, "bool@true");
+
         if(token.type == DO ) {
             pop();
             if(token.type == EOL_CASE ) {
@@ -885,6 +1005,22 @@ bool state(){
                     pop();
                     if(token.type == EOL_CASE ) {
                         pop();
+
+                        add_string_after_specific_string(active_code_list->end, "JUMP");
+                        active_code_list->end->is_start_of_new_line = true;
+                        add_string_after_specific_string(active_code_list->end, "$while_");
+                        sprintf(str, "%d", while_num);
+                        append_text_to_specific_string(active_code_list->end, str);
+
+                        add_string_after_specific_string(active_code_list->end, "LABEL");
+                        active_code_list->end->is_start_of_new_line = true;
+                        add_string_after_specific_string(active_code_list->end, "$while_end_");
+                        sprintf(str, "%d", while_end_num);
+                        append_text_to_specific_string(active_code_list->end, str);
+
+                        if(im_parent_while_loop)
+                            im_in_while_loop = false;
+
                         if(DEBUG_PARSER) printf("PARSER: %s returning: %d\n", non_term,  1);
                         return true;
                     }
