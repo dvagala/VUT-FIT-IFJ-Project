@@ -358,11 +358,10 @@ tToken nextToken()
 
         case STRING: //STRING CASE
         {
-            //int mult_alloc=1;
             c=getchar();
-            char hexValue[3]={0}; //special array to save HEX value that follows after sequence '/x'
+            char hexValue[3]={0}; //special array to save HEX value that follows after sequence '\x'
             int symbol; //we'll save this value in int
-            int tookFlag=0; //variable used to take care of edge case where string ends with /xh"
+            int tookFlag=0; //variable used to take care of edge case where string ends with \xh"
             int bufferedMore=0;
             while (c !='\"')
             {
@@ -644,33 +643,4 @@ tToken nextToken()
 
     //free the token variable, as we saved it already into struct identificator, and return the token.
     return identificator;
-}
-
-
-int main()
-{
-
-    for (int i=0;i<10;i++)
-    {
-        tToken token =nextToken();
-        if (i==0)
-        {
-         //  printf("%s \n",token.data.string);
-        }
-        printf("Token type: %d \n",token.type);
-
-        if (token.type == 1004)
-        {
-            printf("%s \n",token.data.string);
-        }
-        else if (token.type == 1002)
-        {
-            printf("%s",token.data.string);
-        }
-        else if (token.type ==1000)
-        {
-            printf("%d",token.data.value_int);
-        }
-    }
-    return 0;
 }
