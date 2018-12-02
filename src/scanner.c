@@ -350,13 +350,15 @@ tToken nextToken()
             char hexValue[3]={0}; //special array to save HEX value that follows after sequence '/x'
             int symbol; //we'll save this value in int
             int tookFlag=0; //variable used to take care of edge case where string ends with /xh"
+            int bufferedMore=0;
             while (c !='\"')
             {
-             /*   if (i==49*mult_alloc && i!=0)
+                if (c == '\n')
                 {
-                    mult_alloc++;
-                    token = realloc(token, sizeof(char)*mult_alloc*50);
-                }*/
+                    identificator.type=ERROR;
+                    freeString(TokenString);
+                    return identificator;
+                }
                 if (c == '\\') // \ is the so called escape character for special symbols. For our case, we make a case for each and implement
                 {              //their proper behavior.
                     c=getchar();
@@ -412,13 +414,18 @@ tToken nextToken()
                                     }
                                     else
                                     {
-                                        bufferToken(TokenString);
+                                        bufferedMore=1;
                                     }
                                 }
                                 hexValue[2]='\0';
                                 symbol = strtol(hexValue,NULL,16); //converting the value
                                 TokenString->string[TokenString->index]=symbol;
                                 (TokenString->index)++; //then putting in that value as a character in our array (gets converted to char) afterwards
+                                if (bufferedMore==1)
+                                {
+
+                                    bufferToken(TokenString);
+                                }
                                 break;
                             }
                             else
@@ -626,7 +633,7 @@ tToken nextToken()
     return identificator;
 }
 
-/*
+
 int main()
 {
 
@@ -653,4 +660,4 @@ int main()
         }
     }
     return 0;
-}*/
+}
