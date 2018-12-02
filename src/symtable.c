@@ -1,3 +1,14 @@
+/*
+ * Project: Implementace překladače imperativního jazyka IFJ18
+ *
+ * File: symtable.c
+ *
+ * xglosk00   Kristian Glos
+ * xvagal00   Dominik Vagala
+ * xvinsj00   Jakub Vins
+ * xabike00   Zhamilya Abikenova
+ *
+ */
 #include <stddef.h>
 #include <stdlib.h>
 #include <memory.h>

@@ -1,6 +1,14 @@
-//
-// Created by Dominik Vagala on 18. 11. 2018.
-//
+/*
+ * Project: Implementace překladače imperativního jazyka IFJ18
+ *
+ * File: parser.c
+ *
+ * xglosk00   Kristian Glos
+ * xvagal00   Dominik Vagala
+ * xvinsj00   Jakub Vins
+ * xabike00   Zhamilya Abikenova
+ *
+ */
 
 #include "parser.h"
 #include "scanner.h"

@@ -1,6 +1,15 @@
-//
-// Created by vinso on 28.11.2018.
-//
+/*
+ * Project: Implementace překladače imperativního jazyka IFJ18
+ *
+ * File: postfix_data_managment.h
+ *
+ * xglosk00   Kristian Glos
+ * xvagal00   Dominik Vagala
+ * xvinsj00   Jakub Vins
+ * xabike00   Zhamilya Abikenova
+ *
+ */
+
 
 #ifndef IFJ_PROJECT_POSTFIX_STACK_H
 #define IFJ_PROJECT_POSTFIX_STACK_H

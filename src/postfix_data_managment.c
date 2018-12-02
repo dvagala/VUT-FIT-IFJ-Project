@@ -1,11 +1,20 @@
+/*
+ * Project: Implementace překladače imperativního jazyka IFJ18
+ *
+ * File: postfix_data_managment.c
+ *
+ * xglosk00   Kristian Glos
+ * xvagal00   Dominik Vagala
+ * xvinsj00   Jakub Vins
+ * xabike00   Zhamilya Abikenova
+ *
+ */
+
 #include <stddef.h>
 #include <stdlib.h>
 #include "postfix_data_managment.h"
 #include "sym_stack.h"
 
-//
-// Created by vinso on 28.11.2018.
-//
 
 #define DEBUG_POSTFIX 1         // Set to '1', if you want to print debug stuff
 //Operator stack

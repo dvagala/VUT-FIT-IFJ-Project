@@ -1,3 +1,16 @@
+/*
+ * Project: Implementace překladače imperativního jazyka IFJ18
+ *
+ * File: scanner.c
+ *
+ * xglosk00   Kristian Glos
+ * xvagal00   Dominik Vagala
+ * xvinsj00   Jakub Vins
+ * xabike00   Zhamilya Abikenova
+ *
+ */
+
+
 #include "scanner.h"
 int c=30000; //global variable c, holding current character. We need to hold this value between function callings,
 // and setting is as global is the simplest solution.

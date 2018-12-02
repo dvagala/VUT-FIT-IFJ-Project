@@ -1,6 +1,15 @@
-//
-// Created by Ancient on 25. 11. 2018.
-//
+/*
+ * Project: Implementace překladače imperativního jazyka IFJ18
+ *
+ * File: expressions.c
+ *
+ * xglosk00   Kristian Glos
+ * xvagal00   Dominik Vagala
+ * xvinsj00   Jakub Vins
+ * xabike00   Zhamilya Abikenova
+ *
+ */
+
 #include <stdio.h>
 #include <malloc.h>
 #include "expressions.h"

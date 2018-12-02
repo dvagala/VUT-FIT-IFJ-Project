@@ -1,6 +1,15 @@
-//
-// Created by Ancient on 25. 11. 2018.
-//
+/*
+ * Project: Implementace překladače imperativního jazyka IFJ18
+ *
+ * File: param_list.h
+ *
+ * xglosk00   Kristian Glos
+ * xvagal00   Dominik Vagala
+ * xvinsj00   Jakub Vins
+ * xabike00   Zhamilya Abikenova
+ *
+ */
+
 #include <stdbool.h>
 #ifndef IFJ_PROJECT_PARAM_LIST_H
 #define IFJ_PROJECT_PARAM_LIST_H

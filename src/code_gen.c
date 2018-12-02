@@ -1,6 +1,14 @@
-//
-// Created by Dominik Vagala on 28. 11. 2018.
-//
+/*
+ * Project: Implementace překladače imperativního jazyka IFJ18
+ *
+ * File: code_gen.c
+ *
+ * xglosk00   Kristian Glos
+ * xvagal00   Dominik Vagala
+ * xvinsj00   Jakub Vins
+ * xabike00   Zhamilya Abikenova
+ *
+ */
 
 #include <stdlib.h>
 #include "code_gen.h"
