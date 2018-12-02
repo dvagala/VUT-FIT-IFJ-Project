@@ -258,12 +258,14 @@ tToken nextToken()
             else if (identificator.type == FLOAT)//if we found float, we return value saved as a double
             {
                 identificator.data.value_double=atof(TokenString->string);
+                freeString(TokenString);
                 break;
             }
             else //otherwise we stayed in integer, so return that.
             {
                 identificator.type=INT;
                 identificator.data.value_int=atoi(TokenString->string);
+                freeString(TokenString);
                 break;
             }
         }
@@ -612,6 +614,7 @@ tToken nextToken()
     //free the token variable, as we saved it already into struct identificator, and return the token.
     return identificator;
 }
+
 /*
 int main()
 {
