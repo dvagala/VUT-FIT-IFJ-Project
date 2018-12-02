@@ -266,7 +266,6 @@ bool def_func(){
             // Semantics. Check redefinition of func, if yes -> error 3
             // Semantics. Check if func_name isnt previously declared global variable, if yes -> error 3
             // Semantics. Add id_func to symtable, return false if malloc fail
-
             if(is_func_defined(&global_symtable, func_name)){
                 // This ensures that only first error will be in error_code
                 if(DEBUG_SEMATNICS) printf("SEMANTICS: %s, calling funciton wanst declared\n", func_name);
@@ -274,7 +273,6 @@ bool def_func(){
                     error_code = 3;
                 return false;
             }
-
             if(has_func_same_name_as_global_variable(&global_symtable, func_name)){
                 if(DEBUG_SEMATNICS) printf("SEMANTICS: %s, funciton has same name as global variable\n", func_name);
                 // This ensures that only first error will be in error_code
@@ -282,7 +280,6 @@ bool def_func(){
                     error_code = 3;
                 return false;
             }
-
             if(!add_func_to_symtable(&global_symtable, func_name)){
                 // This ensures that only first error will be in error_code
                 if(error_code == 0)
@@ -291,6 +288,10 @@ bool def_func(){
             }
 
             if(DEBUG_SEMATNICS) printf("SEMANTICS: adding func: %s to symtable\n", func_name);
+
+            add_string_after_specific_string(active_code_list->end, "LABEL");
+            active_code_list->end->is_start_of_new_line = true;
+//            append_text_to_specific_string()(active_code_list->end, func_name);   // TODO
 
             // New local symtable for this function
             local_symtable_init(&actual_symtable);
@@ -354,19 +355,19 @@ bool term(int *num_of_args, char *func_name){
     if(DEBUG_PARSER) printf("PARSER: token type: %s\n", token_type_enum_string[token.type]);
 
     // Generate code
-    add_text_string_after_specific_string(active_code_list->end, "DEFVAR");
+    add_string_after_specific_string(active_code_list->end, "DEFVAR");
     active_code_list->end->is_start_of_new_line = true;
-    add_text_string_after_specific_string(active_code_list->end, "TF@");
+    add_string_after_specific_string(active_code_list->end, "TF@");
     char *defined_param_name = get_name_of_defined_param_at_position(&global_symtable, func_name, (*num_of_args)-1);
     char *defined_param_name_copy = malloc(sizeof(char)*(strlen(defined_param_name) + 1));
     strcpy(defined_param_name_copy, defined_param_name);
-    append_allocated_string_to_specific_string(active_code_list->end, defined_param_name_copy);
-    add_text_string_after_specific_string(active_code_list->end, "MOVE");
+    append_text_to_specific_string(active_code_list->end, defined_param_name_copy);
+    add_string_after_specific_string(active_code_list->end, "MOVE");
     active_code_list->end->is_start_of_new_line = true;
-    add_text_string_after_specific_string(active_code_list->end, "TF@");
+    add_string_after_specific_string(active_code_list->end, "TF@");
     char *defined_param_name_copy2 = malloc(sizeof(char)*(strlen(defined_param_name) + 1));
     strcpy(defined_param_name_copy2, defined_param_name);
-    append_allocated_string_to_specific_string(active_code_list->end, defined_param_name_copy2);
+    append_text_to_specific_string(active_code_list->end, defined_param_name_copy2);
 
     // This is not by ll rules, when is minus before number in call func args, this will handle it
     if(token.type == MINUS){
@@ -396,12 +397,10 @@ bool term(int *num_of_args, char *func_name){
 
         // Generate code
         if(active_code_list == main_code_list)              // We are in global context
-            add_text_string_after_specific_string(active_code_list->end, "GF@");
+            add_string_after_specific_string(active_code_list->end, "GF@");
         else                                                // In local
-            add_text_string_after_specific_string(active_code_list->end, "LF@");
-        char *var_name_copy = malloc(sizeof(char) * (strlen(var_name) + 1));
-        strcpy(var_name_copy, var_name);
-        append_allocated_string_to_specific_string(active_code_list->end, var_name_copy);
+            add_string_after_specific_string(active_code_list->end, "LF@");
+        append_text_to_specific_string(active_code_list->end, var_name);
 
         pop();
         if(DEBUG_PARSER) printf("PARSER: %s returning: %d\n", non_term, 1);
@@ -411,8 +410,8 @@ bool term(int *num_of_args, char *func_name){
         // Generate code
         char str[12];       // 12 because 32bit int cant have higher value
         sprintf(str, "%d", token.data.value_int);
-        add_text_string_after_specific_string(active_code_list->end, "int@");
-        append_text_string_to_specific_string(active_code_list->end, str);
+        add_string_after_specific_string(active_code_list->end, "int@");
+        append_text_to_specific_string(active_code_list->end, str);
 
         pop();
 
@@ -423,8 +422,8 @@ bool term(int *num_of_args, char *func_name){
         // Generate code
         char str[24];       // TODO: 24 is made up number
         sprintf(str,  "%a", token.data.value_double);
-        add_text_string_after_specific_string(active_code_list->end, "float@");
-        append_text_string_to_specific_string(active_code_list->end, str);
+        add_string_after_specific_string(active_code_list->end, "float@");
+        append_text_to_specific_string(active_code_list->end, str);
 
         pop();
         if(DEBUG_PARSER) printf("PARSER: %s returning: %d\n", non_term, 1);
@@ -434,8 +433,8 @@ bool term(int *num_of_args, char *func_name){
         // Generate code
         // TODO modify token.data.string so it matches correct IFJcode18 format example:
         // string@retezec\032s\032lomitkem\032\092\032a\010novym\035radkem
-        add_text_string_after_specific_string(active_code_list->end, "string@");
-        append_text_string_to_specific_string(active_code_list->end, token.data.string);
+        add_string_after_specific_string(active_code_list->end, "string@");
+        append_text_to_specific_string(active_code_list->end, token.data.string);
 
         pop();
         if(DEBUG_PARSER) printf("PARSER: %s returning: %d\n", non_term, 1);
@@ -443,7 +442,7 @@ bool term(int *num_of_args, char *func_name){
     } else if(token.type == NIL){           // 22. Term -> nil
 
         // Generate code
-        add_text_string_after_specific_string(active_code_list->end, "nil@nil");
+        add_string_after_specific_string(active_code_list->end, "nil@nil");
 
         pop();
         if(DEBUG_PARSER) printf("PARSER: %s returning: %d\n", non_term, 1);
@@ -539,7 +538,7 @@ bool call_func(){
     if(token.type == IDENTIFICATOR){
 
         // Generate code
-        add_text_string_after_specific_string(active_code_list->end, "CREATEFRAME");
+        add_string_after_specific_string(active_code_list->end, "CREATEFRAME");
         active_code_list->end->is_start_of_new_line = true;
 
         char *func_name = token.data.string;
@@ -573,9 +572,9 @@ bool call_func(){
         if(DEBUG_SEMATNICS) printf("SEMANTICS: Function: %s is calling with: %d arguments.\n", func_name, num_of_args);
 
         // Generate code
-        add_text_string_after_specific_string(active_code_list->end, "CALL");
+        add_string_after_specific_string(active_code_list->end, "CALL");
         active_code_list->end->is_start_of_new_line = true;
-        add_allocated_string_after_specific_string(active_code_list->end, func_name);
+        add_string_after_specific_string(active_code_list->end, func_name);
 
         return sub_analysis_result;
     }
@@ -622,7 +621,7 @@ bool after_id() {
        token.type == INT || token.type == FLOAT || token.type == STRING || token.type == NIL){
 
         // Generate code
-        add_text_string_after_specific_string(active_code_list->end, "CREATEFRAME");
+        add_string_after_specific_string(active_code_list->end, "CREATEFRAME");
         active_code_list->end->is_start_of_new_line = true;
 
         // previous_token == id_func      // cause we are in after_id
@@ -656,9 +655,9 @@ bool after_id() {
         if(DEBUG_SEMATNICS) printf("SEMANTICS: Function: %s is calling with: %d arguments.\n", func_name, num_of_args);
 
         // Generate code
-        add_text_string_after_specific_string(active_code_list->end, "CALL");
+        add_string_after_specific_string(active_code_list->end, "CALL");
         active_code_list->end->is_start_of_new_line = true;
-        add_allocated_string_after_specific_string(active_code_list->end, func_name);
+        add_string_after_specific_string(active_code_list->end, func_name);
 
         return sub_analysis_result;
     }else if(token.type == ASSIGN){        // 6. After_id -> = Func_or_expr
@@ -703,14 +702,14 @@ bool after_id() {
 //
 //        if(new_variable){
 //            printf("ne_vari\n");
-//            add_text_string_after_specific_string(active_code_list->end, "DEFVAR");
+//            add_string_after_specific_string()(active_code_list->end, "DEFVAR");
 //            active_code_list->is_start_of_new_line = true;
 //
 //            if(active_code_list == main_code_list)
-//                add_text_string_after_specific_string(active_code_list->end, "GF@");
+//                add_string_after_specific_string()(active_code_list->end, "GF@");
 //            else if(active_code_list == functions_code_list)
-//                add_text_string_after_specific_string(active_code_list->end, "LF@");
-//            add_allocated_string_after_specific_string(active_code_list->end, var_name);
+//                add_string_after_specific_string()(active_code_list->end, "LF@");
+//            add_string_after_specific_string()(active_code_list->end, var_name);
 //        }
 
         return result;
@@ -857,7 +856,7 @@ void init_parser(){
     global_symtable_init(&global_symtable);
     actual_symtable = global_symtable;
 
-    add_text_string_after_specific_string(functions_code_list, ".IFJcode18");
+    add_string_after_specific_string(functions_code_list, ".IFJcode18");
 
     functions_code_list = active_code_list;
 
@@ -865,11 +864,11 @@ void init_parser(){
     active_code_list = functions_code_list;
 
     active_code_list->start->is_start_of_new_line = true;
-    add_text_string_after_specific_string(active_code_list->end, "JUMP $$main");
+    add_string_after_specific_string(active_code_list->end, "JUMP $$main");
     active_code_list->end->is_start_of_new_line = true;
 
     active_code_list = main_code_list;
-    add_text_string_after_specific_string(active_code_list, "LABEL $$main");
+    add_string_after_specific_string(active_code_list, "LABEL $$main");
     active_code_list->end->is_start_of_new_line = true;
 
 }
@@ -949,30 +948,32 @@ void test_symtable(){
 
 void test_code_list(){
 
+    active_code_list = main_code_list;
+
     char *not_alloc_text = "74 /";
 
-    add_text_string_after_specific_string(main_code_list, not_alloc_text);
+    add_string_after_specific_string(active_code_list->end, not_alloc_text);
 
-    add_text_string_after_specific_string(main_code_list, "5");
-    append_text_string_to_specific_string(main_code_list->end, " + ");
-    append_text_string_to_specific_string(main_code_list->end, "10");
+    add_string_after_specific_string(active_code_list->end, "5");
+    append_text_to_specific_string(active_code_list->end, " + ");
+    append_text_to_specific_string(active_code_list->end, "10");
 
-    add_text_string_after_specific_string(main_code_list->end, "while");
-    main_code_list->end->is_start_of_new_line = true;
-    main_code_list->end->before_me_is_good_place_for_defvar = true;
+    add_string_after_specific_string(active_code_list->end, "while");
+    active_code_list->end->is_start_of_new_line = true;
+    active_code_list->end->before_me_is_good_place_for_defvar = true;
 
-    add_text_string_after_specific_string(main_code_list->end, "5 == 5");
-    add_text_string_after_specific_string(main_code_list->end, "do");
-    add_text_string_after_specific_string(main_code_list->end, "end");
-    main_code_list->end->is_start_of_new_line = true;
+    add_string_after_specific_string(active_code_list->end, "5 == 5");
+    add_string_after_specific_string(active_code_list->end, "do");
+    add_string_after_specific_string(active_code_list->end, "end");
+    active_code_list->end->is_start_of_new_line = true;
 
-    add_text_string_after_specific_string(main_code_list->start->prev, "id_var =");
-    main_code_list->start->is_start_of_new_line = true;
+    add_string_after_specific_string(active_code_list->start->prev, "id_var =");
+    active_code_list->start->is_start_of_new_line = true;
 
     Tstring good_place = find_nearest_good_place_for_defvar();
-    add_text_string_after_specific_string(good_place, "DEFVAR");
+    add_string_after_specific_string(good_place, "DEFVAR");
     good_place->next->is_start_of_new_line = true;
-    add_text_string_after_specific_string(good_place->next, "int@a");
+    add_string_after_specific_string(good_place->next, "int@a");
 
     char *text = malloc(sizeof(char)*5);
     text[0] = 'h';
@@ -981,8 +982,8 @@ void test_code_list(){
     text[3] = 'o';
     text[4] = 0;
 
-    add_allocated_string_after_specific_string(main_code_list->end, text);
-    main_code_list->end->is_start_of_new_line = true;
+    add_string_after_specific_string(active_code_list->end, text);
+    active_code_list->end->is_start_of_new_line = true;
 
     char *text2 = malloc(sizeof(char)*5);
     text2[0] = '_';
@@ -991,7 +992,10 @@ void test_code_list(){
     text2[3] = 'n';
     text2[4] = 0;
 
-    append_allocated_string_to_specific_string(main_code_list->end, text2);
+    append_text_to_specific_string(active_code_list->end, text2);
+
+    free(text);
+    free(text2);
 
     print_code();
     free_code_list();
@@ -1003,12 +1007,14 @@ void test_expr(){
     analyze_expresssion(token, aheadToken, false, &global_symtable);
 }
 
-int add_5(int n){
-    return n+5;
-}
-
-int get_num(int n){
-    return n*2;
+void test_string_convert(){
+    char *input = "ret\tezec s lomitkem \\ a\n"
+                  "novym#radkem";
+    printf("input: %s\n", input);
+    char *out = convert_string_to_correct_IFJcode18_format(input);
+    // string@retezec\032s\032lomitkem\032\092\032a\010novym\035radkem
+    printf("out: %s\n", out);
+    free(out);
 }
 
 int main(){
@@ -1019,6 +1025,7 @@ int main(){
 //    test_symtable();
 //    test_expr();
 //    test_code_list();
+//    test_string_convert();
 
 //    return 0;
 
