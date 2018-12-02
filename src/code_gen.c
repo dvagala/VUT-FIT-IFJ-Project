@@ -7,6 +7,7 @@
 #include <string.h>
 
 #define DEBGUG_CODE_GEN 0
+#define DEBUG_EXPR_GEN 0
 
 void code_list_init(){
     active_code_list = NULL;
@@ -200,6 +201,105 @@ void free_code_lists(){
     main_code_list = NULL;
     functions_code_list = NULL;
 }
+
+
+bool declare_defvar_restype(){
+    insert_simple_instruction("DEFVAR");
+    add_string_after_specific_string(active_code_list->end, "LF@%res$type");
+}
+
+bool insert_defvar_res(){
+    insert_simple_instruction("DEFVAR");
+    add_string_after_specific_string(active_code_list->end, "LF@%res");
+}
+
+bool insert_simple_instruction(char *instruction){
+    add_string_after_specific_string(active_code_list->end,instruction);
+    active_code_list->end->is_start_of_new_line = true;
+    return true;
+}
+
+bool insert_instruction(char *instruction, P_item *o1, P_item *o2,P_stack *post_stack){
+    add_string_after_specific_string(active_code_list->end,instruction);
+    active_code_list->end->is_start_of_new_line = true;
+    if(!strcmp(instruction,"PUSHS")){
+        if(DEBUG_EXPR_GEN) printf("%s\n","I'm gonna push");
+        top_value_gen_and_add(post_stack);
+    }
+    else if(!strcmp(instruction, "POPS")){
+        add_string_after_specific_string(active_code_list->end,"LF@%res");
+    }
+    else if(!strcmp(instruction,"CONCAT")){
+        add_string_after_specific_string(active_code_list->end,"LF@%res");
+        top_value_gen_and_add(post_stack);
+        top_value_gen_and_add(post_stack);
+
+    }
+    else if(!strcmp(instruction, "MOVE")){
+        if(o2 == NULL) {
+            add_string_after_specific_string(active_code_list->end, "LF@%res");
+            top_value_gen_and_add(post_stack);
+        }
+    }
+    else if(!strcmp(instruction, "TYPE")){
+        if(o2 == NULL && o1 == NULL){
+            add_string_after_specific_string(active_code_list->end, "LF@%res$type");
+            add_string_after_specific_string(active_code_list->end, "LF@%res");
+        }
+    }
+
+    return true;
+}
+
+bool top_value_gen_and_add(P_stack *post_stack){
+    char *value;
+    if(!post_stack)
+        return false;
+    switch(post_stack->top->operator){
+        case P_INT_NUM:
+            value = malloc(sizeof(int)*4 +1);
+            if(!value)
+                return false;
+            add_string_after_specific_string(active_code_list->end,"int@");
+            sprintf(value,"%d",post_stack->top->value_int);
+            append_text_to_specific_string(active_code_list->end,value);
+
+            free(value);
+
+            break;
+        case P_FLOAT_NUM:
+            value = malloc(sizeof(double)*4 +1);
+            if(!value)
+                return false;
+            add_string_after_specific_string(active_code_list->end,"float@");
+            sprintf(value,"%a",post_stack->top->value_double);
+            append_text_to_specific_string(active_code_list->end,value);
+            free(value);
+            break;
+        case P_STRING:
+            value = malloc(sizeof(strlen(post_stack->top->string))+1);
+            strcpy(value, post_stack->top->string);
+            add_string_after_specific_string(active_code_list->end,"string@");
+            append_text_to_specific_string(active_code_list->end,value);
+            free(value);
+            break;
+        case P_ID:
+            value = malloc(sizeof(strlen(post_stack->top->string))+1);
+            strcpy(value, post_stack->top->string);
+            add_string_after_specific_string(active_code_list->end,"LF@");
+            append_text_to_specific_string(active_code_list->end,value);
+            free(value);
+            break;
+        default:
+            return false;
+    }
+    p_stack_pop(post_stack);
+
+//    if(DEBUG_EXPR_GEN)printf("%s%d\n","first in queue is:",q.first->operator);
+    return true;
+}
+
+
 
 /**Convert input to this format:
  * string@retezec\032s\032lomitkem\032\092\032a\010novym\035radkem

@@ -58,22 +58,30 @@ void operator_stack_free (Operator_stack *stack){
     while(stack->top){
         operator_pop(stack);
     }
+
 }
 //--------------------------------------------------
 //Postfix stack
 
-void p_stack_init(P_stack *stack){
-    stack->top = NULL;
+void p_stack_init(P_stack *stack) {
+    if (stack) {
+        stack->top = NULL;
+    }
 }
 
 bool p_stack_push(P_stack *stack, bool is_variable, int int_value, double float_value, char *string, Prec_table_symbols_enum type){
     if(stack){
-        P_item *new = malloc(sizeof(P_item));
+        P_item *new = (P_item*)malloc(sizeof(struct postfix_stack_item));
+        if(DEBUG_POSTFIX) printf("POSTFIX: %s%d\n","I am pushin onto post_stack: ", int_value);
         if(!new)
             return false;
         new->value_int = int_value;
         new->value_double = float_value;
-        new->string = string;
+        if(string != NULL) {
+            new->string = malloc(sizeof(strlen(string)) + 1);
+            strcpy(new->string, string);
+        }
+        else new->string = NULL;
         new->operator = type;
         new->next_item = stack->top;
         new->is_variable = is_variable;
@@ -86,6 +94,7 @@ bool p_stack_push(P_stack *stack, bool is_variable, int int_value, double float_
 }
 
 bool determine_type_and_push(P_stack *stack, P_item *item){
+
     if(item->operator == P_ID){
         if(p_stack_push(stack, true, 0,0, item->string, P_ID)) {
             return true;
@@ -118,7 +127,7 @@ bool determine_type_and_push(P_stack *stack, P_item *item){
 
 void p_stack_pop(P_stack *stack){
     if(stack)
-        if(stack->top){
+        if(stack->top!=NULL){
             P_item *pom = stack->top;
             stack->top = stack->top->next_item;
             free(pom);
@@ -131,6 +140,7 @@ void p_stack_free(P_stack *stack){
             p_stack_pop(stack);
         }
     }
+
 }
 
 
@@ -138,11 +148,9 @@ void p_stack_free(P_stack *stack){
 
 //---------------------------------------------------
 //Output queue
-
-Output_queue queue_inint(Output_queue *q){
+void queue_inint(Output_queue *q){
     q->first = NULL;
     q->last = NULL;
-    return *q;
 }
 
 bool queue_insert(Output_queue *q, bool is_operator, int int_value, double float_value, char *string, Prec_table_symbols_enum operator){
@@ -151,7 +159,11 @@ bool queue_insert(Output_queue *q, bool is_operator, int int_value, double float
         if (!new) return false;
         new->value_int = int_value;
         new->value_double = float_value;
-        new->string = string;
+        if(string != NULL) {
+            new->string = malloc(sizeof(strlen(string)) + 1);
+            strcpy(new->string, string);
+        }
+        else new->string = NULL;
         new->is_operator = is_operator;
         new->is_variable = false;
         new->operator = operator;
@@ -247,6 +259,9 @@ void delete_first(Output_queue *q){
         if(q->first){
             P_item *pom = q->first;
             q->first = pom->next_item;
+            if(q->first == NULL){
+                q->last = NULL;
+            }
             free(pom);
         }
     }
@@ -258,11 +273,14 @@ void queue_dispose(Output_queue *q) {
         q->first = q->first->next_item;
         free(item);
     }
+    q->last=NULL;
+
 }
 
 //------------------------------------------------------------
 
 bool first_from_queue_to_stack(Output_queue *q, P_stack *stack){
+
     if(q && stack) {
         if (!determine_type_and_push(stack, q->first))
             return false;
@@ -273,21 +291,19 @@ bool first_from_queue_to_stack(Output_queue *q, P_stack *stack){
 }
 
 //int main() {
-//    Output_queue *q = (Output_queue*)malloc(sizeof(Output_queue));
-//    queue_inint(q);
+//
 //    P_stack *stack = malloc(sizeof(P_stack));
 //    p_stack_init(stack);
-//    queue_insert(q, false, 0, 0, "a", P_ID);
-//    queue_insert(q, false, 0, 0, "C", P_STRING);
-//    update_last_is_variable(q);
-//    queue_insert(q, false, 0, 0, "b", P_ID);
-//    update_last_is_variable(q);
-//
-////    determine_type_and_push(stack,q->first);
+//    Output_queue *q = malloc(sizeof(Output_queue));
+//    queue_inint(q);
+//    queue_insert(q,false,5,0,NULL,P_INT_NUM);
+//    queue_insert(q,false,0,0,"ahojky",P_ID);
 //    first_from_queue_to_stack(q,stack);
-//    printf("%d",stack->top->operator);
-//
+//    p_stack_push(stack,true,0,0,"ahoj",P_ID);
+//    p_stack_push(stack,true,5,0,NULL,P_INT_NUM);
+//    printf("%d\n",stack->top->operator);
 //    p_stack_free(stack);
 //    queue_dispose(q);
+//
 //}
 
