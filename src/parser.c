@@ -1047,7 +1047,7 @@ int main(){
     print_code();
 
     free_symtable(&global_symtable);
-    free_code_list();
+    free_code_lists();
 
     // Error handling
     switch(error_code){
