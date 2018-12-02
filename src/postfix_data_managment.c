@@ -48,7 +48,7 @@ bool pop_to_output_queue(Operator_stack *stack, Output_queue *q){
     Prec_table_symbols_enum *operator = &stack->top->operator;
     if(DEBUG_POSTFIX) printf("POSTFIX: %s","popin operator from stack:");
     if(DEBUG_POSTFIX) printf("POSTFIX: %d\n",*operator);
-    if(insert_operator(q, operator))
+    if(insert_operator(q, *operator))
         if(operator_pop(stack))
             return true;
     return false;
@@ -168,10 +168,11 @@ bool queue_insert(Output_queue *q, bool is_operator, int int_value, double float
         new->is_variable = false;
         new->operator = operator;
         new->next_item = NULL;
+        new->taken = false;
         if(q->first == NULL){
             q->first = new;
         }
-        else if(q->first != NULL){
+        else {
             q->last->next_item = new;
         }
         q->last = new;
@@ -189,7 +190,9 @@ void update_last_is_variable(Output_queue *q){
 void update_last_is_operator(Output_queue *q){
     q->last->is_operator = true;
 }
-
+void update_taken(P_item *item){
+    item->taken = true;
+}
 
 bool determine_type_and_insert(Output_queue *q, tToken *token){
     if(token->type == IDENTIFICATOR){
@@ -223,15 +226,52 @@ bool determine_type_and_insert(Output_queue *q, tToken *token){
     return false;
 }
 
-bool insert_operator(Output_queue *q, Prec_table_symbols_enum *operator){
+bool insert_operator(Output_queue *q, Prec_table_symbols_enum operator){
     if(q){
-        if(queue_insert(q,true, 0, 0, NULL, *operator)) {
+        if(queue_insert(q,true, 0, 0, NULL, operator)) {
 
             return true;
         }
     }
     return false;
 }
+
+P_item* get_first_operand(Output_queue *q){
+    if(q){
+        P_item *item = q->first;
+        while(item){
+            if(!item->is_operator){
+                return item;
+            }
+            item = item->next_item;
+        }
+
+    }
+    return NULL;
+}
+P_item* get_second_operand(Output_queue *q){
+    if(q){
+        P_item *item = q->first;
+        while(item){
+            if(!item->is_operator){
+                return item->next_item;
+            }
+            item = item->next_item;
+        }
+
+    }
+    return NULL;
+}
+
+void delete_until_operator(Output_queue *q){
+    if(q){
+        while(!q->first->is_operator){
+            delete_first(q);
+        }
+        delete_first(q);
+    }
+}
+
 
 void print_queue(Output_queue q){
     P_item *item = q.first;
@@ -255,25 +295,25 @@ void print_queue(Output_queue q){
     if(DEBUG_POSTFIX) printf("%s\n","");
 }
 void delete_first(Output_queue *q){
-    if(q){
-        if(q->first){
+    if(q->first != NULL){
             P_item *pom = q->first;
-            q->first = pom->next_item;
-            if(q->first == NULL){
-                q->last = NULL;
+           if(q->first==q->last){
+                    queue_inint(q);
             }
+           else q->first = pom->next_item;
+            free(pom->string);
             free(pom);
-        }
+
     }
 }
 
 void queue_dispose(Output_queue *q) {
-    while (q->first != NULL) {
-        P_item *item = q->first;//pomocny element, potrebny na zapamatanie si prvku v zozname
-        q->first = q->first->next_item;
-        free(item);
+    if (!q) return ;
+    P_item *pom;
+    while ((pom= q->first)) {
+        delete_first(q);
     }
-    q->last=NULL;
+    queue_inint(q);
 
 }
 

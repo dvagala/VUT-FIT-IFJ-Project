@@ -29,6 +29,7 @@ typedef struct postfix_stack_item{
     Prec_table_symbols_enum operator;
     bool is_operator;
     bool is_variable;
+    bool taken;
     struct postfix_stack_item *next_item;
 }P_item,*P_item_ptr;
 
@@ -38,8 +39,8 @@ typedef struct p_item_stack{
 
 
 typedef struct {
-    P_item *first;
-    P_item *last;
+    P_item_ptr first;
+    P_item_ptr last;
 }Output_queue;
 
 void operator_stack_init(Operator_stack *stack);
@@ -58,9 +59,13 @@ void p_stack_free(P_stack *stack);
 void print_queue(Output_queue q);
 void queue_inint(Output_queue *q);
 bool queue_insert(Output_queue *q, bool is_operator, int int_value, double float_value, char *string, Prec_table_symbols_enum operator);
-bool insert_operator(Output_queue *q, Prec_table_symbols_enum *operator);
+bool insert_operator(Output_queue *q, Prec_table_symbols_enum operator);
 void queue_dispose(Output_queue *q);
 bool determine_type_and_insert(Output_queue *q, tToken *token);
 void delete_first(Output_queue *q);
 bool first_from_queue_to_stack(Output_queue *q, P_stack *stack);
+void update_taken(P_item *item);
+P_item* get_first_operand(Output_queue *q);
+P_item* get_second_operand(Output_queue *q);
+void delete_until_operator(Output_queue *q);
 #endif //IFJ_PROJECT_POSTFIX_STACK_H
