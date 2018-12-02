@@ -65,6 +65,8 @@ bool is_variable_defined(Bnode *actual_symtable, char *var_name);
 
 bool is_func_defined(Bnode *global_symtable, char *func_name);
 
+bool is_system_function(Bnode *global_symtable, char *func_name);
+
 bool is_variable_already_in_func_params(Bnode *global_symtable, char *func_name, char *var_name);
 
 bool has_func_same_name_as_global_variable(Bnode *global_symtable, char *func_name);

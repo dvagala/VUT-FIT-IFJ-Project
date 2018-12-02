@@ -124,7 +124,6 @@ void pop(){
 
 /**----------RECURSIVE DESCENT------------------------------------*/
 
-
 bool expr(){
     char non_term[] = "expr";
     if(DEBUG_PARSER) printf("PARSER: Im in %s\n", non_term);
@@ -289,9 +288,19 @@ bool def_func(){
 
             if(DEBUG_SEMATNICS) printf("SEMANTICS: adding func: %s to symtable\n", func_name);
 
+            // Generate code
             add_string_after_specific_string(active_code_list->end, "LABEL");
             active_code_list->end->is_start_of_new_line = true;
-//            append_text_to_specific_string()(active_code_list->end, func_name);   // TODO
+            add_string_after_specific_string(active_code_list->end, func_name);
+            add_string_after_specific_string(active_code_list->end, "PUSHFRAME");
+            active_code_list->end->is_start_of_new_line = true;
+            add_string_after_specific_string(active_code_list->end, "DEFVAR");
+            active_code_list->end->is_start_of_new_line = true;
+            add_string_after_specific_string(active_code_list->end, "LF@%retval");
+            add_string_after_specific_string(active_code_list->end, "MOVE");
+            active_code_list->end->is_start_of_new_line = true;
+            add_string_after_specific_string(active_code_list->end, "LF@%retval");
+            add_string_after_specific_string(active_code_list->end, "nil@nil");
 
             // New local symtable for this function
             local_symtable_init(&actual_symtable);
@@ -309,8 +318,16 @@ bool def_func(){
                         if (!st_list())
                             return false;
                         if (token.type == END) {
+
+                            // Generate code
+                            add_string_after_specific_string(active_code_list->end, "POPFRAME");
+                            active_code_list->end->is_start_of_new_line = true;
+                            add_string_after_specific_string(active_code_list->end, "RETURN");
+                            active_code_list->end->is_start_of_new_line = true;
+
+                            // Swithing context go global, as we go out of function
                             free_symtable(&actual_symtable);
-                            actual_symtable = global_symtable;              // switch context back to global
+                            actual_symtable = global_symtable;
                             active_code_list = main_code_list;
                             if(DEBUG_SEMATNICS) printf("SEMANTICS: switching context to global\n");
                             pop();
@@ -355,19 +372,20 @@ bool term(int *num_of_args, char *func_name){
     if(DEBUG_PARSER) printf("PARSER: token type: %s\n", token_type_enum_string[token.type]);
 
     // Generate code
-    add_string_after_specific_string(active_code_list->end, "DEFVAR");
-    active_code_list->end->is_start_of_new_line = true;
-    add_string_after_specific_string(active_code_list->end, "TF@");
-    char *defined_param_name = get_name_of_defined_param_at_position(&global_symtable, func_name, (*num_of_args)-1);
-    char *defined_param_name_copy = malloc(sizeof(char)*(strlen(defined_param_name) + 1));
-    strcpy(defined_param_name_copy, defined_param_name);
-    append_text_to_specific_string(active_code_list->end, defined_param_name_copy);
-    add_string_after_specific_string(active_code_list->end, "MOVE");
-    active_code_list->end->is_start_of_new_line = true;
-    add_string_after_specific_string(active_code_list->end, "TF@");
-    char *defined_param_name_copy2 = malloc(sizeof(char)*(strlen(defined_param_name) + 1));
-    strcpy(defined_param_name_copy2, defined_param_name);
-    append_text_to_specific_string(active_code_list->end, defined_param_name_copy2);
+    if(!is_system_function(&global_symtable, func_name)){
+        add_string_after_specific_string(active_code_list->end, "DEFVAR");
+        active_code_list->end->is_start_of_new_line = true;
+        add_string_after_specific_string(active_code_list->end, "TF@");
+        char *defined_param_name = get_name_of_defined_param_at_position(&global_symtable, func_name, (*num_of_args)-1);
+        append_text_to_specific_string(active_code_list->end, defined_param_name);
+        add_string_after_specific_string(active_code_list->end, "MOVE");
+        active_code_list->end->is_start_of_new_line = true;
+        add_string_after_specific_string(active_code_list->end, "TF@");
+        append_text_to_specific_string(active_code_list->end, defined_param_name);
+    } else{
+        printf("system func....\n");
+    }
+
 
     // This is not by ll rules, when is minus before number in call func args, this will handle it
     if(token.type == MINUS){
@@ -395,24 +413,38 @@ bool term(int *num_of_args, char *func_name){
             return false;
         }
 
-        // Generate code
-        if(active_code_list == main_code_list)              // We are in global context
-            add_string_after_specific_string(active_code_list->end, "GF@");
-        else                                                // In local
+        // Generate code for pushing arument when calling func
+        if(!is_system_function(&global_symtable, func_name)){
             add_string_after_specific_string(active_code_list->end, "LF@");
-        append_text_to_specific_string(active_code_list->end, var_name);
+            append_text_to_specific_string(active_code_list->end, var_name);
+        }else{
+            if(strcmp(func_name, "print") == 0){
+                add_string_after_specific_string(active_code_list->end, "WRITE");
+                active_code_list->end->is_start_of_new_line = true;
+                add_string_after_specific_string(active_code_list->end, "LF@");
+            }
+        }
 
         pop();
         if(DEBUG_PARSER) printf("PARSER: %s returning: %d\n", non_term, 1);
         return true;
     } else if(token.type == INT){           // 19. Term -> int
 
-        // Generate code
         char str[12];       // 12 because 32bit int cant have higher value
         sprintf(str, "%d", token.data.value_int);
-        add_string_after_specific_string(active_code_list->end, "int@");
-        append_text_to_specific_string(active_code_list->end, str);
 
+        // Generate code for pushing arument when calling func
+        if(!is_system_function(&global_symtable, func_name)){
+            add_string_after_specific_string(active_code_list->end, "int@");
+            append_text_to_specific_string(active_code_list->end, str);
+        }else{
+            if(strcmp(func_name, "print") == 0){
+                add_string_after_specific_string(active_code_list->end, "WRITE");
+                active_code_list->end->is_start_of_new_line = true;
+                add_string_after_specific_string(active_code_list->end, "int@");
+                append_text_to_specific_string(active_code_list->end, str);
+            }
+        }
         pop();
 
         if(DEBUG_PARSER) printf("PARSER: %s returning: %d\n", non_term, 1);
@@ -431,8 +463,6 @@ bool term(int *num_of_args, char *func_name){
     } else if(token.type == STRING){        // 21. Term -> string
 
         // Generate code
-        // TODO modify token.data.string so it matches correct IFJcode18 format example:
-        // string@retezec\032s\032lomitkem\032\092\032a\010novym\035radkem
         add_string_after_specific_string(active_code_list->end, "string@");
         append_text_to_specific_string(active_code_list->end, token.data.string);
 
@@ -492,6 +522,15 @@ bool call_func_args(int *num_of_args, char *func_name){
     if(DEBUG_PARSER) printf("PARSER: Im in %s\n", non_term);
     if(DEBUG_PARSER) printf("PARSER: token type: %s\n", token_type_enum_string[token.type]);
 
+
+    // Generate code
+    if(!is_system_function(&global_symtable, func_name)){
+        add_string_after_specific_string(active_code_list->end, "CREATEFRAME");
+        active_code_list->end->is_start_of_new_line = true;
+    }else{
+        system_func_count++;
+    }
+
     // This is not by ll rules, when is minus before number in call func args, this will handle it
     if(token.type == MINUS){
         token = enhanced_next_token();
@@ -511,7 +550,9 @@ bool call_func_args(int *num_of_args, char *func_name){
         // '1' becase if we get here, there will be ceratily at least one term + more_arg
         *num_of_args = 1;
 
-        return term(num_of_args, func_name) && more_args(num_of_args, func_name);
+        bool result = term(num_of_args, func_name) && more_args(num_of_args, func_name);
+
+        return result;
     } else if(token.type == EOL_CASE){            // 11. Call_func_args -> eps
         return true;
     } else if(token.type == LPAR){            // 12. Call_func_args -> ( Arg_in_brackets )
@@ -529,7 +570,7 @@ bool call_func_args(int *num_of_args, char *func_name){
     return false;
 }
 
-bool call_func(){
+bool call_func(char *var_name, char **func_name_to_parent){
     char non_term[] = "call_func";
     if(DEBUG_PARSER) printf("PARSER: Im in %s\n", non_term);
     if(DEBUG_PARSER) printf("PARSER: token type: %s\n", token_type_enum_string[token.type]);
@@ -537,11 +578,8 @@ bool call_func(){
     // 8. Call_func -> id Call_func_args
     if(token.type == IDENTIFICATOR){
 
-        // Generate code
-        add_string_after_specific_string(active_code_list->end, "CREATEFRAME");
-        active_code_list->end->is_start_of_new_line = true;
-
         char *func_name = token.data.string;
+        (*func_name_to_parent) = func_name;
         pop();
 
         // Semantics. Check if func_name was defined before calling, if not error 3
@@ -572,9 +610,20 @@ bool call_func(){
         if(DEBUG_SEMATNICS) printf("SEMANTICS: Function: %s is calling with: %d arguments.\n", func_name, num_of_args);
 
         // Generate code
-        add_string_after_specific_string(active_code_list->end, "CALL");
-        active_code_list->end->is_start_of_new_line = true;
-        add_string_after_specific_string(active_code_list->end, func_name);
+        if(!is_system_function(&global_symtable, func_name)){
+            add_string_after_specific_string(active_code_list->end, "CALL");
+            active_code_list->end->is_start_of_new_line = true;
+            add_string_after_specific_string(active_code_list->end, func_name);
+        } else{
+            // Define variable for return value
+
+            add_string_after_specific_string(active_code_list->end, "MOVE");
+            active_code_list->end->is_start_of_new_line = true;
+            add_string_after_specific_string(active_code_list->end, var_name);
+
+            add_string_after_specific_string(active_code_list->end, "nil@nil");
+        }
+
 
         return sub_analysis_result;
     }
@@ -583,14 +632,45 @@ bool call_func(){
     return false;
 }
 
-bool func_or_expr(){
+bool func_or_expr(char *var_name, bool is_new_variable){
     char non_term[] = "func_or_expr";
     if(DEBUG_PARSER) printf("PARSER: Im in %s\n", non_term);
     if(DEBUG_PARSER) printf("PARSER: token type: %s\n", token_type_enum_string[token.type]);
 
     // 7. Func_or_expr -> Call_func
     if(token.type == IDENTIFICATOR){
-        return call_func();
+        char *func_name = NULL;
+        bool result =  call_func(var_name, &func_name);
+
+        // not bother do any chcecks if this
+        if(!result)
+            return false;
+
+        // Generate code
+        // if var_name where we want assign return value from function is new variable, define it
+        if(is_new_variable){
+            add_string_after_specific_string(active_code_list->end, "DEFVAR");
+            active_code_list->end->is_start_of_new_line = true;
+
+            add_string_after_specific_string(active_code_list->end, "LF@");
+            append_text_to_specific_string(active_code_list->end, var_name);
+        }
+
+        if(!is_system_function(&global_symtable, func_name)){
+            add_string_after_specific_string(active_code_list->end, "MOVE");
+            active_code_list->end->is_start_of_new_line = true;
+            add_string_after_specific_string(active_code_list->end, "LF@");
+            append_text_to_specific_string(active_code_list->end, var_name);
+            add_string_after_specific_string(active_code_list->end, "TF@%retval");
+        }else{
+            add_string_after_specific_string(active_code_list->end, "POPS");
+            active_code_list->end->is_start_of_new_line = true;
+            add_string_after_specific_string(active_code_list->end, "LF@");
+            append_text_to_specific_string(active_code_list->end, var_name);
+        }
+
+        return result;
+
     } else if(token.type == EXPR){      // 9. Func_or_expr -> Expr
         return expr();
     }
@@ -619,10 +699,6 @@ bool after_id() {
     // 10. After_id -> Call_func_args
     if(token.type == IDENTIFICATOR || token.type == EOL_CASE || token.type == LPAR ||
        token.type == INT || token.type == FLOAT || token.type == STRING || token.type == NIL){
-
-        // Generate code
-        add_string_after_specific_string(active_code_list->end, "CREATEFRAME");
-        active_code_list->end->is_start_of_new_line = true;
 
         // previous_token == id_func      // cause we are in after_id
         char *func_name = previousToken.data.string;
@@ -655,9 +731,11 @@ bool after_id() {
         if(DEBUG_SEMATNICS) printf("SEMANTICS: Function: %s is calling with: %d arguments.\n", func_name, num_of_args);
 
         // Generate code
-        add_string_after_specific_string(active_code_list->end, "CALL");
-        active_code_list->end->is_start_of_new_line = true;
-        add_string_after_specific_string(active_code_list->end, func_name);
+        if(!is_system_function(&global_symtable, func_name)){
+            add_string_after_specific_string(active_code_list->end, "CALL");
+            active_code_list->end->is_start_of_new_line = true;
+            add_string_after_specific_string(active_code_list->end, func_name);
+        }
 
         return sub_analysis_result;
     }else if(token.type == ASSIGN){        // 6. After_id -> = Func_or_expr
@@ -679,14 +757,14 @@ bool after_id() {
             return false;
         }
 
-        bool new_variable = false;
+        bool is_new_variable = false;
         if(!is_variable_defined(&actual_symtable, var_name))
-            new_variable = true;
+            is_new_variable = true;
 
         if(is_variable_defined(&actual_symtable, var_name)){
             if(DEBUG_SEMATNICS) printf("SEMANTICS: variable \"%s\" is already in symtable, no need to add\n", var_name);
         } else
-            if(DEBUG_SEMATNICS) printf("SEMANTICS: adding variable \"%s\" to symtable\n", var_name);
+        if(DEBUG_SEMATNICS) printf("SEMANTICS: adding variable \"%s\" to symtable\n", var_name);
 
 
         // return false when malloc fails
@@ -698,19 +776,8 @@ bool after_id() {
         }
 
         pop();
-        bool result = func_or_expr();
-//
-//        if(new_variable){
-//            printf("ne_vari\n");
-//            add_string_after_specific_string()(active_code_list->end, "DEFVAR");
-//            active_code_list->is_start_of_new_line = true;
-//
-//            if(active_code_list == main_code_list)
-//                add_string_after_specific_string()(active_code_list->end, "GF@");
-//            else if(active_code_list == functions_code_list)
-//                add_string_after_specific_string()(active_code_list->end, "LF@");
-//            add_string_after_specific_string()(active_code_list->end, var_name);
-//        }
+
+        bool result = func_or_expr(var_name, is_new_variable);
 
         return result;
     }
@@ -852,6 +919,7 @@ void init_parser(){
     // For throwing away EOL if is as start of file
     token.type = EOL_CASE;
     code_list_init();
+    system_func_count = 0;
 
     global_symtable_init(&global_symtable);
     actual_symtable = global_symtable;
@@ -869,6 +937,10 @@ void init_parser(){
 
     active_code_list = main_code_list;
     add_string_after_specific_string(active_code_list, "LABEL $$main");
+    active_code_list->is_start_of_new_line = true;
+    add_string_after_specific_string(active_code_list->end, "CREATEFRAME");
+    active_code_list->end->is_start_of_new_line = true;
+    add_string_after_specific_string(active_code_list->end, "PUSHFRAME");
     active_code_list->end->is_start_of_new_line = true;
 
 }
@@ -1046,6 +1118,7 @@ int main(){
     active_code_list = main_code_list;
     print_code();
 
+    // Free stuff
     free_symtable(&global_symtable);
     free_code_lists();
 
