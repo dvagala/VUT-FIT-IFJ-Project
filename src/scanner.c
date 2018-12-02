@@ -640,7 +640,6 @@ tToken nextToken()
         }
         default:break;
     }
-
     //free the token variable, as we saved it already into struct identificator, and return the token.
     return identificator;
 }
