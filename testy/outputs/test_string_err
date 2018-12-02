@@ -1,0 +1,16 @@
+TokenT: 1002 
+----------->STRING hello 
+TokenT: 1004 
+----------->ID ggg 
+TokenT: 1002 
+----------->STRING 		#1002, 1004, 502
+ 
+TokenT: 1004 
+----------->ID hi 
+TokenT: 500 
+TokenT: 1004 
+----------->ID good 
+TokenT: 1002 
+----------->STRING 			#1004, 502
+ 
+TokenT: 501 

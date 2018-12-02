@@ -1,0 +1,31 @@
+TokenT: 1002 
+----------->STRING  
+TokenT: 500 
+TokenT: 1002 
+----------->STRING    
+TokenT: 500 
+TokenT: 1002 
+----------->STRING haha haha 
+TokenT: 500 
+TokenT: 1002 
+----------->STRING new
+line 
+TokenT: 500 
+TokenT: 1002 
+----------->STRING more	kplace 
+TokenT: 500 
+TokenT: 1002 
+----------->STRING sea	ocean 
+TokenT: 500 
+TokenT: 1002 
+----------->STRING my name is	Jo 
+TokenT: 500 
+TokenT: 1002 
+----------->STRING sea\ocean 
+TokenT: 500 
+TokenT: 1002 
+----------->STRING sun" 
+TokenT: 500 
+TokenT: 1002 
+----------->STRING moon'' 
+TokenT: 501 

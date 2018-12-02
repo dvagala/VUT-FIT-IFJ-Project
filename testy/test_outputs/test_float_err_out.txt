@@ -1,0 +1,30 @@
+TokenT: 500 
+TokenT: 502 
+----------->ERROR 
+TokenT: 500 
+TokenT: 502 
+----------->ERROR 
+TokenT: 500 
+TokenT: 502 
+----------->ERROR 
+TokenT: 100 
+TokenT: 1000 
+----------->INT 1 
+TokenT: 500 
+TokenT: 502 
+----------->ERROR 
+TokenT: 500 
+TokenT: 502 
+----------->ERROR 
+TokenT: 500 
+TokenT: 502 
+----------->ERROR 
+TokenT: 101 
+TokenT: 1000 
+----------->INT 123214 
+TokenT: 500 
+TokenT: 1000 
+----------->INT -1 
+TokenT: 502 
+----------->ERROR 
+TokenT: 501 
