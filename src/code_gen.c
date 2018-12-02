@@ -30,11 +30,11 @@ void print_code(){
     Tstring temp = active_code_list = active_code_list->start;
     while(temp != NULL){
         if(temp->is_start_of_new_line)
-            if(DEBGUG_CODE_GEN) printf("\n");
-        if(DEBGUG_CODE_GEN) printf("%s ", temp->text);
+            printf("\n");
+        printf("%s ", temp->text);
         temp = temp->next;
     }
-    if(DEBGUG_CODE_GEN) printf("\n");
+    printf("\n");
 }
 
 // Just for testing

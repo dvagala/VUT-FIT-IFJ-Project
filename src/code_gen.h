@@ -27,6 +27,8 @@ Tstring active_code_list;           // This is either main_code_list or function
 Tstring main_code_list;
 Tstring functions_code_list;
 
+int system_func_count;
+
 void code_list_init();
 void print_code();
 void print_code_backwards();

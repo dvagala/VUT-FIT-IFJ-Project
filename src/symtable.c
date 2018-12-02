@@ -152,6 +152,15 @@ bool is_func_defined(Bnode *global_symtable, char *func_name){
     return false;
 }
 
+bool is_system_function(Bnode *global_symtable, char *func_name){
+    Bnode pom = Bsearch(*global_symtable, func_name);
+    if(pom) {
+        if (pom->data.system_function)
+            return true;
+    }
+    return false;
+}
+
 bool is_variable_already_in_func_params(Bnode *global_symtable, char *func_name, char *var_name){
     Bnode pom = Bsearch(*global_symtable, func_name);
     if(pom) {
