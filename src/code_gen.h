@@ -1,14 +1,6 @@
-/*
- * Project: Implementace překladače imperativního jazyka IFJ18
- *
- * File: code_gen.h
- *
- * xglosk00   Kristian Glos
- * xvagal00   Dominik Vagala
- * xvinsj00   Jakub Vins
- * xabike00   Zhamilya Abikenova
- *
- */
+//
+// Created by Dominik Vagala on 28. 11. 2018.
+//
 
 #ifndef IFJ_PROJECT_CODE_GEN_H
 #define IFJ_PROJECT_CODE_GEN_H
@@ -47,12 +39,14 @@ Tstring find_nearest_good_place_for_defvar();
 void add_string_after_specific_string(Tstring specific_string, char *text);
 void free_code_lists();
 
+void exit_gen(int error_code);
 bool push_res();
 bool declare_defvar_restype();
 bool insert_defvar_res();
 bool insert_simple_instruction(char *instruction);
-bool insert_instruction(char *instruction, P_item *o1, P_item *o2);
+bool insert_instruction(char *instruction, P_item *o1, P_item *o2, char *type);
 bool item_value_gen_and_add(P_item *item, bool append);
+void insert_res_and_type( P_item *o1);
 
 char* convert_string_to_correct_IFJcode18_format(char *input);
 
