@@ -315,30 +315,88 @@ bool is_item_operand(P_item *item){
     }
 }
 
-int one_is_undefined_semantics(Output_queue q, P_stack post_stack,bool first_res){
+int one_is_undefined_semantics(Output_queue q,Prec_table_symbols_enum operator, bool first_res){
+    P_item *o2;
+    P_item *non_defined;
+    P_item *defined;
+    P_item *o1;
     if(first_res){//o1 = LF@%res
+        o1 = get_first_operand(&q);
+        o2 = get_second_operand(&q);
+
         insert_defvar_res();
-        insert_instruction("MOVE",post_stack.top,NULL, &post_stack);
         declare_defvar_restype();
+        if(o1->operator == P_ID) {
+            insert_instruction("MOVE",o1, NULL);//MOVE Lf@%res o1
+            insert_instruction("TYPE",NULL,NULL);//TYPE LF@%res$type LF@%res
+            non_defined = o1;
+            defined = o2;
+            push_res();                         //PUSHS LF%res
+            insert_instruction("PUSHS",o2,NULL);//PUSHS o2
+        }
+        else{
+            insert_instruction("MOVE",o2, NULL);//MOVE Lf@%res o2
+            insert_instruction("TYPE",NULL,NULL);//TYPE LF@%res$type LF@%res
+            non_defined = o2;
+            defined = o1;
+            insert_instruction("PUSHS",o1,NULL);//PUSHS o1
+            push_res();                         //PUSHS LF%res
+        }
+
+
+    } else {
+        o2 = get_first_operand(&q);
+        defined = o2;
+        insert_instruction("TYPE",NULL,NULL);   //TYPE LF@%res$type LF@%res
+        push_res();                             //PUSHS LF%res
+        insert_instruction("PUSHS", o2, NULL);  //PUSHS o2
     }
-    else p_stack_pop(&post_stack); //popin fake res from stack
-    insert_instruction("TYPE",NULL,NULL,&post_stack);
-    P_item *o2 = post_stack.top;
+
+    insert_instruction("JUMPIFEQ",defined,NULL);
+    insert_instruction("LABEL",defined,NULL);
+
+    switch(operator){
+        case P_PLUS:
+            if (DEBUG_EXPRESSION_ANALYSIS) printf("EXPRESSIONS: %s\n", "I'm adding");
+            insert_simple_instruction("ADDS");
+            break;
+        case P_MINUS:
+            insert_simple_instruction("SUBS");
+            break;
+        case P_MUL:
+            insert_simple_instruction("MULS");
+            break;
+        case P_DIV:
+            if (o1->operator == P_INT_NUM)
+                insert_simple_instruction("IDIVS");
+            else insert_simple_instruction("DIVS");
+            break;
+        case P_LESS:
+            insert_simple_instruction("LTS");
+            break;
+        case P_EQ:
+            insert_simple_instruction("EQS");
+            break;
+        case P_MORE:
+            insert_simple_instruction("GTS");
+        default:
+            break;
+    }
 
 
 
     return SYNTAX_OK;
 }
 
-int semantics(Output_queue q,P_stack post_stack, ReturnData *data,bool first_res){
+int semantics(Output_queue q,Prec_table_symbols_enum operator, ReturnData *data,bool first_res){
 
-    Prec_table_symbols_enum operator = q.first->operator;
+
     if(first_res) {
-        P_item *o1 = post_stack.top;
-        P_item *o2 = post_stack.top->next_item;
+        P_item *o1 = get_first_operand(&q);
+        P_item *o2 = get_second_operand(&q);
         if((o1->operator == P_ID && o2->operator != P_ID) || (o2->operator == P_ID && o1->operator != P_ID))
-            one_is_undefined_semantics(q,post_stack,first_res);
-        else if (o1->operator != P_ID && o2->operator != P_ID){
+            one_is_undefined_semantics(q,operator,first_res);
+        if (o1->operator != P_ID && o2->operator != P_ID){
             if (o1->operator == P_INT_NUM && o2->operator == P_FLOAT_NUM) {
                 o1->value_double = (double) o1->value_int;
                 o1->operator = P_FLOAT_NUM;
@@ -352,10 +410,10 @@ int semantics(Output_queue q,P_stack post_stack, ReturnData *data,bool first_res
             insert_defvar_res();
 
             if (o1->operator == P_STRING && o2->operator == P_STRING) {
-                insert_instruction("CONCAT", o1, o2,  &post_stack);
+                insert_instruction("CONCAT", o1, o2);
             } else {
-                insert_instruction("PUSHS", o1, NULL, &post_stack);
-                insert_instruction("PUSHS", o2, NULL,  &post_stack);
+                insert_instruction("PUSHS", o1, NULL);
+                insert_instruction("PUSHS", o2, NULL);
 
                 switch (operator) {
                     case P_PLUS:
@@ -384,52 +442,51 @@ int semantics(Output_queue q,P_stack post_stack, ReturnData *data,bool first_res
                     default:
                         break;
                 }
-                insert_instruction("POPS", NULL, NULL, NULL);
-                p_stack_push(&post_stack,true,0,0,"%res",P_ID);
+                insert_instruction("POPS", NULL, NULL);
             }
 
         }
     }
     else {
+        P_item *o2 = get_first_operand(&q);
+        if(o2->operator!=P_ID) one_is_undefined_semantics(q, operator,first_res);
     }
     return SYNTAX_OK;
 
 }
 
 int queue_evaluation(Output_queue q, ReturnData *data){
-    P_stack *post_stack = (P_stack*)malloc(sizeof(P_stack));
-    p_stack_init(post_stack);
+
     int error;
     bool first_res = true;
-
-    while(q.first){
-        if(is_item_operand(q.first)){
+    P_item *pom = q.first;
+    while(pom){
+        if(is_item_operand(pom)){
 
             if(DEBUG_EXPRESSION_ANALYSIS)printf("%s%d\n","EXPRESSIONS: first in queue is:",q.first->operator);
 
-            first_from_queue_to_stack(&q, post_stack);
+            update_taken(pom);
 
             if(DEBUG_EXPRESSION_ANALYSIS) printf("%s\n","EXPRESSIONS: pushed to post_stack from queue");
-            if(q.first == NULL)
-                insert_instruction("PUSHS",post_stack->top,NULL,post_stack);
+            if(pom->next_item == NULL)
+                insert_instruction("PUSHS",pom,NULL);
 
         }
-        else if(q.first->operator < P_LEFT_PAR){//operator
-            error =semantics(q , *post_stack, data, first_res);
+        else if(pom->operator < P_LEFT_PAR){//operator
+            error =semantics(q , pom->operator, data, first_res);
             if(error!=SYNTAX_OK)
                 return error;
-            delete_first(&q);
+            delete_until_operator(&q);
+            if(q.first==NULL)
+                return SYNTAX_OK;
             first_res = false;
         }
         else{
-            p_stack_free(post_stack);
             return SYNTAX_ERROR;
         }
+        pom= pom->next_item;
     }
     if(DEBUG_EXPRESSION_ANALYSIS) printf("%s\n","EXPRESSIONS: Queue eval done");
-    p_stack_pop(post_stack);
-    p_stack_pop(post_stack);
-    free(post_stack);
 
     return SYNTAX_OK;
 }
@@ -441,7 +498,8 @@ ReturnData analyze_expresssion(tToken token, tToken aheadToken, bool tokenLookAh
     int error;
     S_stack *stack =  malloc(sizeof(S_stack));
     s_init(stack);
-    Output_queue *q = (Output_queue*)malloc(sizeof(Output_queue)) ;
+    Output_queue *q = malloc(sizeof(Output_queue)) ;
+    printf("%s%lu\n","size of output queue:",sizeof(Output_queue));
     queue_inint(q);
     Operator_stack *o_stack = malloc(sizeof(Operator_stack));
     operator_stack_init(o_stack);
