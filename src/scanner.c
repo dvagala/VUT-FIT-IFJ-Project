@@ -349,6 +349,7 @@ tToken nextToken()
             c=getchar();
             char hexValue[3]={0}; //special array to save HEX value that follows after sequence '/x'
             int symbol; //we'll save this value in int
+            int tookFlag=0; //variable used to take care of edge case where string ends with /xh"
             while (c !='\"')
             {
              /*   if (i==49*mult_alloc && i!=0)
@@ -405,7 +406,14 @@ tToken nextToken()
                                 else //however not required
                                 {
                                     hexValue[1]='\0';
-                                    bufferToken(TokenString);
+                                    if (c=='"') //if the second character was terminating one, we'll need to save it's occurence
+                                    {
+                                        tookFlag=1;
+                                    }
+                                    else
+                                    {
+                                        bufferToken(TokenString);
+                                    }
                                 }
                                 hexValue[2]='\0';
                                 symbol = strtol(hexValue,NULL,16); //converting the value
@@ -427,6 +435,10 @@ tToken nextToken()
                             return identificator;
                         }
                     }
+                    if (tookFlag==1) //and jump out of cycle to not loop
+                    {
+                        break;
+                    }
                     c=getchar();
                 }
                 else
@@ -434,7 +446,7 @@ tToken nextToken()
                     bufferToken(TokenString);
                     c=getchar();
                 }
-                if (c == EOF)
+                if (c == EOF) //if we found EOF without " it means that string was never terminated and we raise ERROR
                 {
                     identificator.type=ERROR;
                     freeString(TokenString);
@@ -614,7 +626,7 @@ tToken nextToken()
     return identificator;
 }
 
-/*
+
 int main()
 {
 
@@ -641,4 +653,4 @@ int main()
         }
     }
     return 0;
-}*/
+}
