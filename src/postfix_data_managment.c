@@ -16,7 +16,7 @@
 #include "sym_stack.h"
 
 
-#define DEBUG_POSTFIX 1         // Set to '1', if you want to print debug stuff
+#define DEBUG_POSTFIX 0         // Set to '1', if you want to print debug stuff
 //Operator stack
 void operator_stack_init(Operator_stack *stack){
     stack->top = NULL;

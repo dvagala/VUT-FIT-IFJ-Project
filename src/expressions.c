@@ -19,7 +19,7 @@
 #define TABLE_SIZE 7
 #define SYNTAX_OK 0
 
-#define DEBUG_EXPRESSION_ANALYSIS 1         // Set to '1', if you want to print debug stuff
+#define DEBUG_EXPRESSION_ANALYSIS 0         // Set to '1', if you want to print debug stuff
 
 typedef enum prec_table_relations
 {
@@ -636,10 +636,10 @@ ReturnData analyze_expresssion(tToken token, tToken aheadToken, bool tokenLookAh
         }
 
     }
-    print_queue(*q);
-    error = queue_evaluation(q,data);
-    if(error!=SYNTAX_OK)
-        return release_resources(error,*stack, q,*o_stack,*data);
+//    print_queue(*q);
+//    error = queue_evaluation(q,data);
+//    if(error!=SYNTAX_OK)
+//        return release_resources(error,*stack, q,*o_stack,*data);
     return release_resources_and_success(SYNTAX_OK, *stack, q , *o_stack, *data);
 };
 
