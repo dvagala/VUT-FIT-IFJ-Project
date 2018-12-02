@@ -243,7 +243,7 @@ bool add_variables_from_func_params(Bnode *global_symtable, Bnode *actual_symtab
     if (pom){
         for(int i = 0; i < pom->data.list->element_count; i++){
             if(!add_variable_to_symtable(actual_symtable, get_nth_element(pom->data.list,i)->id)) {
-                printf("%d",i);
+//                printf("%d",i);
                 return false;
             }
         }

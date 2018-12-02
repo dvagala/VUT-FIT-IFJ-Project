@@ -708,11 +708,47 @@ void generate_ord_func(){
     add_string_after_specific_string(active_code_list->end, "LF@%retval");
     add_string_after_specific_string(active_code_list->end, "nil@nil");
 
+    // Checks if i < 0
+    add_string_after_specific_string(active_code_list->end, "PUSHS LF@i");
+    active_code_list->end->is_start_of_new_line = true;
+    add_string_after_specific_string(active_code_list->end, "PUSHS int@0");
+    active_code_list->end->is_start_of_new_line = true;
+    add_string_after_specific_string(active_code_list->end, "LTS");
+    active_code_list->end->is_start_of_new_line = true;
+    add_string_after_specific_string(active_code_list->end, "PUSHS bool@true");
+    active_code_list->end->is_start_of_new_line = true;
+    add_string_after_specific_string(active_code_list->end, "JUMPIFEQS end");
+    active_code_list->end->is_start_of_new_line = true;
+
+    // Checks if i > length(s)-1
+    add_string_after_specific_string(active_code_list->end, "CREATEFRAME");
+    active_code_list->end->is_start_of_new_line = true;
+    add_string_after_specific_string(active_code_list->end, "DEFVAR TF@s");
+    active_code_list->end->is_start_of_new_line = true;
+    add_string_after_specific_string(active_code_list->end, "MOVE TF@s LF@s");
+    active_code_list->end->is_start_of_new_line = true;
+    add_string_after_specific_string(active_code_list->end, "CALL length");
+    active_code_list->end->is_start_of_new_line = true;
+    add_string_after_specific_string(active_code_list->end, "PUSHS LF@i");
+    active_code_list->end->is_start_of_new_line = true;
+    add_string_after_specific_string(active_code_list->end, "PUSHS TF@%retval");
+    active_code_list->end->is_start_of_new_line = true;
+    add_string_after_specific_string(active_code_list->end, "LTS");
+    active_code_list->end->is_start_of_new_line = true;
+    add_string_after_specific_string(active_code_list->end, "PUSHS bool@false");
+    active_code_list->end->is_start_of_new_line = true;
+    add_string_after_specific_string(active_code_list->end, "JUMPIFEQS end");
+    active_code_list->end->is_start_of_new_line = true;
+
+
     add_string_after_specific_string(active_code_list->end, "STRI2INT");
     active_code_list->end->is_start_of_new_line = true;
     add_string_after_specific_string(active_code_list->end, "LF@%retval");
     add_string_after_specific_string(active_code_list->end, "LF@s");
     add_string_after_specific_string(active_code_list->end, "LF@i");
+
+    add_string_after_specific_string(active_code_list->end, "LABEL end");
+    active_code_list->end->is_start_of_new_line = true;
 
     add_string_after_specific_string(active_code_list->end, "POPFRAME");
     active_code_list->end->is_start_of_new_line = true;

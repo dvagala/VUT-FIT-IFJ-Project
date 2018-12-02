@@ -186,8 +186,8 @@ bool expr(){
     ReturnData returnData;
 
     // TODO: Change this if you want to have just fake_analyze_expresssion
-//    returnData = analyze_expresssion(token, aheadToken, tokenLookAheadFlag, &global_symtable);
-    returnData = fake_analyze_expresssion(token, aheadToken, tokenLookAheadFlag, &global_symtable);
+    returnData = analyze_expresssion(token, aheadToken, tokenLookAheadFlag, &global_symtable);
+//    returnData = fake_analyze_expresssion(token, aheadToken, tokenLookAheadFlag, &global_symtable);
 
     token = (*returnData.token);
 
@@ -794,9 +794,9 @@ bool after_id() {
         if(is_new_variable){
             Tstring good_place_for_defvar;
             if(im_in_while_loop){
-                printf("\n\nserching for good palce\n\n");
+                if(DEBUG_PARSER) printf("\n\nserching for good palce\n\n");
                 good_place_for_defvar = find_nearest_good_place_for_defvar()->prev;
-                printf("good place: %s\n", good_place_for_defvar->text);
+                if(DEBUG_PARSER) printf("good place: %s\n", good_place_for_defvar->text);
                 add_string_after_specific_string(good_place_for_defvar, "DEFVAR");
                 good_place_for_defvar->next->is_start_of_new_line = true;
                 add_string_after_specific_string(good_place_for_defvar->next, "LF@");
@@ -1252,14 +1252,6 @@ void test_string_convert(){
 int main(){
 
     init_parser();
-
-//    test_scanner();
-//    test_symtable();
-//    test_expr();
-//    test_code_list();
-//    test_string_convert();
-
-//    return 0;
 
     pop();      // get first token
 

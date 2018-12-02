@@ -546,7 +546,7 @@ ReturnData analyze_expresssion(tToken token, tToken aheadToken, bool tokenLookAh
     S_stack *stack =  malloc(sizeof(S_stack));
     s_init(stack);
     Output_queue *q = malloc(sizeof(Output_queue)) ;
-    printf("%s%lu\n","size of output queue:",sizeof(Output_queue));
+    if(DEBUG_EXPRESSION_ANALYSIS) printf("%s%lu\n","size of output queue:",sizeof(Output_queue));
     queue_inint(q);
     Operator_stack *o_stack = malloc(sizeof(Operator_stack));
     operator_stack_init(o_stack);
