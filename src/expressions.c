@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <malloc.h>
 #include "expressions.h"
+#include "code_gen.h"
 
 
 #define TABLE_SIZE 7
@@ -137,22 +138,20 @@ bool is_token_an_operator(tToken *token){
 }
 
 
-ReturnData release_resources(int error_code, S_stack stack, Bnode tree, Output_queue *q, Operator_stack operator_stack, ReturnData data){
+ReturnData release_resources(int error_code, S_stack stack, Output_queue *q, Operator_stack operator_stack, ReturnData data){
     data.error=true;
     data.error_code = error_code;
+    if(DEBUG_EXPRESSION_ANALYSIS)printf("%s%d\n","error code is:",error_code);
     s_free(&stack);
-    if(tree)free_symtable(&tree);
     queue_dispose(q);
     operator_stack_free(&operator_stack);
     return data;
-
 }
 
-ReturnData release_resources_and_success(int error_code, S_stack stack, Bnode tree, Output_queue *q, Operator_stack operator_stack, ReturnData data){
+ReturnData release_resources_and_success(int error_code, S_stack stack, Output_queue *q, Operator_stack operator_stack, ReturnData data){
     data.error=false;
     data.error_code = error_code;
     s_free(&stack);
-    if(tree)free_symtable(&tree);
     queue_dispose(q);
     operator_stack_free(&operator_stack);
     return data;
@@ -304,6 +303,136 @@ int rule_reduction( S_stack *stack){
     return SYNTAX_OK;
 
 }
+bool is_item_operand(P_item *item){
+    switch(item->operator){
+        case P_STRING:
+        case P_INT_NUM:
+        case P_FLOAT_NUM:
+        case P_ID:
+            return true;
+        default:
+            return false;
+    }
+}
+
+int one_is_undefined_semantics(Output_queue q, P_stack post_stack,bool first_res){
+    if(first_res){//o1 = LF@%res
+        insert_defvar_res();
+        insert_instruction("MOVE",post_stack.top,NULL, &post_stack);
+        declare_defvar_restype();
+    }
+    else p_stack_pop(&post_stack); //popin fake res from stack
+    insert_instruction("TYPE",NULL,NULL,&post_stack);
+    P_item *o2 = post_stack.top;
+
+
+
+    return SYNTAX_OK;
+}
+
+int semantics(Output_queue q,P_stack post_stack, ReturnData *data,bool first_res){
+
+    Prec_table_symbols_enum operator = q.first->operator;
+    if(first_res) {
+        P_item *o1 = post_stack.top;
+        P_item *o2 = post_stack.top->next_item;
+        if((o1->operator == P_ID && o2->operator != P_ID) || (o2->operator == P_ID && o1->operator != P_ID))
+            one_is_undefined_semantics(q,post_stack,first_res);
+        else if (o1->operator != P_ID && o2->operator != P_ID){
+            if (o1->operator == P_INT_NUM && o2->operator == P_FLOAT_NUM) {
+                o1->value_double = (double) o1->value_int;
+                o1->operator = P_FLOAT_NUM;
+
+            } else if (o2->operator == P_INT_NUM && o1->operator == P_FLOAT_NUM) {
+                o2->value_double = (double) o2->value_int;
+                o2->operator = P_FLOAT_NUM;
+
+            } else if (o1->operator != o2->operator) return COMPATIBILITY_ERROR;
+
+            insert_defvar_res();
+
+            if (o1->operator == P_STRING && o2->operator == P_STRING) {
+                insert_instruction("CONCAT", o1, o2,  &post_stack);
+            } else {
+                insert_instruction("PUSHS", o1, NULL, &post_stack);
+                insert_instruction("PUSHS", o2, NULL,  &post_stack);
+
+                switch (operator) {
+                    case P_PLUS:
+                        if (DEBUG_EXPRESSION_ANALYSIS) printf("EXPRESSIONS: %s\n", "I'm adding");
+                        insert_simple_instruction("ADDS");
+                        break;
+                    case P_MINUS:
+                        insert_simple_instruction("SUBS");
+                        break;
+                    case P_MUL:
+                        insert_simple_instruction("MULS");
+                        break;
+                    case P_DIV:
+                        if (o1->operator == P_INT_NUM)
+                            insert_simple_instruction("IDIVS");
+                        else insert_simple_instruction("DIVS");
+                        break;
+                    case P_LESS:
+                        insert_simple_instruction("LTS");
+                        break;
+                    case P_EQ:
+                        insert_simple_instruction("EQS");
+                        break;
+                    case P_MORE:
+                        insert_simple_instruction("GTS");
+                    default:
+                        break;
+                }
+                insert_instruction("POPS", NULL, NULL, NULL);
+                p_stack_push(&post_stack,true,0,0,"%res",P_ID);
+            }
+
+        }
+    }
+    else {
+    }
+    return SYNTAX_OK;
+
+}
+
+int queue_evaluation(Output_queue q, ReturnData *data){
+    P_stack *post_stack = (P_stack*)malloc(sizeof(P_stack));
+    p_stack_init(post_stack);
+    int error;
+    bool first_res = true;
+
+    while(q.first){
+        if(is_item_operand(q.first)){
+
+            if(DEBUG_EXPRESSION_ANALYSIS)printf("%s%d\n","EXPRESSIONS: first in queue is:",q.first->operator);
+
+            first_from_queue_to_stack(&q, post_stack);
+
+            if(DEBUG_EXPRESSION_ANALYSIS) printf("%s\n","EXPRESSIONS: pushed to post_stack from queue");
+            if(q.first == NULL)
+                insert_instruction("PUSHS",post_stack->top,NULL,post_stack);
+
+        }
+        else if(q.first->operator < P_LEFT_PAR){//operator
+            error =semantics(q , *post_stack, data, first_res);
+            if(error!=SYNTAX_OK)
+                return error;
+            delete_first(&q);
+            first_res = false;
+        }
+        else{
+            p_stack_free(post_stack);
+            return SYNTAX_ERROR;
+        }
+    }
+    if(DEBUG_EXPRESSION_ANALYSIS) printf("%s\n","EXPRESSIONS: Queue eval done");
+    p_stack_pop(post_stack);
+    p_stack_pop(post_stack);
+    free(post_stack);
+
+    return SYNTAX_OK;
+}
 
 ReturnData analyze_expresssion(tToken token, tToken aheadToken, bool tokenLookAheadFlag, Bnode *tree ){
     //allocating data managment
@@ -319,45 +448,45 @@ ReturnData analyze_expresssion(tToken token, tToken aheadToken, bool tokenLookAh
 
 
     if(!s_push(stack,P_DOLLAR))
-        return release_resources(INNER_ERROR, *stack, *tree, q, *o_stack, *data);
+        return release_resources(INNER_ERROR, *stack, q, *o_stack, *data);
 
     Prec_table_symbols_enum *stack_top_terminal_symbol;
     data->token = &token;
     Prec_table_symbols_enum new_symbol = token_to_symbol(token);
     error = generate_postfix(data->token, o_stack, q);
     if(error != 0)
-        return release_resources(error, *stack, *tree, q, *o_stack, *data);
+        return release_resources(error, *stack, q, *o_stack, *data);
 
     bool enough = false;
     while(!enough){
 
-        if(DEBUG_EXPRESSION_ANALYSIS) printf("EXPRESSIONS: %s%d\n","next token is: ",new_symbol);
+        if(DEBUG_EXPRESSION_ANALYSIS) printf("EXPRESSIONS: %s%d\n","current token is: ",data->token->type);
         stack_top_terminal_symbol = &get_top_terminal(stack)->symbol;
         if(new_symbol == P_ID && !is_token_end_symbol(&token)){
             if(!is_variable_defined(tree,token.data.string))
-                return release_resources(SEMANTIC_ERROR,*stack,*tree, q, *o_stack, *data);
+                return release_resources(SEMANTIC_ERROR,*stack, q, *o_stack, *data);
         }
 
         if(stack->top == NULL)
-            return release_resources(INNER_ERROR, *stack, *tree, q ,*o_stack, *data);
+            return release_resources(INNER_ERROR, *stack, q ,*o_stack, *data);
         switch(prec_table[get_prec_table_index(*stack_top_terminal_symbol)][get_prec_table_index(new_symbol)]){
             case R:
                 if(DEBUG_EXPRESSION_ANALYSIS) printf("EXPRESSIONS: %s\n","I'm in R!");
                 if((error = rule_reduction(stack))){
-                    return release_resources(error, *stack, *tree, q ,*o_stack, *data);
+                    return release_resources(error, *stack,  q ,*o_stack, *data);
                 }
                 break;
             case S:
                 if(DEBUG_EXPRESSION_ANALYSIS) printf("EXPRESSIONS: %s\n","I'm in S!");
                 if(!insert_after_top_terminal(stack,P_STOP))
-                    return release_resources(INNER_ERROR, *stack, *tree, q ,*o_stack, *data);
+                    return release_resources(INNER_ERROR, *stack, q ,*o_stack, *data);
 
                 if(!s_push(stack, new_symbol))
-                    return release_resources(INNER_ERROR, *stack, *tree, q, *o_stack, *data);
+                    return release_resources(INNER_ERROR, *stack, q, *o_stack, *data);
 
                 if(new_symbol == P_ID){
                     if(!is_variable_defined(tree,token.data.string))
-                        return release_resources(SEMANTIC_ERROR,*stack,*tree, q, *o_stack, *data);
+                        return release_resources(SEMANTIC_ERROR,*stack, q, *o_stack, *data);
                 }
 //
 //              if( new_symbol == P_ID || new_symbol == P_INT_NUM || new_symbol == P_FLOAT_NUM || new_symbol == P_STRING )
@@ -367,14 +496,14 @@ ReturnData analyze_expresssion(tToken token, tToken aheadToken, bool tokenLookAh
                     data->token = &aheadToken;
                     error = generate_postfix(data->token, o_stack, q);
                     if(error != 0)
-                        return release_resources(error, *stack, *tree, q, *o_stack, *data);
+                        return release_resources(error, *stack, q, *o_stack, *data);
                     tokenLookAheadFlag = false;
                 }
                 else {
                     *data->token = nextToken();
                     error = generate_postfix(data->token, o_stack, q);
                     if(error != 0)
-                        return release_resources(error, *stack, *tree, q, *o_stack, *data);
+                        return release_resources(error, *stack, q, *o_stack, *data);
                 }
                 new_symbol = token_to_symbol(*data->token);
 
@@ -385,17 +514,17 @@ ReturnData analyze_expresssion(tToken token, tToken aheadToken, bool tokenLookAh
                     if(DEBUG_EXPRESSION_ANALYSIS) printf("EXPRESSIONS: %s\n","ENOUGH!, very nice");
                     enough = true;
                 }
-                else return release_resources(SYNTAX_ERROR, *stack, *tree, q, *o_stack, *data);
+                else return release_resources(SYNTAX_ERROR, *stack, q, *o_stack, *data);
                 break;
             case E:
                 if(DEBUG_EXPRESSION_ANALYSIS) printf("EXPRESSIONS: %s\n","I'm in E!");
                 if(!s_push(stack,new_symbol))
-                    return release_resources(INNER_ERROR, *stack, *tree, q, *o_stack, *data);
+                    return release_resources(INNER_ERROR, *stack,  q, *o_stack, *data);
                 *data->token = nextToken();
                 new_symbol = token_to_symbol(*data->token);
                 error = generate_postfix(data->token, o_stack, q);
                 if(error != 0)
-                    return release_resources(error, *stack, *tree, q, *o_stack, *data);
+                    return release_resources(error, *stack,  q, *o_stack, *data);
 
                 break;
             default: break;
@@ -403,7 +532,10 @@ ReturnData analyze_expresssion(tToken token, tToken aheadToken, bool tokenLookAh
 
     }
     print_queue(*q);
-   return release_resources_and_success(SYNTAX_OK, *stack, NULL, q , *o_stack, *data);
+    error = queue_evaluation(*q,data);
+    if(error!=SYNTAX_OK)
+        return release_resources(error,*stack,q,*o_stack,*data);
+   return release_resources_and_success(SYNTAX_OK, *stack, q , *o_stack, *data);
 };
 
 //int main(){
