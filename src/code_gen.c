@@ -226,50 +226,47 @@ bool insert_simple_instruction(char *instruction){
     active_code_list->end->is_start_of_new_line = true;
     return true;
 }
-
-bool insert_instruction(char *instruction, P_item *o1, P_item *o2,P_stack *post_stack){
-    add_string_after_specific_string(active_code_list->end,instruction);
-    active_code_list->end->is_start_of_new_line = true;
-    if(!strcmp(instruction,"PUSHS")){
-        if(DEBUG_EXPR_GEN) printf("%s\n","I'm gonna push");
-        top_value_gen_and_add(post_stack);
-    }
-    else if(!strcmp(instruction, "POPS")){
-        add_string_after_specific_string(active_code_list->end,"LF@%res");
-    }
-    else if(!strcmp(instruction,"CONCAT")){
-        add_string_after_specific_string(active_code_list->end,"LF@%res");
-        top_value_gen_and_add(post_stack);
-        top_value_gen_and_add(post_stack);
-
-    }
-    else if(!strcmp(instruction, "MOVE")){
-        if(o2 == NULL) {
-            add_string_after_specific_string(active_code_list->end, "LF@%res");
-            top_value_gen_and_add(post_stack);
-        }
-    }
-    else if(!strcmp(instruction, "TYPE")){
-        if(o2 == NULL && o1 == NULL){
-            add_string_after_specific_string(active_code_list->end, "LF@%res$type");
-            add_string_after_specific_string(active_code_list->end, "LF@%res");
-        }
-    }
-
+bool push_res(){
+    insert_simple_instruction("PUSHS");
+    add_string_after_specific_string(active_code_list->end, "LF@%res");
     return true;
 }
 
-bool top_value_gen_and_add(P_stack *post_stack){
+
+bool item_type_gen_and_add(P_item *item){
     char *value;
-    if(!post_stack)
+    if(!item)
         return false;
-    switch(post_stack->top->operator){
+    switch(item->operator) {
+        case P_INT_NUM:
+            add_string_after_specific_string(active_code_list->end,"string@int");
+            break;
+        case P_FLOAT_NUM:
+            add_string_after_specific_string(active_code_list->end,"string@float");
+            break;
+        case P_STRING:
+            add_string_after_specific_string(active_code_list->end,"string@string");
+            break;
+        default: return false;
+
+    }
+    return true;
+}
+
+bool item_value_gen_and_add(P_item *item,bool append){
+    char *value;
+    if(!item)
+        return false;
+    switch(item->operator){
         case P_INT_NUM:
             value = malloc(sizeof(int)*4 +1);
             if(!value)
                 return false;
-            add_string_after_specific_string(active_code_list->end,"int@");
-            sprintf(value,"%d",post_stack->top->value_int);
+            if(!append) {
+                add_string_after_specific_string(active_code_list->end, "int@");
+            }else append_text_to_specific_string(active_code_list->end, "int$");
+
+            sprintf(value,"%d",item->value_int);
             append_text_to_specific_string(active_code_list->end,value);
 
             free(value);
@@ -279,31 +276,78 @@ bool top_value_gen_and_add(P_stack *post_stack){
             value = malloc(sizeof(double)*4 +1);
             if(!value)
                 return false;
-            add_string_after_specific_string(active_code_list->end,"float@");
-            sprintf(value,"%a",post_stack->top->value_double);
+            if(!append) {
+                add_string_after_specific_string(active_code_list->end, "float@");
+            }else append_text_to_specific_string(active_code_list->end, "float$");
+            sprintf(value,"%a",item->value_double);
             append_text_to_specific_string(active_code_list->end,value);
             free(value);
             break;
         case P_STRING:
-            value = malloc(sizeof(strlen(post_stack->top->string))+1);
-            strcpy(value, post_stack->top->string);
-            add_string_after_specific_string(active_code_list->end,"string@");
-            append_text_to_specific_string(active_code_list->end,value);
+            value = malloc(sizeof(strlen(item->string))+1);
+            strcpy(value, item->string);
+            if(!append){
+                add_string_after_specific_string(active_code_list->end,"string@");
+            }else append_text_to_specific_string(active_code_list->end, "string$");
+            append_text_to_specific_string(active_code_list->end,convert_string_to_correct_IFJcode18_format(value));
             free(value);
             break;
         case P_ID:
-            value = malloc(sizeof(strlen(post_stack->top->string))+1);
-            strcpy(value, post_stack->top->string);
-            add_string_after_specific_string(active_code_list->end,"LF@");
-            append_text_to_specific_string(active_code_list->end,value);
+            value = malloc(sizeof(strlen(item->string))+1);
+            strcpy(value, item->string);
+            if(!append){
+                add_string_after_specific_string(active_code_list->end,"LF@");
+            }else append_text_to_specific_string(active_code_list->end, "LF$");
+            append_text_to_specific_string(active_code_list->end,convert_string_to_correct_IFJcode18_format(value));
             free(value);
             break;
         default:
             return false;
     }
-    p_stack_pop(post_stack);
 
 //    if(DEBUG_EXPR_GEN)printf("%s%d\n","first in queue is:",q.first->operator);
+    return true;
+}
+
+bool insert_instruction(char *instruction, P_item *o1, P_item *o2){
+    add_string_after_specific_string(active_code_list->end,instruction);
+    active_code_list->end->is_start_of_new_line = true;
+    if(!strcmp(instruction,"PUSHS")){
+        if(DEBUG_EXPR_GEN) printf("%s\n","I'm gonna push");
+        item_value_gen_and_add(o1,false);
+    }
+    else if(!strcmp(instruction, "POPS")){
+        add_string_after_specific_string(active_code_list->end,"LF@%res");
+    }
+    else if(!strcmp(instruction,"CONCAT")){
+        add_string_after_specific_string(active_code_list->end,"LF@%res");
+        item_value_gen_and_add(o1,false);
+        item_value_gen_and_add(o1,false);
+
+    }
+    else if(!strcmp(instruction, "MOVE")){
+        if(o2 == NULL) {
+            add_string_after_specific_string(active_code_list->end, "LF@%res");
+            item_value_gen_and_add(o1,false);
+        }
+    }
+    else if(!strcmp(instruction, "TYPE")){
+        if(o2 == NULL && o1 == NULL){
+            add_string_after_specific_string(active_code_list->end, "LF@%res$type");
+            add_string_after_specific_string(active_code_list->end, "LF@%res");
+        }
+    }
+    else if(!strcmp(instruction, "JUMPIFEQ")){
+        add_string_after_specific_string(active_code_list->end, "$%res$type$");
+        item_value_gen_and_add(o1,true);
+        add_string_after_specific_string(active_code_list->end, "LF@%res$type");
+        item_type_gen_and_add(o1);
+    }
+    else if(!strcmp(instruction, "LABEL")){
+        add_string_after_specific_string(active_code_list->end, "$%res$type$");
+        item_value_gen_and_add(o1,true);
+    }
+
     return true;
 }
 
