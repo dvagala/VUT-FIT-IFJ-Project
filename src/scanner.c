@@ -626,7 +626,7 @@ tToken nextToken()
     return identificator;
 }
 
-
+/*
 int main()
 {
 
@@ -653,4 +653,4 @@ int main()
         }
     }
     return 0;
-}
+}*/
