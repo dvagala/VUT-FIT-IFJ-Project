@@ -22,17 +22,19 @@ typedef struct Sstring{
 
 }*Tstring;
 
-Tstring code_list;
+Tstring active_code_list;           // This is either main_code_list or functions_code_list
+Tstring main_code_list;
+Tstring functions_code_list;
 
 void code_list_init();
 void print_code();
 void print_code_backwards();
-char* append_text_string_to_specific_string(Tstring specific_string, char *text);
-char* append_allocated_string_to_specific_string(Tstring specific_string, char *text);
+char* append_text_to_specific_string(Tstring specific_string, char *text);
 Tstring find_nearest_good_place_for_defvar();
-void add_allocated_string_after_specific_string(Tstring specific_string, char *text);
-void add_text_string_after_specific_string(Tstring specific_string, char *text);
-void free_code_list();
+void add_string_after_specific_string(Tstring specific_string, char *text);
+void free_code_lists();
+
+char* convert_string_to_correct_IFJcode18_format(char *input);
 
 #endif //IFJ_PROJECT_CODE_GEN_H
 

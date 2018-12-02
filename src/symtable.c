@@ -228,6 +228,15 @@ bool add_variables_from_func_params(Bnode *global_symtable, Bnode *actual_symtab
     }
     return false;
 }
+
+char *get_name_of_defined_param_at_position(Bnode *global_symtable, char *func_name, int n){
+    Bnode pom = Bsearch(*global_symtable,func_name);
+    if (pom){
+        return get_nth_element(pom->data.list,n)->id;
+    }
+    return NULL;
+}
+
 //----
 //TODO not working
 void free_symtable(Bnode *symtable){
