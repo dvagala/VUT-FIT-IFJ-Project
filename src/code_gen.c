@@ -218,28 +218,75 @@ void free_code_lists(){
     main_code_list = NULL;
     functions_code_list = NULL;
 }
+
+
 void append_unique_code(){
     char *value = malloc(sizeof(int)+1);
     sprintf(value,"%d",generic_label_count);
     append_text_to_specific_string(active_code_list->end, value);
     free(value);
 }
-void add_unique_res_type(){
-    add_string_after_specific_string(active_code_list->end, "$%res$type");   // $%res$type$
+
+void gen_unique_operation(Prec_table_symbols_enum operator){
+    char *value=malloc(sizeof(char)*8+1);
+    switch (operator) {
+        case P_PLUS:
+            strcpy(value,"$plus");
+            break;
+        case P_MINUS:
+            strcpy(value,"$subs");
+            break;
+        case P_MUL:
+            strcpy(value,"$muls");
+            break;
+        case P_DIV:
+            strcpy(value,"$divs");
+            break;
+        case P_IDIV:
+            strcpy(value,"$idivs");
+        case P_LESS:
+            strcpy(value,"$less");
+            break;
+        case P_EQ:
+            strcpy(value,"$eqs");
+            break;
+        case P_MORE:
+            strcpy(value,"$mores");
+        default:
+            break;
+    }
+    add_string_after_specific_string(active_code_list->end,value);
+    append_unique_code();
+    free(value);
+
+}
+void add_unique_res_type(bool label){
+    if(label) {
+        add_string_after_specific_string(active_code_list->end, "$%res$type");   // $%res$type$
+    }
+    else add_string_after_specific_string(active_code_list->end, "LF@%res$type");
+    append_unique_code();
+}
+
+void add_unique_var_type(P_item *o1){
+    item_value_gen_and_add(o1,false);
+    append_text_to_specific_string(active_code_list->end,"$type");
+    append_unique_code();
+}
+
+void add_unique_res(){
+    add_string_after_specific_string(active_code_list->end, "LF@%res");
     append_unique_code();
 }
 
 bool declare_defvar_restype(){
     insert_simple_instruction("DEFVAR");
-    add_unique_res_type();
-    append_text_to_specific_string(active_code_list->end, "$");   // $%res$type$
+    add_unique_res_type(false);
 }
 
 bool insert_defvar_res(){
     insert_simple_instruction("DEFVAR");
-    add_string_after_specific_string(active_code_list->end, "LF@%res");
-    append_unique_code();
-
+    add_unique_res();
 }
 
 bool insert_simple_instruction(char *instruction){
@@ -253,6 +300,13 @@ bool push_res(){
     append_unique_code();
     return true;
 }
+
+void add_end(){
+    add_string_after_specific_string(active_code_list->end, "$end$");
+    append_unique_code();
+}
+
+
 
 void exit_gen(int error_code){
     insert_simple_instruction("EXIT");
@@ -318,30 +372,26 @@ bool item_value_gen_and_add(P_item *item,bool append){
     return true;
 }
 
-void gen_unique_label(P_item *o1){
+void gen_unique_label_for_res(P_item *o1){
     char *unique;
 
     if(o1->operator == P_FLOAT_NUM){
-        add_unique_res_type();
+        add_unique_res_type(true);
         append_text_to_specific_string(active_code_list->end, "$");   // $%res$type0$
-        append_unique_code();
         append_text_to_specific_string(active_code_list->end,"float");              //$%res$type$0float
 
     }else if (o1->operator == P_INT_NUM){
-        add_unique_res_type();
+        add_unique_res_type(true);
         append_text_to_specific_string(active_code_list->end, "$");   // $%res$type0$
-        append_unique_code();
         append_text_to_specific_string(active_code_list->end,"int");
 
     }  else if (o1->operator == P_STRING){
-        add_unique_res_type();
+        add_unique_res_type(true);
         append_text_to_specific_string(active_code_list->end, "$");   // $%res$type$
-        append_unique_code();
         append_text_to_specific_string(active_code_list->end,"string");
     }  else if(o1->operator == P_ID){
-        add_unique_res_type();
+        add_unique_res_type(true);
         append_text_to_specific_string(active_code_list->end, "$");   // $%res$type$
-        append_unique_code();
         item_value_gen_and_add(o1,true);
     }
 
@@ -350,22 +400,22 @@ void gen_unique_label(P_item *o1){
 
 void insert_res_and_type(P_item *o1){
     if (o1->operator == P_FLOAT_NUM) {
-        gen_unique_label(o1);
-        add_unique_res_type();
+        gen_unique_label_for_res(o1);
+        add_unique_res_type(false);
         add_string_after_specific_string(active_code_list->end, "string@float");
     } else if (o1->operator == P_INT_NUM) {
-        gen_unique_label(o1);
-        add_unique_res_type();
+        gen_unique_label_for_res(o1);
+        add_unique_res_type(false);
         add_string_after_specific_string(active_code_list->end, "string@int");// JUMPIFEQ $%res$type$0int string@int
     } else if (o1->operator == P_STRING) {
-        gen_unique_label(o1);
-        add_unique_res_type();
+        gen_unique_label_for_res(o1);
+        add_unique_res_type(false);
         add_string_after_specific_string(active_code_list->end,
                                          "string@string");// JUMPIFEQ $%res$type$0string string@string
     } else if (o1->operator == P_ID){
-        gen_unique_label(o1);
-        add_unique_res_type();
-        add_string_after_specific_string(active_code_list->end,NULL);
+        gen_unique_label_for_res(o1);
+        add_unique_res_type(false);
+        add_unique_var_type(o1);
     }
 
 }
@@ -393,7 +443,13 @@ bool item_type_gen_and_add(P_item *item, bool append){
     return true;
 }
 
+void gen_custom_jumpifeq(P_item *o1, Prec_table_symbols_enum operator){
+    insert_simple_instruction("JUMPIFEQ");
+    gen_unique_operation(operator);
+    add_unique_res_type(false);
+    item_type_gen_and_add(o1,false);
 
+}
 
 
 
@@ -403,7 +459,10 @@ bool insert_instruction(char *instruction, P_item *o1, P_item *o2,char *type){
     char *unique;
     if(!strcmp(instruction,"PUSHS")){
         if(DEBUG_EXPR_GEN) printf("%s\n","I'm gonna push");
-        item_value_gen_and_add(o1,false);
+        if(o1->res){
+            add_unique_res();
+        }
+        else item_value_gen_and_add(o1,false);
     }
     else if(!strcmp(instruction, "POPS")){
         add_string_after_specific_string(active_code_list->end,"LF@%res");
@@ -435,16 +494,34 @@ bool insert_instruction(char *instruction, P_item *o1, P_item *o2,char *type){
     }
     else if(!strcmp(instruction, "TYPE")){
         if(o2 == NULL && o1 == NULL){
-            add_unique_res_type();
+            add_unique_res_type(false);
             add_string_after_specific_string(active_code_list->end, "LF@%res");
             append_unique_code();
+        }else{
+            add_unique_var_type(o1);
+            item_value_gen_and_add(o1,false);
         }
+
     }
     else if(!strcmp(instruction, "JUMPIFEQ")){
         insert_res_and_type(o1);
     }
     else if(!strcmp(instruction, "LABEL")){
-        gen_unique_label(o1);
+
+        if (type != NULL) {
+            if (!strcmp(type, "end")) {
+                add_end();
+            }
+        } else gen_unique_label_for_res(o1);
+
+    }
+    else if(!strcmp(instruction, "JUMP")){
+        if(!strcmp(type,"end")){
+            add_end();
+        }
+    }
+    else if(!strcmp(instruction,"DEFVAR")){
+        add_unique_var_type(o1);
     }
 
     return true;
