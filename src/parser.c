@@ -187,8 +187,8 @@ bool expr(){
     ReturnData returnData;
 
     // TODO: Change this if you want to have just fake_analyze_expresssion
-    returnData = analyze_expresssion(token, aheadToken, tokenLookAheadFlag, &global_symtable);
-//    returnData = fake_analyze_expresssion(token, aheadToken, tokenLookAheadFlag, &global_symtable);
+//    returnData = analyze_expresssion(token, aheadToken, tokenLookAheadFlag, &global_symtable);
+    returnData = fake_analyze_expresssion(token, aheadToken, tokenLookAheadFlag, &global_symtable);
 
     token = (*returnData.token);
 
@@ -197,7 +197,7 @@ bool expr(){
         error_code = returnData.error_code;
     }
 
-    add_string_after_specific_string(active_code_list->end, "# Doing some calculations");
+    add_string_after_specific_string(active_code_list->end, "# Doing some calculations, store result on stack");
     active_code_list->end->is_start_of_new_line = true;
 
     if(DEBUG_PARSER) printf("PARSER: after, epxresssoin\n");
@@ -838,8 +838,6 @@ bool after_id() {
 
         char *func_name = NULL;
 
-        bool result = func_or_expr(var_name, &func_name);
-
         // Generate code
         // if var_name where we want assign return value from function is new variable, define it
         if(is_new_variable){
@@ -848,17 +846,25 @@ bool after_id() {
                 if(DEBUG_PARSER) printf("\n\nserching for good palce\n\n");
                 good_place_for_defvar = find_nearest_good_place_for_defvar()->prev;
                 if(DEBUG_PARSER) printf("good place: %s\n", good_place_for_defvar->text);
-                add_string_after_specific_string(good_place_for_defvar, "DEFVAR");
+                add_string_after_specific_string(good_place_for_defvar, "DEFVAR LF@");
                 good_place_for_defvar->next->is_start_of_new_line = true;
-                add_string_after_specific_string(good_place_for_defvar->next, "LF@");
+                append_text_to_specific_string(good_place_for_defvar->next, var_name);
+                add_string_after_specific_string(good_place_for_defvar->next, "MOVE LF@");
+                good_place_for_defvar->next->next->is_start_of_new_line = true;
                 append_text_to_specific_string(good_place_for_defvar->next->next, var_name);
+                add_string_after_specific_string(good_place_for_defvar->next->next, "nil@nil");
             }else{
-                add_string_after_specific_string(active_code_list->end, "DEFVAR");
+                add_string_after_specific_string(active_code_list->end, "DEFVAR LF@");
                 active_code_list->end->is_start_of_new_line = true;
-                add_string_after_specific_string(active_code_list->end, "LF@");
                 append_text_to_specific_string(active_code_list->end, var_name);
+                add_string_after_specific_string(active_code_list->end, "MOVE LF@");
+                active_code_list->end->is_start_of_new_line = true;
+                append_text_to_specific_string(active_code_list->end, var_name);
+                add_string_after_specific_string(active_code_list->end, "nil@nil");
             }
         }
+
+        bool result = func_or_expr(var_name, &func_name);
 
         if(func_name != NULL) {
             if(strcmp(func_name, "print") != 0) {
@@ -1136,7 +1142,7 @@ void init_parser(){
     // Useless, but you get the point, function_code_list is now "active"
     active_code_list = functions_code_list;
 
-    active_code_list->start->is_start_of_new_line = true;
+//    active_code_list->start->is_start_of_new_line = true;
     add_string_after_specific_string(active_code_list->end, "JUMP $$main");
     active_code_list->end->is_start_of_new_line = true;
 

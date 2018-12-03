@@ -40,7 +40,7 @@ void print_code(){
         if(temp->is_start_of_new_line)
             printf("\n");
         if(strcmp(temp->text, "LABEL") == 0){
-            printf("\n");                       // This will nicely separate LABELS
+//            printf("\n");                       // This will nicely separate LABELS
             if(temp->next != NULL){
                 if(temp->next->text != NULL){
                     if(temp->next->text[0] != '$')
@@ -524,7 +524,7 @@ void generate_inputs_func(){
                                                             "MOVE LF@%retval nil@nil \n"
                                                             "READ LF@%retval string \n"
                                                             "POPFRAME \n"
-                                                            "RETURN \n\n");
+                                                            "RETURN \n");
     active_code_list->end->is_start_of_new_line = true;
 }
 
@@ -535,7 +535,7 @@ void generate_inputi_func(){
                                                             "MOVE LF@%retval nil@nil \n"
                                                             "READ LF@%retval int \n"
                                                             "POPFRAME \n"
-                                                            "RETURN \n\n");
+                                                            "RETURN \n");
     active_code_list->end->is_start_of_new_line = true;
 }
 
@@ -546,7 +546,7 @@ void generate_inputf_func(){
                                                             "MOVE LF@%retval nil@nil \n"
                                                             "READ LF@%retval float \n"
                                                             "POPFRAME \n"
-                                                            "RETURN \n\n");
+                                                            "RETURN \n");
     active_code_list->end->is_start_of_new_line = true;
 }
 
@@ -563,7 +563,7 @@ void generate_length_func(){
                                                             "LABEL $$length_ok \n"
                                                             "STRLEN LF@%retval LF@s \n"
                                                             "POPFRAME \n"
-                                                            "RETURN \n\n");
+                                                            "RETURN \n");
     active_code_list->end->is_start_of_new_line = true;
 }
 
@@ -617,7 +617,7 @@ void generate_substr_func(){
                                                             "JUMP $$substr_while \n"
                                                             "LABEL $$substr_end \n"
                                                             "POPFRAME \n"
-                                                            "RETURN  \n\n");
+                                                            "RETURN ");
     active_code_list->end->is_start_of_new_line = true;
 }
 
@@ -651,7 +651,7 @@ void generate_ord_func(){
                                                             "STRI2INT LF@%retval LF@s LF@i \n"
                                                             "LABEL $$ord_end  \n"
                                                             "POPFRAME \n"
-                                                            "RETURN \n\n");
+                                                            "RETURN \n");
     active_code_list->end->is_start_of_new_line = true;
 }
 
@@ -681,13 +681,13 @@ void generate_chr_func(){
                                                             "LABEL $$char_bound_ok_2\n"
                                                             "INT2CHAR LF@%retval LF@i \n"
                                                             "POPFRAME \n"
-                                                            "RETURN \n\n");
+                                                            "RETURN \n");
     active_code_list->end->is_start_of_new_line = true;
 }
 
 void generate_system_functions(){
 
-    add_string_after_specific_string(active_code_list->end, "# Start declaring system function");
+    add_string_after_specific_string(active_code_list->end, "\n# Start declaring system function");
     active_code_list->end->is_start_of_new_line = true;
 
     generate_inputf_func();

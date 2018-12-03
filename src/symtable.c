@@ -54,7 +54,10 @@ bool Binsert(Bnode *rootPtr, char *id, bool func_bool){
     if(!*rootPtr){
         Bnode new = malloc(sizeof(struct Node));
         if(new) {
-            new->key = id;
+            // Copy so it is independant from token.data
+            new->key = malloc(sizeof(char)*(strlen(id)+1));
+            strcpy(new->key, id);
+//            new->key = id;            //old one
             new->data.function = func_bool;
             new->Lptr = NULL;
             new->Rptr = NULL;

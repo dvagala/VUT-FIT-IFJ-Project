@@ -27,7 +27,9 @@ int insert_element(List *list, char *id, Data_type type){
     if(!new) return INNER_ERROR;
     new->type = type;
     new->next = NULL;
-    new->id = id;
+//    new->id = id;     // old one
+    new->id = malloc(sizeof(char) * (strlen(id)+1));
+    strcpy(new->id, id);
 
     if(list->First == NULL){
         list->First = new;
