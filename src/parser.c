@@ -846,6 +846,14 @@ bool after_id() {
         // previous_token == id_var      // cause we are in after_id
         char *var_name = previousToken.data.string;
 
+        // If name of variable ends with '!' or '?' throw error, only functions cant ends like this
+        if(var_name[strlen(var_name)-1] == '?' || var_name[strlen(var_name)-1] == '!'){
+            // This ensures that only first error will be in error_code
+            if(error_code == 0)
+                error_code = 2;
+            return false;
+        }
+
         if(DEBUG_PARSER) printf("PARSER: var_name: %s\n", var_name);
         if(DEBUG_PARSER) printf("PARSER: is var_name defined: %d\n", is_variable_defined(&global_symtable, var_name));
         if(DEBUG_PARSER) printf("PARSER: Is var_name in funcions: %d\n", is_func_defined(&global_symtable, var_name));
@@ -1360,12 +1368,13 @@ void test_string_convert(){
 
 int main(){
 
-
+    init_parser();
+//
 //    test_scanner();
 //
 //    return 0;
 
-    init_parser();
+
 
     pop();      // get first token
 
