@@ -613,7 +613,7 @@ int queue_evaluation(Output_queue *q, ReturnData *data){
             p_stack_free(stack);
             return SYNTAX_ERROR;
         }
-        printf("%s%d\n","q first is:",q->first->operator);
+        if(DEBUG_EXPRESSION_ANALYSIS) printf("%s%d\n","q first is:",q->first->operator);
     }
 
     if(DEBUG_EXPRESSION_ANALYSIS) printf("%s\n","EXPRESSIONS: Queue eval done");
