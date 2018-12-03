@@ -95,6 +95,7 @@ bool p_stack_push(P_stack *stack, bool is_variable, int int_value, double float_
         new->next_item = stack->top;
         new->is_variable = is_variable;
         new->is_operator = false;
+        new->res= false;
         stack->top = new;
         return true;
     }
@@ -177,7 +178,7 @@ bool queue_insert(Output_queue *q, bool is_operator, int int_value, double float
         new->is_variable = false;
         new->operator = operator;
         new->next_item = NULL;
-        new->taken = false;
+        new->res = false;
         if(q->first == NULL){
             q->first = new;
         }
@@ -199,8 +200,8 @@ void update_last_is_variable(Output_queue *q){
 void update_last_is_operator(Output_queue *q){
     q->last->is_operator = true;
 }
-void update_taken(P_item *item){
-    item->taken = true;
+void update_res(P_item *item){
+    item->res = true;
 }
 
 bool determine_type_and_insert(Output_queue *q, tToken *token){

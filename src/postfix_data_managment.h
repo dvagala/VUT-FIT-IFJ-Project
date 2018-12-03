@@ -38,7 +38,7 @@ typedef struct postfix_stack_item{
     Prec_table_symbols_enum operator;
     bool is_operator;
     bool is_variable;
-    bool taken;
+    bool res;
     struct postfix_stack_item *next_item;
 }P_item,*P_item_ptr;
 
@@ -73,7 +73,7 @@ void queue_dispose(Output_queue *q);
 bool determine_type_and_insert(Output_queue *q, tToken *token);
 void delete_first(Output_queue *q);
 bool first_from_queue_to_stack(Output_queue *q, P_stack *stack);
-void update_taken(P_item *item);
+void update_res(P_item *item);
 P_item* get_first_operand(Output_queue *q);
 P_item* get_second_operand(Output_queue *q);
 void delete_until_operator(Output_queue *q);
