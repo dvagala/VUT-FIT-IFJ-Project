@@ -577,6 +577,11 @@ int queue_evaluation(Output_queue *q, ReturnData *data){
             if(DEBUG_EXPRESSION_ANALYSIS)printf("%s%d\n","EXPRESSIONS: first in queue is:",q->first->operator);
 
             first_from_queue_to_stack(q,stack);
+            if(q->first==NULL && stack->top->next_item==NULL){
+                insert_instruction("PUSHS",stack->top,NULL,NULL);
+                p_stack_pop(stack);
+                return SYNTAX_OK;
+            }
 
         }
         else if(q->first->operator < P_LEFT_PAR){//operator
@@ -714,10 +719,10 @@ ReturnData analyze_expresssion(tToken token, tToken aheadToken, bool tokenLookAh
         }
 
     }
-//    print_queue(*q);
-//    error = queue_evaluation(q,data);
-//    if(error!=SYNTAX_OK)
-//        return release_resources(error,*stack, q,*o_stack,*data);
+    print_queue(*q);
+    error = queue_evaluation(q,data);
+    if(error!=SYNTAX_OK)
+        return release_resources(error,*stack, q,*o_stack,*data);
     return release_resources_and_success(SYNTAX_OK, *stack, q , *o_stack, *data);
 };
 
