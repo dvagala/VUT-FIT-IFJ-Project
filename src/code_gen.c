@@ -155,6 +155,9 @@ Tstring find_nearest_good_place_for_defvar(){
 
 void free_code_lists(){
 
+    if(functions_code_list == NULL)
+        return;
+
     active_code_list = functions_code_list->start;
 
     while(active_code_list != NULL){
@@ -183,6 +186,9 @@ void free_code_lists(){
             active_code_list->prev = NULL;
         }
     }
+
+    if(main_code_list == NULL)
+        return;
 
     active_code_list = main_code_list->start;
 

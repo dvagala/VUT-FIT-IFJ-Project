@@ -18,6 +18,7 @@
 
 #include "errors.h"
 
+#define DEBUG_FREE 0
 
 //
 // Created by Ancient on 22.11.2018.
@@ -53,12 +54,12 @@ bool Binsert(Bnode *rootPtr, char *id, bool func_bool){
 
     if(!*rootPtr){
         Bnode new = malloc(sizeof(struct Node));
-//        fprintf(stderr, "Malloc Bnode: %p\n", new);
+        if(DEBUG_FREE) fprintf(stderr, "Malloc Bnode: %p\n", new);
         if(new) {
             // Copy so it is independant from token.data
             new->key = malloc(sizeof(char)*(strlen(id)+1));
             strcpy(new->key, id);
-//            fprintf(stderr, "Malloc Bonode->key: %p, %s\n", new->key, id);
+            if(DEBUG_FREE) fprintf(stderr, "Malloc Bonode->key: %p, %s\n", new->key, id);
             new->data.function = func_bool;
             new->Lptr = NULL;
             new->Rptr = NULL;
@@ -249,7 +250,7 @@ void free_params(Bnode *global_symtable){
         free_params(&(*global_symtable)->Lptr);
         if((*global_symtable)->data.function == true){
             if((*(*global_symtable)->data.list).First != NULL){         // just functions that have parameters
-//                fprintf(stderr, "Free: Param in Bnode: %p\n", (*(*global_symtable)->data.list).First);
+//                if(DEBUG_FREE) fprintf(stderr, "Free: Param in Bnode: %p\n", (*(*global_symtable)->data.list).First);
                 list_disposal((*global_symtable)->data.list);
             }
         }
@@ -287,7 +288,10 @@ void free_symtable(Bnode *symtable){
     if(*symtable){
         free_symtable(&(*symtable)->Rptr);
         free_symtable(&(*symtable)->Lptr);
-//        fprintf(stderr, "Free: Bonode: %p\n", *symtable);
+        if(DEBUG_FREE) fprintf(stderr, "Free: Bonode: %p\n", *symtable);
+        if(DEBUG_FREE) fprintf(stderr, "Free: Bonode: %p, %s\n", (*symtable)->key, (*symtable)->key);
+        free((*symtable)->key);
+        (*symtable)->key = NULL;
         free(*symtable);
         (*symtable) = NULL;
     }

@@ -1184,7 +1184,6 @@ void init_parser(){
 
     global_symtable_init(&global_symtable);
     actual_symtable = global_symtable;
-
     add_string_after_specific_string(functions_code_list, ".IFJcode18");
 
     functions_code_list = active_code_list;
@@ -1215,11 +1214,14 @@ void test_scanner(){
     printf("\nTest scanner:\n\n");
 
     while(token.type != EOF_CASE){
-//        token = enhanced_next_token();
-        token = nextToken();
+        token = enhanced_next_token();
+//        token = nextToken();
         printf("%s ", token_type_enum_string[token.type]);
-//        if(token.type == IDENTIFICATOR)
+//        if(token.type == IDENTIFICATOR){
 //            printf("(token.data.string = \"%s\") ", token.data.string);
+//            free(token.data.string);
+//        }
+
 //        if(token.type == FLOAT){
 //            printf("(value a= \"%a\") ", token.data.value_double);
 //            printf("(value f= \"%f\") ", token.data.value_double);
@@ -1358,7 +1360,10 @@ void test_string_convert(){
 
 int main(){
 
-//    count = 0;
+
+//    test_scanner();
+//
+//    return 0;
 
     init_parser();
 
@@ -1366,6 +1371,7 @@ int main(){
 
     // Start analyser
     bool analysis_result = prog();
+//    bool analysis_result = 0;
 
     if(!analysis_result && error_code == 0){
         error_code = 2;
@@ -1379,13 +1385,9 @@ int main(){
     active_code_list = main_code_list;
     print_code();
 
-//    fprintf(stderr, "Global symtable: %p\n", global_symtable->Lptr);
-
     // Free stuff
     free_global_symtable(&global_symtable);
     free_code_lists();
-
-    fprintf(stderr, "\nCount: %d\n", count);
 
     // Error handling
     switch(error_code){
