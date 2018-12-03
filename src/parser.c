@@ -10,6 +10,7 @@
  *
  */
 
+#include <math.h>
 #include "parser.h"
 #include "scanner.h"
 #include "code_gen.h"
@@ -421,6 +422,7 @@ bool more_args(int *num_of_args, char *func_name){
     return false;
 }
 
+// TODO: type chcecks
 bool term(int *num_of_args, char *func_name){
     char non_term[] = "term";
     if(DEBUG_PARSER) printf("PARSER: Im in %s\n", non_term);
@@ -476,6 +478,18 @@ bool term(int *num_of_args, char *func_name){
         return true;
     } else if(token.type == INT){           // 19. Term -> int
 
+        if(strcmp(func_name, "length") == 0){    // function lenght() cant have int as argument
+            if(error_code == 0)
+                error_code = 4;
+            return false;
+        } else if(strcmp(func_name, "chr") == 0  ){
+//            if(token.data.value_int < 0 || token.data.value_int > 255){     // Check if number is in correct interval
+//                if(error_code == 0)
+//                    error_code = 4;
+//                return false;
+//            }
+        }
+
         char str[12];       // 12 because 32bit int cant have higher value
         sprintf(str, "%d", token.data.value_int);
 
@@ -488,6 +502,18 @@ bool term(int *num_of_args, char *func_name){
         return true;
     } else if(token.type == FLOAT){         // 20. Term -> double
 
+        if(strcmp(func_name, "length") == 0){    // function lenght() cant have float as argument
+            if(error_code == 0)
+                error_code = 4;
+            return false;
+        } else if(strcmp(func_name, "chr") == 0  ){
+//            if(trunc(token.data.value_double) < 0 || trunc(token.data.value_double) > 255){     // Check if number is in correct interval
+//                if(error_code == 0)
+//                    error_code = 4;
+//                return false;
+//            }
+        }
+
         // Generate code
         char str[24];       // TODO: 24 is made up number
         sprintf(str,  "%a", token.data.value_double);
@@ -499,6 +525,12 @@ bool term(int *num_of_args, char *func_name){
         return true;
     } else if(token.type == STRING){        // 21. Term -> string
 
+        if(strcmp(func_name, "chr") == 0){
+//            if(error_code == 0)
+//                error_code = 4;
+//            return false;
+        }
+
         // Generate code
         add_string_after_specific_string(active_code_list->end, "string@");
         append_text_to_specific_string(active_code_list->end, convert_string_to_correct_IFJcode18_format(token.data.string));
@@ -507,6 +539,16 @@ bool term(int *num_of_args, char *func_name){
         if(DEBUG_PARSER) printf("PARSER: %s returning: %d\n", non_term, 1);
         return true;
     } else if(token.type == NIL){           // 22. Term -> nil
+
+        if(strcmp(func_name, "length") == 0){    // function lenght() cant have nil as argument
+            if(error_code == 0)
+                error_code = 4;
+            return false;
+        } else if(strcmp(func_name, "chr") == 0){
+//            if(error_code == 0)
+//                error_code = 4;
+//            return false;
+        }
 
         // Generate code
         add_string_after_specific_string(active_code_list->end, "nil@nil");
