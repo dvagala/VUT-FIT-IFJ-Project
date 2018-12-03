@@ -198,8 +198,8 @@ bool expr(){
     ReturnData returnData;
 
     // TODO: Change this if you want to have just fake_analyze_expresssion
-//    returnData = analyze_expresssion(token, aheadToken, tokenLookAheadFlag, &global_symtable);
-    returnData = fake_analyze_expresssion(token, aheadToken, tokenLookAheadFlag, &global_symtable);
+    returnData = analyze_expresssion(token, aheadToken, tokenLookAheadFlag, &global_symtable);
+//    returnData = fake_analyze_expresssion(token, aheadToken, tokenLookAheadFlag, &global_symtable);
 
     token = (*returnData.token);
 
