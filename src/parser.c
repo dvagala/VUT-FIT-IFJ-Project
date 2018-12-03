@@ -91,6 +91,9 @@ bool is_token_start_of_expr() {
     if(DEBUG_PARSER) printf("PARSER: Checking if is_token_start_of_expr\n");
     if (token.type == IDENTIFICATOR) {
         if(DEBUG_PARSER) printf("PARSER: Token.data.string: \"%s\"\n", token.data.string);
+        if(previousToken.type == IF || previousToken.type == WHILE){
+            return true;
+        }
         if(is_id_variable(&actual_symtable, token.data.string)){
             aheadToken = next_token_lookahead();
             if(aheadToken.type != ASSIGN && previousToken.type != LPAR &&
@@ -194,6 +197,10 @@ bool expr(){
     token.type = original_token_type_backup;
 
     if(DEBUG_PARSER) printf("PARSER: token type send to expr: %s\n", token_type_enum_string[token.type]);
+    if(DEBUG_PARSER) printf("PARSER: aheadToken type send to expr: %s\n", token_type_enum_string[aheadToken.type]);
+
+    add_string_after_specific_string(active_code_list->end, "# Expr start");
+    active_code_list->end->is_start_of_new_line = true;
 
     ReturnData returnData;
 
@@ -204,11 +211,11 @@ bool expr(){
     token = (*returnData.token);
 
     if(error_code == 0 && returnData.error){
-        if(DEBUG_PARSER) printf("PARSER: Expression sending me error: %d\n", returnData.error_code);
+        fprintf(stderr, "PARSER: Expression sending me error: %d\n", returnData.error_code);
         error_code = returnData.error_code;
     }
 
-    add_string_after_specific_string(active_code_list->end, "# Doing some calculations, store result on stack");
+    add_string_after_specific_string(active_code_list->end, "# Expr done, store result on stack");
     active_code_list->end->is_start_of_new_line = true;
 
     if(DEBUG_PARSER) printf("PARSER: after, epxresssoin\n");
