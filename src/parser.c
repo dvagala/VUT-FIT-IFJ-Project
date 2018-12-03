@@ -422,7 +422,6 @@ bool more_args(int *num_of_args, char *func_name){
     return false;
 }
 
-// TODO: type chcecks
 bool term(int *num_of_args, char *func_name){
     char non_term[] = "term";
     if(DEBUG_PARSER) printf("PARSER: Im in %s\n", non_term);
@@ -434,6 +433,8 @@ bool term(int *num_of_args, char *func_name){
         active_code_list->end->is_start_of_new_line = true;
         add_string_after_specific_string(active_code_list->end, "TF@");
         char *defined_param_name = get_name_of_defined_param_at_position(&global_symtable, func_name, (*num_of_args)-1);
+        if(defined_param_name == NULL)
+            return false;
         append_text_to_specific_string(active_code_list->end, defined_param_name);
         add_string_after_specific_string(active_code_list->end, "MOVE");
         active_code_list->end->is_start_of_new_line = true;
@@ -483,11 +484,15 @@ bool term(int *num_of_args, char *func_name){
                 error_code = 4;
             return false;
         } else if(strcmp(func_name, "chr") == 0  ){
-//            if(token.data.value_int < 0 || token.data.value_int > 255){     // Check if number is in correct interval
-//                if(error_code == 0)
-//                    error_code = 4;
-//                return false;
-//            }
+            if(token.data.value_int < 0 || token.data.value_int > 255){     // Check if number is in correct interval
+                if(error_code == 0)
+                    error_code = 4;
+                return false;
+            }
+        }else if((strcmp(func_name, "ord") == 0 || strcmp(func_name, "ord") == 0) && *num_of_args == 1){
+            if(error_code == 0)
+                error_code = 4;
+            return false;
         }
 
         char str[12];       // 12 because 32bit int cant have higher value
@@ -507,11 +512,15 @@ bool term(int *num_of_args, char *func_name){
                 error_code = 4;
             return false;
         } else if(strcmp(func_name, "chr") == 0  ){
-//            if(trunc(token.data.value_double) < 0 || trunc(token.data.value_double) > 255){     // Check if number is in correct interval
-//                if(error_code == 0)
-//                    error_code = 4;
-//                return false;
-//            }
+            if(trunc(token.data.value_double) < 0 || trunc(token.data.value_double) > 255){     // Check if number is in correct interval
+                if(error_code == 0)
+                    error_code = 4;
+                return false;
+            }
+        }else if((strcmp(func_name, "ord") == 0 || strcmp(func_name, "substr") == 0) && *num_of_args == 1){
+            if(error_code == 0)
+                error_code = 4;
+            return false;
         }
 
         // Generate code
@@ -526,9 +535,13 @@ bool term(int *num_of_args, char *func_name){
     } else if(token.type == STRING){        // 21. Term -> string
 
         if(strcmp(func_name, "chr") == 0){
-//            if(error_code == 0)
-//                error_code = 4;
-//            return false;
+            if(error_code == 0)
+                error_code = 4;
+            return false;
+        }else if((strcmp(func_name, "ord") == 0 || strcmp(func_name, "substr") == 0) && (*num_of_args == 2 || *num_of_args == 3)){
+            if(error_code == 0)
+                error_code = 4;
+            return false;
         }
 
         // Generate code
@@ -540,14 +553,10 @@ bool term(int *num_of_args, char *func_name){
         return true;
     } else if(token.type == NIL){           // 22. Term -> nil
 
-        if(strcmp(func_name, "length") == 0){    // function lenght() cant have nil as argument
+        if(strcmp(func_name, "length") == 0 || strcmp(func_name, "chr") == 0 || strcmp(func_name, "ord") == 0 || strcmp(func_name, "substr") == 0){
             if(error_code == 0)
                 error_code = 4;
             return false;
-        } else if(strcmp(func_name, "chr") == 0){
-//            if(error_code == 0)
-//                error_code = 4;
-//            return false;
         }
 
         // Generate code
