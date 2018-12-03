@@ -19,12 +19,14 @@
 // Set to '1', if you want to print debug stuff
 #define DEBUG_PARSER 0
 #define DEBUG_SEMATNICS 0
+#define DEBUG_FREE 0
 
 int error_code = 0;
 
 tToken token;
-tToken previousToken;       // always behind actual token
-tToken aheadToken;          // When I need to do lookahead what is after actual token, this is it
+tToken aheadToken;          // When I need to do lookahead what is after actual token, this is it, use for expression detect
+tToken previousToken;       // always behind actual token, use for expression detect
+//tToken previousPreviousToken;       // always behind previousToken, this
 bool tokenLookAheadFlag = false;
 bool im_in_while_loop = false;
 
@@ -43,12 +45,21 @@ int original_token_type_backup;
  *  so then do not read next token but return aheadToken*/
 tToken enhanced_next_token(){
 
+    if(previousToken.type == IDENTIFICATOR){
+//        free(previousToken.data.string);
+    }
+
     previousToken = token;
     if(tokenLookAheadFlag){
         tokenLookAheadFlag = false;
         return aheadToken;
     } else{
         tToken next_token = nextToken();
+
+        if(next_token.type == IDENTIFICATOR){
+//            if(DEBUG_FREE) fprintf(stderr, "Malloc: %p, %s, %c\n", next_token.data.string, next_token.data.string, next_token.data.string[0]);
+        }
+
 //         Throw away multiplte eols
         if(previousToken.type == EOL_CASE && next_token.type == EOL_CASE){
             next_token = enhanced_next_token();
@@ -248,6 +259,11 @@ bool more_param(char *func_name){
             }
             if(DEBUG_SEMATNICS) printf("SEMANTICS: adding param: %s from func: %s, to its local symtable as variable\n", var_name, func_name);
 
+            if(DEBUG_FREE) fprintf(stderr, "More param: Free: %p, %s, %c\n", var_name, var_name, var_name[0]);
+            // Free string stored in token.data.string, dont need this anymore
+            free(var_name);
+            var_name = NULL;
+
             pop();
             return more_param(func_name);
         }
@@ -293,6 +309,11 @@ bool param(char *func_name){
             return false;
         }
         if(DEBUG_SEMATNICS) printf("SEMANTICS: adding param: %s from func: %s, to its local symtable as variable\n", var_name, func_name);
+
+        if(DEBUG_FREE) fprintf(stderr, "Param: Free: %p, %s, %c\n", var_name, var_name, var_name[0]);
+        // Free string stored in token.data.string, dont need this anymore
+        free(var_name);
+        var_name = NULL;
 
         pop();
         return more_param(func_name);
@@ -365,13 +386,20 @@ bool def_func(){
             pop();
             if (token.type == LPAR) {
                 pop();
-                if (!param(func_name))
+                bool result = param(func_name);
+
+                if(DEBUG_FREE) fprintf(stderr, "Def func: Free: %p, %s, %c\n", func_name,  func_name, func_name[0]);
+//                // Free string stored in token.data.string, dont need this anymore
+                free(func_name);
+                func_name = NULL;
+
+                if(!result)
                     return false;
                 if (token.type == RPAR) {
                     pop();
                     if (token.type == EOL_CASE) {
                         pop();
-                        if (!st_list())
+                        if(!st_list())
                             return false;
                         if (token.type == END) {
 
@@ -382,13 +410,14 @@ bool def_func(){
                             active_code_list->end->is_start_of_new_line = true;
 
                             // Swithing context go global, as we go out of function
-                            free_symtable(&actual_symtable);
+                            free_local_symtable(&actual_symtable);
                             actual_symtable = global_symtable;
                             active_code_list = main_code_list;
                             if(DEBUG_SEMATNICS) printf("SEMANTICS: switching context to global\n");
                             pop();
                             if (token.type == EOL_CASE) {
                                 pop();
+
                                 if(DEBUG_PARSER) printf("PARSER: %s returning: %d\n", non_term, 1);
                                 return true;
                             }
@@ -473,6 +502,11 @@ bool term(int *num_of_args, char *func_name){
 
         add_string_after_specific_string(active_code_list->end, "LF@");
         append_text_to_specific_string(active_code_list->end, var_name);
+
+        if(DEBUG_FREE) fprintf(stderr, "Term: Free: %p, %s, %c\n", var_name, var_name, var_name[0]);
+//        // Free string stored in token.data.string, dont need this anymore
+        free(var_name);
+        var_name = NULL;
 
         pop();
         if(DEBUG_PARSER) printf("PARSER: %s returning: %d\n", non_term, 1);
@@ -706,6 +740,11 @@ bool call_func(char *var_name, char **func_name_to_parent){
             add_string_after_specific_string(active_code_list->end, func_name);
         }
 
+        if(DEBUG_FREE) fprintf(stderr, "Call func: Free: %p, %s, %c\n", func_name, func_name, func_name[0]);
+        // Free string stored in token.data.string, dont need this anymore
+        free(func_name);
+        func_name = NULL;
+
         return sub_analysis_result;
     }
 
@@ -796,6 +835,11 @@ bool after_id() {
             add_string_after_specific_string(active_code_list->end, func_name);
         }
 
+        if(DEBUG_FREE) fprintf(stderr, "After id: Free: %p, %s, %c\n", func_name, func_name, func_name[0]);
+        // Free string stored in token.data.string, dont need this anymore
+        free(func_name);
+        func_name = NULL;
+
         return sub_analysis_result;
     }else if(token.type == ASSIGN){        // 6. After_id -> = Func_or_expr
 
@@ -880,6 +924,12 @@ bool after_id() {
             add_string_after_specific_string(active_code_list->end, "LF@");
             append_text_to_specific_string(active_code_list->end, var_name);
         }
+
+        if(DEBUG_FREE) fprintf(stderr, "After id: free: %p, %s, %c\n", var_name, var_name, var_name[0]);
+        // Free string stored in token.data.string, dont need this anymore
+        free(var_name);
+        var_name = NULL;
+
 
         return result;
     }
@@ -1308,6 +1358,8 @@ void test_string_convert(){
 
 int main(){
 
+//    count = 0;
+
     init_parser();
 
     pop();      // get first token
@@ -1327,9 +1379,13 @@ int main(){
     active_code_list = main_code_list;
     print_code();
 
+//    fprintf(stderr, "Global symtable: %p\n", global_symtable->Lptr);
+
     // Free stuff
-    free_symtable(&global_symtable);
+    free_global_symtable(&global_symtable);
     free_code_lists();
+
+    fprintf(stderr, "\nCount: %d\n", count);
 
     // Error handling
     switch(error_code){
