@@ -40,7 +40,8 @@ typedef enum prec_table_symbols{
     P_STRING,// string
     P_DOLLAR,// $
     P_STOP,
-    P_NON_TERM// non terminal
+    P_NON_TERM,// non terminal
+    P_IDIV
 
 }Prec_table_symbols_enum;
 
