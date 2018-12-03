@@ -53,8 +53,12 @@ bool Binsert(Bnode *rootPtr, char *id, bool func_bool){
 
     if(!*rootPtr){
         Bnode new = malloc(sizeof(struct Node));
+//        fprintf(stderr, "Malloc Bnode: %p\n", new);
         if(new) {
-            new->key = id;
+            // Copy so it is independant from token.data
+            new->key = malloc(sizeof(char)*(strlen(id)+1));
+            strcpy(new->key, id);
+//            fprintf(stderr, "Malloc Bonode->key: %p, %s\n", new->key, id);
             new->data.function = func_bool;
             new->Lptr = NULL;
             new->Rptr = NULL;
@@ -238,6 +242,20 @@ bool add_variable_to_func_params(Bnode *global_symtable, char *func_name, char *
     return false;
 }
 
+void free_params(Bnode *global_symtable){
+
+    if(*global_symtable){
+        free_params(&(*global_symtable)->Rptr);
+        free_params(&(*global_symtable)->Lptr);
+        if((*global_symtable)->data.function == true){
+            if((*(*global_symtable)->data.list).First != NULL){         // just functions that have parameters
+//                fprintf(stderr, "Free: Param in Bnode: %p\n", (*(*global_symtable)->data.list).First);
+                list_disposal((*global_symtable)->data.list);
+            }
+        }
+    }
+}
+
 bool add_variables_from_func_params(Bnode *global_symtable, Bnode *actual_symtable, char *func_name){
     Bnode pom = Bsearch(*global_symtable,func_name);
     if (pom){
@@ -253,6 +271,10 @@ bool add_variables_from_func_params(Bnode *global_symtable, Bnode *actual_symtab
 }
 
 char *get_name_of_defined_param_at_position(Bnode *global_symtable, char *func_name, int n){
+
+    if(n >= get_num_of_defined_func_params(global_symtable, func_name))
+        return NULL;
+
     Bnode pom = Bsearch(*global_symtable,func_name);
     if (pom){
         return get_nth_element(pom->data.list,n)->id;
@@ -260,15 +282,24 @@ char *get_name_of_defined_param_at_position(Bnode *global_symtable, char *func_n
     return NULL;
 }
 
-//----
-//TODO not working
 void free_symtable(Bnode *symtable){
+
     if(*symtable){
         free_symtable(&(*symtable)->Rptr);
         free_symtable(&(*symtable)->Lptr);
+//        fprintf(stderr, "Free: Bonode: %p\n", *symtable);
         free(*symtable);
-        local_symtable_init(&(*symtable));
+        (*symtable) = NULL;
     }
+}
+
+void free_local_symtable(Bnode *symtable){
+    free_symtable(symtable);
+}
+
+void free_global_symtable(Bnode *symtable){
+    free_params(symtable);
+    free_symtable(symtable);
 }
 
 //int main(){

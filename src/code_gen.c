@@ -40,7 +40,7 @@ void print_code(){
         if(temp->is_start_of_new_line)
             printf("\n");
         if(strcmp(temp->text, "LABEL") == 0){
-            printf("\n");                       // This will nicely separate LABELS
+//            printf("\n");                       // This will nicely separate LABELS
             if(temp->next != NULL){
                 if(temp->next->text != NULL){
                     if(temp->next->text[0] != '$')
@@ -517,278 +517,198 @@ char* convert_string_to_correct_IFJcode18_format(char *input)
     return output;
 }
 
-//TODO: type checks
-
 void generate_inputs_func(){
-    add_string_after_specific_string(active_code_list->end, "LABEL");
-    active_code_list->end->is_start_of_new_line = true;
-    add_string_after_specific_string(active_code_list->end, "inputs");
-    add_string_after_specific_string(active_code_list->end, "PUSHFRAME");
-    active_code_list->end->is_start_of_new_line = true;
-
-    add_string_after_specific_string(active_code_list->end, "DEFVAR");
-    active_code_list->end->is_start_of_new_line = true;
-    add_string_after_specific_string(active_code_list->end, "LF@%retval");
-    add_string_after_specific_string(active_code_list->end, "MOVE");
-    active_code_list->end->is_start_of_new_line = true;
-    add_string_after_specific_string(active_code_list->end, "LF@%retval");
-    add_string_after_specific_string(active_code_list->end, "nil@nil");
-
-    add_string_after_specific_string(active_code_list->end, "READ");
-    active_code_list->end->is_start_of_new_line = true;
-    add_string_after_specific_string(active_code_list->end, "LF@%retval");
-    add_string_after_specific_string(active_code_list->end, "string");
-
-    add_string_after_specific_string(active_code_list->end, "POPFRAME");
-    active_code_list->end->is_start_of_new_line = true;
-    add_string_after_specific_string(active_code_list->end, "RETURN");
+    add_string_after_specific_string(active_code_list->end, "LABEL inputs \n"
+                                                            "PUSHFRAME \n"
+                                                            "DEFVAR LF@%retval \n"
+                                                            "MOVE LF@%retval nil@nil \n"
+                                                            "READ LF@%retval string \n"
+                                                            "POPFRAME \n"
+                                                            "RETURN \n");
     active_code_list->end->is_start_of_new_line = true;
 }
 
 void generate_inputi_func(){
-    add_string_after_specific_string(active_code_list->end, "LABEL");
-    active_code_list->end->is_start_of_new_line = true;
-    add_string_after_specific_string(active_code_list->end, "inputi");
-    add_string_after_specific_string(active_code_list->end, "PUSHFRAME");
-    active_code_list->end->is_start_of_new_line = true;
-
-    add_string_after_specific_string(active_code_list->end, "DEFVAR");
-    active_code_list->end->is_start_of_new_line = true;
-    add_string_after_specific_string(active_code_list->end, "LF@%retval");
-    add_string_after_specific_string(active_code_list->end, "MOVE");
-    active_code_list->end->is_start_of_new_line = true;
-    add_string_after_specific_string(active_code_list->end, "LF@%retval");
-    add_string_after_specific_string(active_code_list->end, "nil@nil");
-
-    add_string_after_specific_string(active_code_list->end, "READ");
-    active_code_list->end->is_start_of_new_line = true;
-    add_string_after_specific_string(active_code_list->end, "LF@%retval");
-    add_string_after_specific_string(active_code_list->end, "int");
-
-    add_string_after_specific_string(active_code_list->end, "POPFRAME");
-    active_code_list->end->is_start_of_new_line = true;
-    add_string_after_specific_string(active_code_list->end, "RETURN");
+    add_string_after_specific_string(active_code_list->end, "LABEL inputi \n"
+                                                            "PUSHFRAME \n"
+                                                            "DEFVAR LF@%retval \n"
+                                                            "MOVE LF@%retval nil@nil \n"
+                                                            "READ LF@%retval int \n"
+                                                            "POPFRAME \n"
+                                                            "RETURN \n");
     active_code_list->end->is_start_of_new_line = true;
 }
 
 void generate_inputf_func(){
-    add_string_after_specific_string(active_code_list->end, "LABEL");
-    active_code_list->end->is_start_of_new_line = true;
-    add_string_after_specific_string(active_code_list->end, "inputf");
-    add_string_after_specific_string(active_code_list->end, "PUSHFRAME");
-    active_code_list->end->is_start_of_new_line = true;
-
-    add_string_after_specific_string(active_code_list->end, "DEFVAR");
-    active_code_list->end->is_start_of_new_line = true;
-    add_string_after_specific_string(active_code_list->end, "LF@%retval");
-    add_string_after_specific_string(active_code_list->end, "MOVE");
-    active_code_list->end->is_start_of_new_line = true;
-    add_string_after_specific_string(active_code_list->end, "LF@%retval");
-    add_string_after_specific_string(active_code_list->end, "nil@nil");
-
-    add_string_after_specific_string(active_code_list->end, "READ");
-    active_code_list->end->is_start_of_new_line = true;
-    add_string_after_specific_string(active_code_list->end, "LF@%retval");
-    add_string_after_specific_string(active_code_list->end, "float");
-
-    add_string_after_specific_string(active_code_list->end, "POPFRAME");
-    active_code_list->end->is_start_of_new_line = true;
-    add_string_after_specific_string(active_code_list->end, "RETURN");
+    add_string_after_specific_string(active_code_list->end, "LABEL inputf \n"
+                                                            "PUSHFRAME \n"
+                                                            "DEFVAR LF@%retval \n"
+                                                            "MOVE LF@%retval nil@nil \n"
+                                                            "READ LF@%retval float \n"
+                                                            "POPFRAME \n"
+                                                            "RETURN \n");
     active_code_list->end->is_start_of_new_line = true;
 }
 
-//id = length(s)
-//STRLEN LF@id LF@s
-//# LF@s must be string
 void generate_length_func(){
-    add_string_after_specific_string(active_code_list->end, "LABEL");
-    active_code_list->end->is_start_of_new_line = true;
-    add_string_after_specific_string(active_code_list->end, "length");
-    add_string_after_specific_string(active_code_list->end, "PUSHFRAME");
-    active_code_list->end->is_start_of_new_line = true;
 
-    add_string_after_specific_string(active_code_list->end, "DEFVAR");
-    active_code_list->end->is_start_of_new_line = true;
-    add_string_after_specific_string(active_code_list->end, "LF@%retval");
-    add_string_after_specific_string(active_code_list->end, "MOVE");
-    active_code_list->end->is_start_of_new_line = true;
-    add_string_after_specific_string(active_code_list->end, "LF@%retval");
-    add_string_after_specific_string(active_code_list->end, "nil@nil");
-
-    add_string_after_specific_string(active_code_list->end, "STRLEN");
-    active_code_list->end->is_start_of_new_line = true;
-    add_string_after_specific_string(active_code_list->end, "LF@%retval");
-    add_string_after_specific_string(active_code_list->end, "LF@s");
-
-    add_string_after_specific_string(active_code_list->end, "POPFRAME");
-    active_code_list->end->is_start_of_new_line = true;
-    add_string_after_specific_string(active_code_list->end, "RETURN");
+    add_string_after_specific_string(active_code_list->end, "LABEL length \n"
+                                                            "PUSHFRAME \n"
+                                                            "DEFVAR LF@%retval \n"
+                                                            "MOVE LF@%retval nil@nil \n"
+                                                            "DEFVAR LF@id_type \n"
+                                                            "TYPE LF@id_type LF@s \n"
+                                                            "JUMPIFNEQ $$length_continue0 LF@id_type string@nil\n"
+                                                            "EXIT int@4\n"
+                                                            "LABEL $$length_continue0    # must be string\n"
+                                                            "JUMPIFEQ $$length_ok LF@id_type string@string \n"
+                                                            "EXIT int@4 \n"
+                                                            "LABEL $$length_ok \n"
+                                                            "STRLEN LF@%retval LF@s \n"
+                                                            "POPFRAME \n"
+                                                            "RETURN \n");
     active_code_list->end->is_start_of_new_line = true;
 }
 
-//out = substr(s, i, n)
-//# s must be string
-//# i,n int
 void generate_substr_func(){
-    add_string_after_specific_string(active_code_list->end, "LABEL");
-    active_code_list->end->is_start_of_new_line = true;
-    add_string_after_specific_string(active_code_list->end, "substr");
-    add_string_after_specific_string(active_code_list->end, "PUSHFRAME");
-    active_code_list->end->is_start_of_new_line = true;
-
-    add_string_after_specific_string(active_code_list->end, "DEFVAR");
-    active_code_list->end->is_start_of_new_line = true;
-    add_string_after_specific_string(active_code_list->end, "LF@%retval");
-    add_string_after_specific_string(active_code_list->end, "MOVE");
-    active_code_list->end->is_start_of_new_line = true;
-    add_string_after_specific_string(active_code_list->end, "LF@%retval");
-    add_string_after_specific_string(active_code_list->end, "string@");
-
-    add_string_after_specific_string(active_code_list->end, "DEFVAR");
-    active_code_list->end->is_start_of_new_line = true;
-    add_string_after_specific_string(active_code_list->end, "LF@new_char");
-
-    add_string_after_specific_string(active_code_list->end, "LABEL");
-    active_code_list->end->is_start_of_new_line = true;
-    add_string_after_specific_string(active_code_list->end, "$$substr_while");
-
-    add_string_after_specific_string(active_code_list->end, "GETCHAR");
-    active_code_list->end->is_start_of_new_line = true;
-    add_string_after_specific_string(active_code_list->end, "LF@new_char");
-    add_string_after_specific_string(active_code_list->end, "LF@s");
-    add_string_after_specific_string(active_code_list->end, "LF@i");
-
-    add_string_after_specific_string(active_code_list->end, "CONCAT");
-    active_code_list->end->is_start_of_new_line = true;
-    add_string_after_specific_string(active_code_list->end, "LF@%retval");
-    add_string_after_specific_string(active_code_list->end, "LF@%retval");
-    add_string_after_specific_string(active_code_list->end, "LF@new_char");
-
-    add_string_after_specific_string(active_code_list->end, "JUMPIFEQ");
-    active_code_list->end->is_start_of_new_line = true;
-    add_string_after_specific_string(active_code_list->end, "$$substr_end");
-    add_string_after_specific_string(active_code_list->end, "LF@i");
-    add_string_after_specific_string(active_code_list->end, "LF@n");
-
-    add_string_after_specific_string(active_code_list->end, "ADD");
-    active_code_list->end->is_start_of_new_line = true;
-    add_string_after_specific_string(active_code_list->end, "LF@i");
-    add_string_after_specific_string(active_code_list->end, "LF@i");
-    add_string_after_specific_string(active_code_list->end, "int@1");
-
-    add_string_after_specific_string(active_code_list->end, "JUMP");
-    active_code_list->end->is_start_of_new_line = true;
-    add_string_after_specific_string(active_code_list->end, "$$substr_while");
-
-    add_string_after_specific_string(active_code_list->end, "LABEL");
-    active_code_list->end->is_start_of_new_line = true;
-    add_string_after_specific_string(active_code_list->end, "$$substr_end");
-
-    add_string_after_specific_string(active_code_list->end, "POPFRAME");
-    active_code_list->end->is_start_of_new_line = true;
-    add_string_after_specific_string(active_code_list->end, "RETURN");
+    add_string_after_specific_string(active_code_list->end, "LABEL substr \n"
+                                                            "PUSHFRAME \n"
+                                                            "DEFVAR LF@%retval \n"
+                                                            "MOVE LF@%retval string@ \n"
+                                                            "DEFVAR LF@new_char \n"
+                                                            "DEFVAR LF@id_type \n"
+                                                            "TYPE LF@id_type LF@s     \n"
+                                                            "JUMPIFNEQ $$substr_continue0 LF@id_type string@nil\n"
+                                                            "EXIT int@4\n"
+                                                            "LABEL $$substr_continue0    # must be string\n"
+                                                            "JUMPIFEQ $$substr_continue LF@id_type string@string\n"
+                                                            "EXIT int@4\n"
+                                                            "LABEL $$substr_continue\n"
+                                                            "TYPE LF@id_type LF@i     \n"
+                                                            "JUMPIFNEQ $$substr_continue1 LF@id_type string@nil\n"
+                                                            "EXIT int@4\n"
+                                                            "LABEL $$substr_continue1    # i cannot be string\n"
+                                                            "JUMPIFNEQ $$substr_continue2 LF@id_type string@string\n"
+                                                            "EXIT int@4\n"
+                                                            "LABEL $$substr_continue2\n"
+                                                            "TYPE LF@id_type LF@n     \n"
+                                                            "JUMPIFNEQ $$substr_continue3 LF@id_type string@nil\n"
+                                                            "EXIT int@4\n"
+                                                            "LABEL $$substr_continue3    # n cannot be string\n"
+                                                            "JUMPIFNEQ $$substr_continue4 LF@id_type string@string\n"
+                                                            "EXIT int@4\n"
+                                                            "LABEL $$substr_continue4\n"
+                                                            "TYPE LF@id_type LF@i\n"
+                                                            "JUMPIFNEQ $$substr_type_ok1 LF@id_type string@float \n"
+                                                            "FLOAT2INT LF@i LF@i  # now have int of i\n"
+                                                            "LABEL $$substr_type_ok1\n"
+                                                            "TYPE LF@id_type LF@n\n"
+                                                            "JUMPIFNEQ $$substr_type_ok2 LF@id_type string@float \n"
+                                                            "FLOAT2INT LF@n LF@n  # now have int of n\n"
+                                                            "LABEL $$substr_type_ok2\n"
+                                                            "DEFVAR LF@$$substr_bounds\n"
+                                                            "LT LF@$$substr_bounds LF@i int@0     # i check lower bound\n"
+                                                            "JUMPIFEQ $$substr_end LF@$$substr_bounds bool@true\n"
+                                                            "LT LF@$$substr_bounds LF@n int@0     # n check lower bound\n"
+                                                            "JUMPIFEQ $$substr_end LF@$$substr_bounds bool@true\n"
+                                                            "CREATEFRAME \n"
+                                                            "DEFVAR TF@s \n"
+                                                            "MOVE TF@s LF@s \n"
+                                                            "CALL length \n"
+                                                            "LT LF@$$substr_bounds LF@i TF@%retval    # i check higher bound\n"
+                                                            "JUMPIFEQ $$substr_end LF@$$substr_bounds bool@false\n"
+                                                            "LT LF@$$substr_bounds LF@n TF@%retval    # check if n > lenght(s) - 1, if yes set it to lenght(s) - 1\n"
+                                                            "JUMPIFEQ $$substr_while LF@$$substr_bounds bool@true\n"
+                                                            "SUB TF@%retval TF@%retval int@1\n"
+                                                            "MOVE LF@n TF@%retval\n"
+                                                            "LABEL $$substr_while \n"
+                                                            "GETCHAR LF@new_char LF@s LF@i \n"
+                                                            "CONCAT LF@%retval LF@%retval LF@new_char \n"
+                                                            "JUMPIFEQ $$substr_end LF@i LF@n \n"
+                                                            "ADD LF@i LF@i int@1 \n"
+                                                            "JUMP $$substr_while \n"
+                                                            "LABEL $$substr_end \n"
+                                                            "POPFRAME \n"
+                                                            "RETURN  ");
     active_code_list->end->is_start_of_new_line = true;
 }
 
-// id = ord(s, i)
-// STRI2INT LF@id LF@s LF@i
 void generate_ord_func(){
 
-    add_string_after_specific_string(active_code_list->end, "LABEL");
-    active_code_list->end->is_start_of_new_line = true;
-    add_string_after_specific_string(active_code_list->end, "ord");
-    add_string_after_specific_string(active_code_list->end, "PUSHFRAME");
-    active_code_list->end->is_start_of_new_line = true;
-
-    add_string_after_specific_string(active_code_list->end, "DEFVAR");
-    active_code_list->end->is_start_of_new_line = true;
-    add_string_after_specific_string(active_code_list->end, "LF@%retval");
-    add_string_after_specific_string(active_code_list->end, "MOVE");
-    active_code_list->end->is_start_of_new_line = true;
-    add_string_after_specific_string(active_code_list->end, "LF@%retval");
-    add_string_after_specific_string(active_code_list->end, "nil@nil");
-
-    // Checks if i < 0
-    add_string_after_specific_string(active_code_list->end, "PUSHS LF@i");
-    active_code_list->end->is_start_of_new_line = true;
-    add_string_after_specific_string(active_code_list->end, "PUSHS int@0");
-    active_code_list->end->is_start_of_new_line = true;
-    add_string_after_specific_string(active_code_list->end, "LTS");
-    active_code_list->end->is_start_of_new_line = true;
-    add_string_after_specific_string(active_code_list->end, "PUSHS bool@true");
-    active_code_list->end->is_start_of_new_line = true;
-    add_string_after_specific_string(active_code_list->end, "JUMPIFEQS end");
-    active_code_list->end->is_start_of_new_line = true;
-
-    // Checks if i > length(s)-1
-    add_string_after_specific_string(active_code_list->end, "CREATEFRAME");
-    active_code_list->end->is_start_of_new_line = true;
-    add_string_after_specific_string(active_code_list->end, "DEFVAR TF@s");
-    active_code_list->end->is_start_of_new_line = true;
-    add_string_after_specific_string(active_code_list->end, "MOVE TF@s LF@s");
-    active_code_list->end->is_start_of_new_line = true;
-    add_string_after_specific_string(active_code_list->end, "CALL length");
-    active_code_list->end->is_start_of_new_line = true;
-    add_string_after_specific_string(active_code_list->end, "PUSHS LF@i");
-    active_code_list->end->is_start_of_new_line = true;
-    add_string_after_specific_string(active_code_list->end, "PUSHS TF@%retval");
-    active_code_list->end->is_start_of_new_line = true;
-    add_string_after_specific_string(active_code_list->end, "LTS");
-    active_code_list->end->is_start_of_new_line = true;
-    add_string_after_specific_string(active_code_list->end, "PUSHS bool@false");
-    active_code_list->end->is_start_of_new_line = true;
-    add_string_after_specific_string(active_code_list->end, "JUMPIFEQS end");
-    active_code_list->end->is_start_of_new_line = true;
-
-
-    add_string_after_specific_string(active_code_list->end, "STRI2INT");
-    active_code_list->end->is_start_of_new_line = true;
-    add_string_after_specific_string(active_code_list->end, "LF@%retval");
-    add_string_after_specific_string(active_code_list->end, "LF@s");
-    add_string_after_specific_string(active_code_list->end, "LF@i");
-
-    add_string_after_specific_string(active_code_list->end, "LABEL end");
-    active_code_list->end->is_start_of_new_line = true;
-
-    add_string_after_specific_string(active_code_list->end, "POPFRAME");
-    active_code_list->end->is_start_of_new_line = true;
-    add_string_after_specific_string(active_code_list->end, "RETURN");
+    add_string_after_specific_string(active_code_list->end, "LABEL ord \n"
+                                                            "PUSHFRAME \n"
+                                                            "DEFVAR LF@%retval \n"
+                                                            "MOVE LF@%retval nil@nil \n"
+                                                            "DEFVAR LF@id_type \n"
+                                                            "TYPE LF@id_type LF@s     \n"
+                                                            "JUMPIFNEQ $$ord_continue0 LF@id_type string@nil\n"
+                                                            "EXIT int@4\n"
+                                                            "LABEL $$ord_continue0    # must be string\n"
+                                                            "JUMPIFEQ $$ord_continue LF@id_type string@string\n"
+                                                            "EXIT int@4\n"
+                                                            "LABEL $$ord_continue\n"
+                                                            "TYPE LF@id_type LF@i     \n"
+                                                            "JUMPIFNEQ $$ord_continue1 LF@id_type string@nil\n"
+                                                            "EXIT int@4\n"
+                                                            "LABEL $$ord_continue1   # cannot be string\n"
+                                                            "JUMPIFNEQ $$ord_continue2 LF@id_type string@string\n"
+                                                            "EXIT int@4\n"
+                                                            "LABEL $$ord_continue2\n"
+                                                            "JUMPIFNEQ $$ord_type_ok LF@id_type string@float \n"
+                                                            "FLOAT2INT LF@i LF@i  # now have int\n"
+                                                            "LABEL $$ord_type_ok\n"
+                                                            "DEFVAR LF@$$ord_bounds\n"
+                                                            "LT LF@$$ord_bounds LF@i int@0     # check lower bound\n"
+                                                            "JUMPIFEQ $$ord_end LF@$$ord_bounds bool@true\n"
+                                                            "CREATEFRAME \n"
+                                                            "DEFVAR TF@s \n"
+                                                            "MOVE TF@s LF@s \n"
+                                                            "CALL length \n"
+                                                            "LT LF@$$ord_bounds LF@i TF@%retval    # check higher bound\n"
+                                                            "JUMPIFEQ $$ord_end LF@$$ord_bounds bool@false\n"
+                                                            "STRI2INT LF@%retval LF@s LF@i \n"
+                                                            "LABEL $$ord_end  \n"
+                                                            "POPFRAME \n"
+                                                            "RETURN \n");
     active_code_list->end->is_start_of_new_line = true;
 }
 
-//id = chr(i)
-//INT2CHAR LF@id LF@i
-//# i is int <0, 255> if not error 58
-//#
 void generate_chr_func(){
-    add_string_after_specific_string(active_code_list->end, "LABEL");
-    active_code_list->end->is_start_of_new_line = true;
-    add_string_after_specific_string(active_code_list->end, "chr");
-    add_string_after_specific_string(active_code_list->end, "PUSHFRAME");
-    active_code_list->end->is_start_of_new_line = true;
-
-    add_string_after_specific_string(active_code_list->end, "DEFVAR");
-    active_code_list->end->is_start_of_new_line = true;
-    add_string_after_specific_string(active_code_list->end, "LF@%retval");
-    add_string_after_specific_string(active_code_list->end, "MOVE");
-    active_code_list->end->is_start_of_new_line = true;
-    add_string_after_specific_string(active_code_list->end, "LF@%retval");
-    add_string_after_specific_string(active_code_list->end, "nil@nil");
-
-    add_string_after_specific_string(active_code_list->end, "INT2CHAR");
-    active_code_list->end->is_start_of_new_line = true;
-    add_string_after_specific_string(active_code_list->end, "LF@%retval");
-    add_string_after_specific_string(active_code_list->end, "LF@i");
-
-    add_string_after_specific_string(active_code_list->end, "POPFRAME");
-    active_code_list->end->is_start_of_new_line = true;
-    add_string_after_specific_string(active_code_list->end, "RETURN");
+    add_string_after_specific_string(active_code_list->end, "LABEL chr\n"
+                                                            "PUSHFRAME \n"
+                                                            "DEFVAR LF@%retval \n"
+                                                            "MOVE LF@%retval nil@nil \n"
+                                                            "DEFVAR LF@id_type \n"
+                                                            "TYPE LF@id_type LF@i\n"
+                                                            "JUMPIFNEQ $$chr_continue0 LF@id_type string@nil\n"
+                                                            "EXIT int@4\n"
+                                                            "LABEL $$chr_continue0\n"
+                                                            "JUMPIFNEQ $$chr_continue LF@id_type string@string\n"
+                                                            "EXIT int@4\n"
+                                                            "LABEL $$chr_continue\n"
+                                                            "JUMPIFNEQ $$chr_type_ok LF@id_type string@float \n"
+                                                            "PUSHS LF@i\n"
+                                                            "FLOAT2INTS\n"
+                                                            "POPS LF@i   # now have int\n"
+                                                            "LABEL $$chr_type_ok\n"
+                                                            "DEFVAR LF@$$char_bounds\n"
+                                                            "LT LF@$$char_bounds LF@i int@0\n"
+                                                            "JUMPIFNEQ $$char_bound_ok_1 LF@$$char_bounds bool@true\n"
+                                                            "EXIT int@4\n"
+                                                            "LABEL $$char_bound_ok_1\n"
+                                                            "GT LF@$$char_bounds LF@i int@255\n"
+                                                            "JUMPIFNEQ $$char_bound_ok_2 LF@$$char_bounds bool@true\n"
+                                                            "EXIT int@4\n"
+                                                            "LABEL $$char_bound_ok_2\n"
+                                                            "INT2CHAR LF@%retval LF@i \n"
+                                                            "POPFRAME \n"
+                                                            "RETURN \n");
     active_code_list->end->is_start_of_new_line = true;
 }
 
 void generate_system_functions(){
 
-    add_string_after_specific_string(active_code_list->end, "# Start declaring system function");
+    add_string_after_specific_string(active_code_list->end, "\n# Start declaring system function");
     active_code_list->end->is_start_of_new_line = true;
 
     generate_inputf_func();

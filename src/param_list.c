@@ -12,6 +12,7 @@
 
 #include <stddef.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include "param_list.h"
 #include "errors.h"
 #include "string.h"
@@ -27,7 +28,9 @@ int insert_element(List *list, char *id, Data_type type){
     if(!new) return INNER_ERROR;
     new->type = type;
     new->next = NULL;
-    new->id = id;
+    new->id = malloc(sizeof(char) * (strlen(id)+1));
+    strcpy(new->id, id);
+//    fprintf(stderr, "Malloc: Param: %p, %s\n", new, new->id);
 
     if(list->First == NULL){
         list->First = new;
@@ -64,6 +67,8 @@ void list_disposal(List *list){
     while (list->First!=NULL){
         L_element *e = list->First;//pomocny element, potrebny na zapamatanie si prvku v zozname
         list->First = list->First->next;
+//        fprintf(stderr, "Free: Param in Bnode: %p, %s\n", e, e->id);
+        free(e->id);
         free(e);
     }
 }
