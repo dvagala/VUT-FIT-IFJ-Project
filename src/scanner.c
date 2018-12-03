@@ -36,7 +36,6 @@ void bufferToken(tokenstringptr ts)
 
 void freeString(tokenstringptr ts)
 {
-    ts->string=NULL;
     free(ts->string);
     free(ts);
 }
@@ -189,6 +188,7 @@ tToken nextToken()
                             case KEYWORDCASES: //Therefore no need for token string, free it and return keyword.
                             {
                                 identificator.type=j;
+                                freeString(TokenString);
                                 return identificator;
                             }
                         }
@@ -203,7 +203,8 @@ tToken nextToken()
                     c=getchar();
                 }
                 identificator.type=IDENTIFICATOR;
-                identificator.data.string=TokenString->string;
+                identificator.data.string=malloc(sizeof(char)*CHUNK*(TokenString->chunk_amount));
+                strcpy(identificator.data.string,TokenString->string);
                 break;
             }
         } //CASE FOR FLOAT AND INT
@@ -270,14 +271,12 @@ tToken nextToken()
             else if (identificator.type == FLOAT)//if we found float, we return value saved as a double
             {
                 identificator.data.value_double=atof(TokenString->string);
-                freeString(TokenString);
                 break;
             }
             else //otherwise we stayed in integer, so return that.
             {
                 identificator.type=INT;
                 identificator.data.value_int=atoi(TokenString->string);
-                freeString(TokenString);
                 break;
             }
         }
@@ -474,7 +473,8 @@ tToken nextToken()
             } //cycle will be repeated until we reach an unescaped " after that string will be saved and token returned.
             c=getchar();
             identificator.type = STRING;
-            identificator.data.string = TokenString->string;
+            identificator.data.string=malloc(sizeof(char)*CHUNK*(TokenString->chunk_amount));
+            strcpy(identificator.data.string,TokenString->string);
             break;
 
         }
@@ -548,7 +548,7 @@ tToken nextToken()
             {
                 c=getchar();
             }
-
+                freeString(TokenString);
                 return nextToken();
         }
         //BEGCOM, MULTILINE OR BLOCK COMMENT, can only start on the very start of a new line. (or start of the code.)
@@ -611,6 +611,7 @@ tToken nextToken()
                             return identificator;
                         }
                     }
+                    freeString(TokenString);
                     return nextToken();
                 }
             }
@@ -641,5 +642,6 @@ tToken nextToken()
         default:break;
     }
     //free the token variable, as we saved it already into struct identificator, and return the token.
+    freeString(TokenString);
     return identificator;
 }
