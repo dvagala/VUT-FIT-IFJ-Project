@@ -385,30 +385,35 @@ tToken nextToken()
                         {
                             TokenString->string[TokenString->index]='\n';
                             (TokenString->index)++;
+                            TokenString->string[TokenString->index]='\0';
                             break;
                         }
                         case 't': //t is tab
                         {
                             TokenString->string[TokenString->index]='\t';
                             (TokenString->index)++;
+                            TokenString->string[TokenString->index]='\0';
                             break;
                         }
                         case 's': //s is space
                         {
                             TokenString->string[TokenString->index]=' ';
                             (TokenString->index)++;
+                            TokenString->string[TokenString->index]='\0';
                             break;
                         }
                         case '\\': // is escaped escape character
                         {
                             TokenString->string[TokenString->index]='\\';
                             (TokenString->index)++;
+                            TokenString->string[TokenString->index]='\0';
                             break;
                         }
                         case '\"': // is escaped "
                         {
                             TokenString->string[TokenString->index]='\"';
                             (TokenString->index)++;
+                            TokenString->string[TokenString->index]='\0';
                             break;
                         }
                         case 'x': //is a hexadecimal value of a character in the ASCII table
@@ -438,6 +443,7 @@ tToken nextToken()
                                 symbol = strtol(hexValue,NULL,16); //converting the value
                                 TokenString->string[TokenString->index]=symbol;
                                 (TokenString->index)++; //then putting in that value as a character in our array (gets converted to char) afterwards
+                                TokenString->string[TokenString->index]='\0';
                                 if (bufferedMore==1)
                                 {
 
