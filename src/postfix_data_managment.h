@@ -17,7 +17,30 @@
 
 #include "param_list.h"
 #include "scanner.h"
-#include "expressions.h"
+
+typedef enum prec_table_symbols{
+    P_PLUS,   // +
+    P_MINUS,  // -
+    P_MUL,    // *
+    P_DIV,    // /
+    P_EQ,     // ==
+    P_NOT_EQ, // !=
+    P_LESS_EQ,// <=
+    P_MORE_EQ,// >=
+    P_LESS,   // <
+    P_MORE,   // >
+    P_LEFT_PAR,// (
+    P_RIGHT_PAR,// )
+    P_ID,     // ID
+    P_INT_NUM,// int
+    P_FLOAT_NUM,// float
+    P_STRING,// string
+    P_DOLLAR,// $
+    P_STOP,
+    P_NON_TERM,// non terminal
+    P_IDIV
+
+}Prec_table_symbols_enum;
 
 typedef struct operator_stack_item{
     Prec_table_symbols_enum operator;
@@ -38,7 +61,7 @@ typedef struct postfix_stack_item{
     Prec_table_symbols_enum operator;
     bool is_operator;
     bool is_variable;
-    bool taken;
+    bool res;
     struct postfix_stack_item *next_item;
 }P_item,*P_item_ptr;
 
@@ -51,6 +74,8 @@ typedef struct {
     P_item_ptr first;
     P_item_ptr last;
 }Output_queue;
+
+
 
 void operator_stack_init(Operator_stack *stack);
 bool operator_stack_push(Operator_stack *stack,Prec_table_symbols_enum operator);
@@ -73,7 +98,7 @@ void queue_dispose(Output_queue *q);
 bool determine_type_and_insert(Output_queue *q, tToken *token);
 void delete_first(Output_queue *q);
 bool first_from_queue_to_stack(Output_queue *q, P_stack *stack);
-void update_taken(P_item *item);
+void update_res(P_item *item);
 P_item* get_first_operand(Output_queue *q);
 P_item* get_second_operand(Output_queue *q);
 void delete_until_operator(Output_queue *q);

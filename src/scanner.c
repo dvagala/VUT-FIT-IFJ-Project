@@ -17,6 +17,7 @@ int c=30000; //global variable c, holding current character. We need to hold thi
 
 // Set to '1', if you want to print debug stuff
 #define DEBUG_SCANNER 0
+#define DEBUG_FREE 0
 
 /*
 This is a function that saves characters scanned from code into a string. This string is dynamically allocated so we always
@@ -36,6 +37,8 @@ void bufferToken(tokenstringptr ts)
 
 void freeString(tokenstringptr ts)
 {
+    if(DEBUG_FREE) fprintf(stderr, "Scanner: Free ts: %p\n", ts);
+    if(DEBUG_FREE) fprintf(stderr, "Scanner: Free ts->string %p, %s\n", ts->string, ts->string);
     free(ts->string);
     free(ts);
 }
@@ -58,6 +61,8 @@ tToken nextToken()
     tokenstringptr TokenString = malloc(sizeof(struct tokenstring));
     TokenString->string=NULL;
     TokenString->string=malloc(sizeof(char)*CHUNK);
+    if(DEBUG_FREE) fprintf(stderr, "Scanner: Malloc ts: %p\n", TokenString);
+    if(DEBUG_FREE) fprintf(stderr, "Scanner: Malloc ts->string: %p\n", TokenString->string);
     TokenString->index=0;
     TokenString->chunk_amount=1;
     tToken identificator;
@@ -204,6 +209,7 @@ tToken nextToken()
                 }
                 identificator.type=IDENTIFICATOR;
                 identificator.data.string=malloc(sizeof(char)*CHUNK*(TokenString->chunk_amount));
+                if(DEBUG_FREE) fprintf(stderr, "Scanner: Malloc id.data.string: %p, %s\n", identificator.data.string, identificator.data.string);
                 strcpy(identificator.data.string,TokenString->string);
                 break;
             }
@@ -474,6 +480,7 @@ tToken nextToken()
             c=getchar();
             identificator.type = STRING;
             identificator.data.string=malloc(sizeof(char)*CHUNK*(TokenString->chunk_amount));
+            if(DEBUG_FREE) fprintf(stderr, "Scanner: Malloc id.data.string: %p, %s\n", identificator.data.string, identificator.data.string);
             strcpy(identificator.data.string,TokenString->string);
             break;
 

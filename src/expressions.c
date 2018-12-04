@@ -323,81 +323,8 @@ bool is_item_operand(P_item *item){
             return false;
     }
 }
-int both_are_undefined(Output_queue q, Prec_table_symbols_enum oeprator, bool first_res){
-
-}
-
-int one_is_undefined_semantics(Output_queue q,Prec_table_symbols_enum operator, bool first_res){
-    P_item *o2;
-    P_item *defined;
-    P_item *non_defined = malloc(sizeof(P_item));
-    P_item *o1;
-    if(first_res){//o1 = LF@%res
-        o1 = get_first_operand(&q);
-        o2 = get_second_operand(&q);
-
-        insert_defvar_res();
-        declare_defvar_restype();
-        if(o1->operator == P_ID) {
-            insert_instruction("MOVE",o1, NULL,NULL);//MOVE Lf@%res o1
-            insert_instruction("TYPE",NULL,NULL,NULL);//TYPE LF@%res$type LF@%res
-            defined = o2;
-
-        }
-        else{
-            insert_instruction("MOVE",o2, NULL,NULL);//MOVE Lf@%res o2
-            insert_instruction("TYPE",NULL,NULL,NULL);//TYPE LF@%res$type LF@%res
-            defined = o1;
-
-        }
-
-
-    } else {
-        insert_defvar_res();
-        insert_instruction("POPS",NULL,NULL,NULL);
-        o2 = get_first_operand(&q);
-        defined = o2;
-        insert_instruction("TYPE",NULL,NULL,NULL);   //TYPE LF@%res$type LF@%res
-
-    }
-
-    if(defined->operator == P_STRING ){
-        if(operator == P_PLUS){
-            insert_instruction("JUMPIFEQ", defined, NULL, NULL);//pokial su rovnakeho typu
-            exit_gen(53);
-            insert_instruction("LABEL", defined, NULL, NULL);
-            insert_instruction("CONCAT", defined, NULL,NULL);
-            return SYNTAX_OK;
-        }
-        else return COMPATIBILITY_ERROR;
-    }
-
-    if(defined->operator == P_INT_NUM || defined->operator == P_FLOAT_NUM) {
-        insert_instruction("JUMPIFEQ", defined, NULL, NULL);    //pokial su rovnakeho typu
-        if (defined->operator == P_INT_NUM) {//pokial je int, musim kontrolovat ci res neni float
-            non_defined->operator = P_FLOAT_NUM;
-        } else non_defined->operator = P_INT_NUM;//pokial je float musim kontrolovat ci res neni int
-
-        insert_instruction("JUMPIFEQ", non_defined, NULL, NULL);//JUMPIFEQ na INT2FLOATS
-        exit_gen(53);
-        //INT2FLOATS pre defined
-        if (non_defined->operator == P_FLOAT_NUM) {
-            insert_instruction("LABEL", non_defined, NULL, NULL);
-            insert_instruction("PUSHS", o2, NULL, NULL);
-            insert_simple_instruction("INT2FLOATS");
-            push_res();
-        } //INT2FLOATS pre non_defined
-        else if (non_defined->operator == P_INT_NUM) {
-            insert_instruction("LABEL", non_defined, NULL, NULL);
-            push_res();
-            insert_simple_instruction("INT2FLOATS");
-            insert_instruction("PUSHS", o2, NULL, NULL);
-        }
-
-        insert_instruction("LABEL", defined, NULL, NULL);
-    }
-
-    switch(operator){
+int operation_gen(P_item *o2, Prec_table_symbols_enum operator){
+    switch (operator) {
         case P_PLUS:
             if (DEBUG_EXPRESSION_ANALYSIS) printf("EXPRESSIONS: %s\n", "I'm adding");
             insert_simple_instruction("ADDS");
@@ -409,9 +336,26 @@ int one_is_undefined_semantics(Output_queue q,Prec_table_symbols_enum operator, 
             insert_simple_instruction("MULS");
             break;
         case P_DIV:
-            if (defined->operator == P_INT_NUM)//TODO
-                insert_simple_instruction("IDIVS");
-            else insert_simple_instruction("DIVS");
+            if (o2->operator == P_INT_NUM) {
+                if (o2->res) {
+                    insert_simple_instruction("DIVS");
+                    return SYNTAX_OK;
+                } else {
+                    if (o2->value_int == 0)
+                        return ZERO_ERROR;
+                    insert_simple_instruction("IDIVS");
+                }
+            }
+            else {
+                if (o2->res) {
+                    insert_simple_instruction("IDIVS");
+                    return SYNTAX_OK;
+
+                }
+                else if (o2->value_double == 0 && !o2->res)
+                    return ZERO_ERROR;
+                insert_simple_instruction("DIVS");
+            }
             break;
         case P_LESS:
             insert_simple_instruction("LTS");
@@ -421,78 +365,232 @@ int one_is_undefined_semantics(Output_queue q,Prec_table_symbols_enum operator, 
             break;
         case P_MORE:
             insert_simple_instruction("GTS");
+            break;
+        case P_NOT_EQ:
+            insert_simple_instruction("EQS");
+            insert_simple_instruction("NOTS");
+            break;
+        case P_MORE_EQ:
+            insert_simple_instruction("LTS");
+            insert_simple_instruction("NOTS");
+            break;
+        case P_LESS_EQ:
+            insert_simple_instruction("GTS");
+            insert_simple_instruction("NOTS");
+            break;
         default:
             break;
     }
-    free(non_defined);
+    return SYNTAX_OK;
+
+}
+
+int both_are_undefined(Output_queue q,P_stack *post_stack, Prec_table_symbols_enum operator) {
+    P_item *o2;
+    P_item *o1;
+    P_item *int_pom = (P_item*)malloc(sizeof(P_item));
+    int_pom->operator = P_INT_NUM;
+    int_pom->value_int =1;
+    P_item *float_pom = (P_item*)malloc(sizeof(P_item));
+    P_item *string_pom = (P_item*)malloc(sizeof(P_item));
+    float_pom->operator = P_FLOAT_NUM;
+    float_pom->value_double = 1;
+    string_pom->operator = P_STRING;
+    insert_defvar_res(im_in_while_loop);
+    declare_defvar_restype(im_in_while_loop);
+
+    o2 = post_stack->top;//o1 + o2
+    o1 = post_stack->top->next_item;
+    if(im_in_while_loop){
+        gen_defvar_in_while(o1);
+    }
+    else insert_instruction("DEFVAR", o2, NULL, NULL);
+
+    insert_instruction("MOVE", o1, NULL, NULL);//MOVE Lf@%res o1
+
+    o1->res = true;
+
+
+
+    insert_instruction("TYPE", NULL, NULL, NULL);//TYPE LF@%res$type LF@%res
+    insert_instruction("TYPE", o2, NULL, NULL);//TYPE LF@%name$type LF@name
+
+
+    insert_instruction("JUMPIFEQ",o2,NULL,NULL); //JUMPIFEQ $%res$type1$LF$a LF@%res$type1 LF@a  || if they are equal
+    insert_instruction("JUMPIFEQ",float_pom,NULL,NULL);// JUMPIFEQ $%res$type1$float LF@%res$type1 string@float
+    insert_instruction("JUMPIFEQ",int_pom,NULL,NULL);// JUMPIFEQ $%res$type1$int LF@%res$type1 string@int
+    exit_gen(4);
+
+    insert_instruction("LABEL",float_pom,NULL,NULL); //LABEL $%res$type1$float
+    insert_instruction("PUSHS",o1,NULL,NULL); // PUSHS LF@%res1
+    insert_instruction("PUSHS",o2,NULL,NULL); // PUSHS LF@a
+    insert_simple_instruction("INT2FLOATS");
+    insert_simple_instruction("JUMP");
+    gen_unique_operation(operator,float_pom); // JUMP $plus1
+
+    insert_instruction("LABEL",int_pom,NULL,NULL); // LABEL $%res$type1$int
+    insert_instruction("PUSHS",o1,NULL,NULL); //PUSHS LF@%res1
+    insert_simple_instruction("INT2FLOATS");
+    insert_instruction("PUSHS",o2,NULL,NULL); //PUSHS LF@a
+    insert_simple_instruction("JUMP");
+    gen_unique_operation(operator,float_pom);// JUMP $plus1
+
+    insert_instruction("LABEL",o2,NULL,NULL); //LABEL $%res$type1$LF$a || o1 type == o2 type LABEL
+    insert_instruction("JUMPIFEQ",string_pom,NULL,NULL); // JUMPIFEQ $%res$type1$string LF@%res$type1 string@string
+    insert_instruction("PUSHS",o1,NULL,NULL);
+    insert_instruction("PUSHS",o2,NULL,NULL);
+    gen_custom_jumpifeq(int_pom,operator);
+    gen_custom_jumpifeq(float_pom,operator);
+    exit_gen(4);
+
+    insert_instruction("LABEL",string_pom,NULL,NULL);// LABEL $%res$type1$string
+    insert_instruction("CONCAT", o2, NULL,NULL);
+    push_res();
+    insert_instruction("JUMP",NULL,NULL,"end");//JUMP to end
+
+    if(operator == P_DIV){
+        insert_simple_instruction("LABEL");
+        gen_unique_operation(operator,int_pom);
+        operation_gen(int_pom,operator);
+        insert_instruction("JUMP",NULL,NULL,"end");
+    }
+
+    insert_simple_instruction("LABEL");
+    gen_unique_operation(operator,float_pom);// LABEL $plus1
+    if(operator== P_DIV){
+        operation_gen(float_pom,operator);
+    }
+    else operation_gen(o2,operator);
+    insert_instruction("LABEL",NULL,NULL,"end");
+
+
+    free(int_pom);
+    free(string_pom);
+    free(float_pom);
 
     return SYNTAX_OK;
 }
 
-int semantics(Output_queue q,Prec_table_symbols_enum operator, ReturnData *data,bool first_res){
+int one_is_undefined_semantics(Output_queue q,P_stack *post_stack,Prec_table_symbols_enum operator){
+    P_item *o2;
+    P_item *defined;
+    P_item *non_defined ;
+    P_item *o1;
+    int error;
+    o2 = post_stack->top;//o1 + o2
+    o1 = post_stack->top->next_item;
+
+    insert_defvar_res(im_in_while_loop);
+    declare_defvar_restype(im_in_while_loop);
+    if(o1->operator == P_ID) {
+        insert_instruction("MOVE",o1, NULL,NULL);//MOVE Lf@%res o1
+        insert_instruction("TYPE",NULL,NULL,NULL);//TYPE LF@%res$type LF@%res
+        defined = o2;
+
+        o1->res = true;
+        non_defined = o1;
+
+    }
+    else{
+        insert_instruction("MOVE",o2, NULL,NULL);//MOVE Lf@%res o2
+        insert_instruction("TYPE",NULL,NULL,NULL);//TYPE LF@%res$type LF@%res
+        defined = o1;
+        o2->res = true;
+        non_defined = o2;
+    }
 
 
-    if(first_res) {
-        P_item *o1 = get_first_operand(&q);
-        P_item *o2 = get_second_operand(&q);
-        if((o1->operator == P_ID && o2->operator != P_ID) || (o2->operator == P_ID && o1->operator != P_ID))
-            one_is_undefined_semantics(q,operator,first_res);
-        if (o1->operator != P_ID && o2->operator != P_ID){
-            if (o1->operator == P_INT_NUM && o2->operator == P_FLOAT_NUM) {
-                o1->value_double = (double) o1->value_int;
-                o1->operator = P_FLOAT_NUM;
+    if(defined->operator == P_STRING ){
+        if(operator == P_PLUS){
+            insert_instruction("JUMPIFEQ", defined, NULL, NULL);//pokial su rovnakeho typu
+            exit_gen(4);
+            insert_instruction("LABEL", defined, NULL, NULL);
+            insert_instruction("CONCAT", defined, NULL,NULL);
+            push_res();
+            return SYNTAX_OK;
+        }
+        else return COMPATIBILITY_ERROR;
+    }
 
-            } else if (o2->operator == P_INT_NUM && o1->operator == P_FLOAT_NUM) {
-                o2->value_double = (double) o2->value_int;
-                o2->operator = P_FLOAT_NUM;
+    if(defined->operator == P_INT_NUM || defined->operator == P_FLOAT_NUM) {
 
-            } else if (o1->operator != o2->operator) return COMPATIBILITY_ERROR;
+        if (defined->operator == P_INT_NUM) {//pokial je int, musim kontrolovat ci res neni float
+            non_defined->operator = P_FLOAT_NUM;
+        }
+        else non_defined->operator = P_INT_NUM;
 
-            insert_defvar_res();
+        insert_instruction("JUMPIFEQ", non_defined, NULL, NULL);    //pokial su rozdielneho typu
+        insert_instruction("PUSHS",o1,NULL,NULL);
+        insert_instruction("PUSHS",o2,NULL,NULL);
 
-            if (o1->operator == P_STRING && o2->operator == P_STRING) {
-                insert_instruction("CONCAT", o1, o2,NULL);
-            } else {
-                insert_instruction("PUSHS", o1, NULL,NULL);
-                insert_instruction("PUSHS", o2, NULL,NULL);
+        insert_instruction("JUMPIFEQ", defined, NULL, NULL);//pokial su rovnakeho typu
+        exit_gen(4);
 
-                switch (operator) {
-                    case P_PLUS:
-                        if (DEBUG_EXPRESSION_ANALYSIS) printf("EXPRESSIONS: %s\n", "I'm adding");
-                        insert_simple_instruction("ADDS");
-                        break;
-                    case P_MINUS:
-                        insert_simple_instruction("SUBS");
-                        break;
-                    case P_MUL:
-                        insert_simple_instruction("MULS");
-                        break;
-                    case P_DIV:
-                        if (o1->operator == P_INT_NUM)
-                            insert_simple_instruction("IDIVS");
-                        else insert_simple_instruction("DIVS");
-                        break;
-                    case P_LESS:
-                        insert_simple_instruction("LTS");
-                        break;
-                    case P_EQ:
-                        insert_simple_instruction("EQS");
-                        break;
-                    case P_MORE:
-                        insert_simple_instruction("GTS");
-                    default:
-                        break;
-                }
-                insert_instruction("POPS", NULL, NULL,NULL);
-            }
+
+        insert_instruction("LABEL",non_defined,NULL,NULL);
+        if((o2 == non_defined && o1->operator == P_INT_NUM)||(o1==non_defined && o2->operator == P_FLOAT_NUM)){
+            insert_instruction("PUSHS",o1,NULL,NULL);
+            insert_simple_instruction("INT2FLOATS");
+            insert_instruction("PUSHS",o2,NULL,NULL);
+        }
+        else{
+            insert_instruction("PUSHS",o1,NULL,NULL);
+            insert_instruction("PUSHS",o2,NULL,NULL);
+            insert_simple_instruction("INT2FLOATS");
 
         }
+        if(operator == P_DIV && defined->operator!=P_FLOAT_NUM){
+            insert_simple_instruction("DIVS");
+            insert_instruction("JUMP",NULL,NULL,"end");
+        }
+
+        insert_instruction("LABEL", defined, NULL, NULL);
     }
-    else {
-        P_item *o2 = get_first_operand(&q);
-        if(o2->operator!=P_ID) one_is_undefined_semantics(q, operator,first_res);
-        else both_are_undefined(q,operator,first_res);
+
+    error=operation_gen(o2,operator);
+    if(operator == P_DIV){
+        insert_instruction("LABEL",NULL,NULL,"end");
     }
+
+
+    return error;
+}
+
+int semantics(Output_queue q,P_stack *stack,Prec_table_symbols_enum operator, ReturnData *data){
+
+
+    P_item *o2= stack->top;
+    P_item *o1 = stack->top->next_item;
+    if((o1->operator == P_ID && o2->operator != P_ID) || (o2->operator == P_ID && o1->operator != P_ID))
+        return one_is_undefined_semantics(q,stack,operator);
+    if(o1->operator == P_ID && o2->operator == P_ID)
+        return both_are_undefined(q,stack,operator);
+    if (o1->operator != P_ID && o2->operator != P_ID){
+        if (o1->operator == P_INT_NUM && o2->operator == P_FLOAT_NUM) {
+            o1->value_double = (double) o1->value_int;
+            o1->operator = P_FLOAT_NUM;
+
+        } else if (o2->operator == P_INT_NUM && o1->operator == P_FLOAT_NUM) {
+            o2->value_double = (double) o2->value_int;
+            o2->operator = P_FLOAT_NUM;
+
+        } else if (o1->operator != o2->operator) return COMPATIBILITY_ERROR;
+
+        insert_defvar_res(im_in_while_loop);
+
+        if (o1->operator == P_STRING && o2->operator == P_STRING) {
+            insert_instruction("CONCAT", o1, o2,NULL);
+            push_res();
+        } else {
+            insert_instruction("PUSHS", o1, NULL,NULL);
+            insert_instruction("PUSHS", o2, NULL,NULL);
+
+
+            return operation_gen(o2,operator);
+        }
+
+    }
+
     return SYNTAX_OK;
 
 }
@@ -500,41 +598,56 @@ int semantics(Output_queue q,Prec_table_symbols_enum operator, ReturnData *data,
 int queue_evaluation(Output_queue *q, ReturnData *data){
 
     int error;
-    bool first_res = true;
-    P_item *pom = q->first;
-    while(pom){
-        if(is_item_operand(pom)){
+    char *value;
+    P_stack *stack = malloc(sizeof(P_stack));
+    p_stack_init(stack);
+    while(q->first){
+        if(is_item_operand(q->first)){
 
             if(DEBUG_EXPRESSION_ANALYSIS)printf("%s%d\n","EXPRESSIONS: first in queue is:",q->first->operator);
 
-
-            if(pom->next_item == NULL)
-                insert_instruction("PUSHS",pom,NULL,NULL);
-
-        }
-        else if(pom->operator < P_LEFT_PAR){//operator
-            error =semantics(*q , pom->operator, data, first_res);
-
-            if(error!=SYNTAX_OK)
-                return error;
-            delete_until_operator(q);
-            if(q->first==NULL) {
-                push_res();
-                generic_label_count++;
+            first_from_queue_to_stack(q,stack);
+            if(q->first==NULL && stack->top->next_item==NULL){
+                insert_instruction("PUSHS",stack->top,NULL,NULL);
+                p_stack_pop(stack);
                 return SYNTAX_OK;
             }
 
+        }
+        else if(q->first->operator < P_LEFT_PAR){//operator
+            value = malloc(sizeof(int)*2+1);
+            error =semantics(*q , stack, q->first->operator, data);
+            insert_simple_instruction("#--------------------------------------------------------");
+            if(error!=SYNTAX_OK) {
+                free(value);
+                return error;
+            }
+            delete_first(q);
+            if(q->first==NULL) {
+                generic_label_count++;
+                p_stack_free(stack);
+                free(value);
+                return SYNTAX_OK;
+            }
+            p_stack_pop(stack);
+            p_stack_pop(stack);
+            insert_instruction("POPS",NULL,NULL,NULL);
+            strcpy(value,"%res");
+            sprintf(value,"%s%d",value,generic_label_count);
+            p_stack_push(stack,true,0,0,value,P_ID); //inserts result from last calculation to stack top
+
             generic_label_count++;
-            first_res = false;
+            free(value);
         }
         else{
+            p_stack_free(stack);
             return SYNTAX_ERROR;
         }
-        pom= pom->next_item;
+        if(DEBUG_EXPRESSION_ANALYSIS) printf("%s%d\n","q first is:",q->first->operator);
     }
 
     if(DEBUG_EXPRESSION_ANALYSIS) printf("%s\n","EXPRESSIONS: Queue eval done");
-
+    p_stack_free(stack);
     return SYNTAX_OK;
 }
 
@@ -636,10 +749,10 @@ ReturnData analyze_expresssion(tToken token, tToken aheadToken, bool tokenLookAh
         }
 
     }
-//    print_queue(*q);
-//    error = queue_evaluation(q,data);
-//    if(error!=SYNTAX_OK)
-//        return release_resources(error,*stack, q,*o_stack,*data);
+    print_queue(*q);
+    error = queue_evaluation(q,data);
+    if(error!=SYNTAX_OK)
+        return release_resources(error,*stack, q,*o_stack,*data);
     return release_resources_and_success(SYNTAX_OK, *stack, q , *o_stack, *data);
 };
 
