@@ -152,11 +152,11 @@ bool is_token_an_operator(tToken *token){
 }
 
 /** Function that correctly frees allocated structures and returns updated data*/
-ReturnData *release_resources(int error_code, S_stack *stack, Output_queue *q, Operator_stack *operator_stack, ReturnData data){
+ReturnData *release_resources(int error_code, S_stack *stack, Output_queue *q, Operator_stack *operator_stack, ReturnData *data){
     if(error_code==0)
-        data.error=false;
-    else data.error=true;
-    data.error_code = error_code;
+        data->error=false;
+    else data->error=true;
+    data->error_code = error_code;
     if(DEBUG_EXPRESSION_ANALYSIS)printf("%s%d\n","error code is:",error_code);
     s_free(stack);
     free(stack);
@@ -164,7 +164,7 @@ ReturnData *release_resources(int error_code, S_stack *stack, Output_queue *q, O
     free(q);
     operator_stack_free(operator_stack);
     free(operator_stack);
-    return &data;
+    return data;
 }
 
 /** Function that generates postfix into a queue by the Shunting-yard algorithm*/
@@ -412,7 +412,7 @@ int both_are_undefined(P_stack *post_stack, Prec_table_symbols_enum operator) {
     o2 = post_stack->top;//o1 + o2
     o1 = post_stack->top->next_item;
     if(im_in_while_loop){
-        gen_defvar_in_while(o2);
+        gen_defvar_in_while(o1);
     }
     else insert_instruction("DEFVAR", o2, NULL, NULL);
 
@@ -686,14 +686,14 @@ ReturnData *analyze_expresssion(tToken token, tToken aheadToken, bool tokenLookA
 
 
     if(!s_push(stack,P_DOLLAR))
-        return release_resources(INNER_ERROR, stack, q, o_stack, *data);
+        return release_resources(INNER_ERROR, stack, q, o_stack, data);
 
     Prec_table_symbols_enum *stack_top_terminal_symbol;
     data->token = &token;
     Prec_table_symbols_enum new_symbol = token_to_symbol(token);
     error = generate_postfix(data->token, o_stack, q);
     if(error != 0)
-        return release_resources(error, stack, q, o_stack, *data);
+        return release_resources(error, stack, q, o_stack, data);
 
     bool enough = false;
     while(!enough){
@@ -702,29 +702,29 @@ ReturnData *analyze_expresssion(tToken token, tToken aheadToken, bool tokenLookA
         stack_top_terminal_symbol = &get_top_terminal(stack)->symbol;
         if(new_symbol == P_ID && !is_token_end_symbol(&token)){
             if(!is_variable_defined(tree,data->token->data.string))
-                return release_resources(SEMANTIC_ERROR,stack, q,o_stack, *data);
+                return release_resources(SEMANTIC_ERROR,stack, q,o_stack, data);
         }
 
         if(stack->top == NULL)
-            return release_resources(INNER_ERROR, stack, q ,o_stack, *data);
+            return release_resources(INNER_ERROR, stack, q ,o_stack, data);
         switch(prec_table[get_prec_table_index(*stack_top_terminal_symbol)][get_prec_table_index(new_symbol)]){
             case R:
                 if(DEBUG_EXPRESSION_ANALYSIS) printf("EXPRESSIONS: %s\n","I'm in R!");
                 if((error = rule_reduction(stack))){
-                    return release_resources(error, stack,  q ,o_stack, *data);
+                    return release_resources(error, stack,  q ,o_stack, data);
                 }
                 break;
             case S:
                 if(DEBUG_EXPRESSION_ANALYSIS) printf("EXPRESSIONS: %s\n","I'm in S!");
                 if(!insert_after_top_terminal(stack,P_STOP))
-                    return release_resources(INNER_ERROR, stack, q ,o_stack, *data);
+                    return release_resources(INNER_ERROR, stack, q ,o_stack, data);
 
                 if(!s_push(stack, new_symbol))
-                    return release_resources(INNER_ERROR, stack, q, o_stack, *data);
+                    return release_resources(INNER_ERROR, stack, q, o_stack, data);
 
                 if(new_symbol == P_ID){
                     if(!is_variable_defined(tree,data->token->data.string))
-                        return release_resources(SEMANTIC_ERROR,stack, q, o_stack, *data);
+                        return release_resources(SEMANTIC_ERROR,stack, q, o_stack, data);
                 }
 //
 //              if( new_symbol == P_ID || new_symbol == P_INT_NUM || new_symbol == P_FLOAT_NUM || new_symbol == P_STRING )
@@ -737,7 +737,7 @@ ReturnData *analyze_expresssion(tToken token, tToken aheadToken, bool tokenLookA
                     data->token = &aheadToken;
                     error = generate_postfix(data->token, o_stack, q);
                     if(error != 0)
-                        return release_resources(error, stack, q, o_stack, *data);
+                        return release_resources(error, stack, q, o_stack, data);
                     tokenLookAheadFlag = false;
                 }
                 else {
@@ -747,7 +747,7 @@ ReturnData *analyze_expresssion(tToken token, tToken aheadToken, bool tokenLookA
                     *data->token = nextToken();
                     error = generate_postfix(data->token, o_stack, q);
                     if(error != 0)
-                        return release_resources(error, stack, q, o_stack, *data);
+                        return release_resources(error, stack, q, o_stack, data);
                 }
 
                 new_symbol = token_to_symbol(*data->token);
@@ -759,12 +759,12 @@ ReturnData *analyze_expresssion(tToken token, tToken aheadToken, bool tokenLookA
                     if(DEBUG_EXPRESSION_ANALYSIS) printf("EXPRESSIONS: %s\n","ENOUGH!, very nice");
                     enough = true;
                 }
-                else return release_resources(SYNTAX_ERROR, stack, q, o_stack, *data);
+                else return release_resources(SYNTAX_ERROR, stack, q, o_stack, data);
                 break;
             case E:
                 if(DEBUG_EXPRESSION_ANALYSIS) printf("EXPRESSIONS: %s\n","I'm in E!");
                 if(!s_push(stack,new_symbol))
-                    return release_resources(INNER_ERROR, stack,  q, o_stack, *data);
+                    return release_resources(INNER_ERROR, stack,  q, o_stack, data);
                 if(new_symbol == P_ID || new_symbol == P_STRING) {
                     free(data->token->data.string);
                 }
@@ -772,7 +772,7 @@ ReturnData *analyze_expresssion(tToken token, tToken aheadToken, bool tokenLookA
                 new_symbol = token_to_symbol(*data->token);
                 error = generate_postfix(data->token, o_stack, q);
                 if(error != 0)
-                    return release_resources(error, stack,  q, o_stack, *data);
+                    return release_resources(error, stack,  q, o_stack, data);
 
                 break;
             default: break;
@@ -782,7 +782,7 @@ ReturnData *analyze_expresssion(tToken token, tToken aheadToken, bool tokenLookA
     print_queue(*q);
     error = queue_evaluation(q);
 
-    return release_resources(error, stack, q , o_stack, *data);
+    return release_resources(error, stack, q , o_stack, data);
 
 };
 
