@@ -198,6 +198,7 @@ bool expr(){
 
     if(DEBUG_PARSER) printf("PARSER: token type send to expr: %s\n", token_type_enum_string[token.type]);
     if(DEBUG_PARSER) printf("PARSER: aheadToken type send to expr: %s\n", token_type_enum_string[aheadToken.type]);
+    if(DEBUG_PARSER) printf("PARSER: tokenLookAheadFlag: %d\n", tokenLookAheadFlag);
 
     add_string_after_specific_string(active_code_list->end, "# Expr start");
     active_code_list->end->is_start_of_new_line = true;
@@ -214,6 +215,9 @@ bool expr(){
         fprintf(stderr, "PARSER: Expression sending me error: %d\n", returnData.error_code);
         error_code = returnData.error_code;
     }
+
+    // Because after analyze_expression this will reset
+    tokenLookAheadFlag = false;
 
     add_string_after_specific_string(active_code_list->end, "# Expr done, store result on stack");
     active_code_list->end->is_start_of_new_line = true;
