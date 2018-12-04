@@ -226,13 +226,15 @@ void free_code_lists(){
     functions_code_list = NULL;
 }
 
-
+/**Appends unique number to the end of active_code_list */
 void append_unique_code(){
     char *value = malloc(sizeof(int)+1);
     sprintf(value,"%d",generic_label_count);
     append_text_to_specific_string(active_code_list->end, value);
     free(value);
 }
+
+/**Appends unique number right behind good place for defvar */
 void append_unique_code_to_newfound_defvar(){
     char *value = malloc(sizeof(int)+1);
     sprintf(value,"%d",generic_label_count);
@@ -240,6 +242,7 @@ void append_unique_code_to_newfound_defvar(){
     free(value);
 }
 
+/**Generates operation depending on the passed operator. And adds unique number. */
 void gen_unique_operation(Prec_table_symbols_enum operator,P_item *o1){
     char *value=malloc(sizeof(char)*8+1);
     switch (operator) {
@@ -285,6 +288,8 @@ void gen_unique_operation(Prec_table_symbols_enum operator,P_item *o1){
     free(value);
 
 }
+
+/** Generates res type depending if its for label or not and appends unique code.*/
 void add_unique_res_type(bool label){
     if(label) {
         add_string_after_specific_string(active_code_list->end, "$%res$type");   // $%res$type$
@@ -293,18 +298,21 @@ void add_unique_res_type(bool label){
     append_unique_code();
 }
 
+/**Generates var type and appends unique code. */
 void add_unique_var_type(P_item *o1){
     item_value_gen_and_add(o1,false);
-    append_text_to_specific_string(active_code_list->end,"$type");
+    append_text_to_specific_string(active_code_list->end,"$type"); // int$type1
     append_unique_code();
 }
 
+/**Generates LF@%res and appends unique code */
 void add_unique_res(){
     add_string_after_specific_string(active_code_list->end, "LF@%res");
     append_unique_code();
 }
 
-bool declare_defvar_restype(bool is_while){
+/**Generates DEFVAR restype, adds it on the right place if is_while is true */
+void declare_defvar_restype(bool is_while){
     if(is_while){
         add_string_after_specific_string(find_nearest_good_place_for_defvar()->prev,"DEFVAR");
         find_nearest_good_place_for_defvar()->prev->is_start_of_new_line = true;
@@ -317,7 +325,8 @@ bool declare_defvar_restype(bool is_while){
     }
 }
 
-bool insert_defvar_res(bool is_while){
+/**Generates DEFVAR res, adds it on the right place if is_while is true */
+void insert_defvar_res(bool is_while){
     if(is_while){
         add_string_after_specific_string(find_nearest_good_place_for_defvar()->prev,"DEFVAR");
         find_nearest_good_place_for_defvar()->prev->is_start_of_new_line = true;
@@ -329,25 +338,26 @@ bool insert_defvar_res(bool is_while){
     }
 }
 
-bool insert_simple_instruction(char *instruction){
+/**Generates instruction to the code_list and defines it as the start of new line */
+void insert_simple_instruction(char *instruction){
     add_string_after_specific_string(active_code_list->end,instruction);
     active_code_list->end->is_start_of_new_line = true;
-    return true;
 }
-bool push_res(){
+
+/**Generates PUSHS res and appends unique code*/
+void push_res(){
     insert_simple_instruction("PUSHS");
     add_string_after_specific_string(active_code_list->end, "LF@%res");
     append_unique_code();
-    return true;
 }
 
+/**Generates unique $end$ */
 void add_end(){
     add_string_after_specific_string(active_code_list->end, "$end$");
     append_unique_code();
 }
 
-
-
+/**Generates needed exit code */
 void exit_gen(int error_code){
     insert_simple_instruction("EXIT");
     add_string_after_specific_string(active_code_list->end,"int@");
@@ -356,16 +366,14 @@ void exit_gen(int error_code){
     append_text_to_specific_string(active_code_list->end, value);
     free(value);
 }
-bool item_value_gen_and_add(P_item *item,bool append){
+
+/**Generates items value and adds it or appends it to the code */
+void item_value_gen_and_add(P_item *item,bool append){
     char *value;
     char *ifj18string;
-    if(!item)
-        return false;
     switch(item->operator){
         case P_INT_NUM:
             value = malloc(sizeof(int)*4 +1);
-            if(!value)
-                return false;
             if(!append) {
                 add_string_after_specific_string(active_code_list->end, "int@");
             }else append_text_to_specific_string(active_code_list->end, "int$");
@@ -378,8 +386,6 @@ bool item_value_gen_and_add(P_item *item,bool append){
             break;
         case P_FLOAT_NUM:
             value = malloc(sizeof(double)*4 +1);
-            if(!value)
-                return false;
             if(!append) {
                 add_string_after_specific_string(active_code_list->end, "float@");
             }else append_text_to_specific_string(active_code_list->end, "float$");
@@ -410,15 +416,13 @@ bool item_value_gen_and_add(P_item *item,bool append){
             free(ifj18string);
             break;
         default:
-            return false;
+            break;
     }
 
-//    if(DEBUG_EXPR_GEN)printf("%s%d\n","first in queue is:",q.first->operator);
-    return true;
 }
 
+/**Generates unique label depending on operands type */
 void gen_unique_label_for_res(P_item *o1){
-    char *unique;
 
     if(o1->operator == P_FLOAT_NUM){
         add_unique_res_type(true);
@@ -443,6 +447,7 @@ void gen_unique_label_for_res(P_item *o1){
 
 }
 
+/**Generates Jumpifeq condition basically*/
 void insert_res_and_type(P_item *o1){
     if (o1->operator == P_FLOAT_NUM) {
         gen_unique_label_for_res(o1);
@@ -451,7 +456,7 @@ void insert_res_and_type(P_item *o1){
     } else if (o1->operator == P_INT_NUM) {
         gen_unique_label_for_res(o1);
         add_unique_res_type(false);
-        add_string_after_specific_string(active_code_list->end, "string@int");// JUMPIFEQ $%res$type$0int string@int
+        add_string_after_specific_string(active_code_list->end, "string@int");// JUMPIFEQ $%res$type$0int $%res$type string@int
     } else if (o1->operator == P_STRING) {
         gen_unique_label_for_res(o1);
         add_unique_res_type(false);
@@ -465,10 +470,9 @@ void insert_res_and_type(P_item *o1){
 
 }
 
-bool item_type_gen_and_add(P_item *item, bool append){
-    char *value;
-    if(!item)
-        return false;
+/**Adds or appends items type */
+void item_type_gen_and_add(P_item *item, bool append){
+
     switch(item->operator) {
         case P_INT_NUM:
             if(!append)add_string_after_specific_string(active_code_list->end,"string@int");
@@ -482,20 +486,23 @@ bool item_type_gen_and_add(P_item *item, bool append){
             if(!append)add_string_after_specific_string(active_code_list->end,"string@string");
             else append_text_to_specific_string(active_code_list->end,"$string");
             break;
-        default: return false;
+        default:
+            break;
 
     }
-    return true;
+
 }
 
+/**Generates custom jumpifeq */
 void gen_custom_jumpifeq(P_item *o1, Prec_table_symbols_enum operator){
     insert_simple_instruction("JUMPIFEQ");
     gen_unique_operation(operator,o1);
     add_unique_res_type(false);
-    item_type_gen_and_add(o1,false);
+    item_type_gen_and_add(o1,false); //JUMPIFEQ $plus1 LF@%res$type1 string@int
 
 }
 
+/**Generates defvar if expression is in while cycle */
 void gen_defvar_in_while(P_item *o1){
     add_string_after_specific_string(find_nearest_good_place_for_defvar()->prev,"DEFVAR");
     find_nearest_good_place_for_defvar()->prev->is_start_of_new_line = true;
@@ -512,10 +519,11 @@ void gen_defvar_in_while(P_item *o1){
 
 }
 
-bool insert_instruction(char *instruction, P_item *o1, P_item *o2,char *type){
+/**Insert any other instructions depending on operands or on special type */
+void insert_instruction(char *instruction, P_item *o1, P_item *o2,char *type){
     add_string_after_specific_string(active_code_list->end,instruction);
     active_code_list->end->is_start_of_new_line = true;
-    char *unique;
+
     if(!strcmp(instruction,"PUSHS")){
         if(DEBUG_EXPR_GEN) printf("%s\n","I'm gonna push");
         if(o1->res){
@@ -584,7 +592,6 @@ bool insert_instruction(char *instruction, P_item *o1, P_item *o2,char *type){
 
     }
 
-    return true;
 }
 
 

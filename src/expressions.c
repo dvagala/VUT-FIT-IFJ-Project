@@ -608,7 +608,7 @@ int semantics(P_stack *stack,Prec_table_symbols_enum operator){
 
 }
 
-/** This function evaluates*/
+/** This function evaluates postfix queue, generates ifj18code and checks semantics, has all the control over P_stack*/
 int queue_evaluation(Output_queue *q){
 
     int error;
@@ -671,6 +671,7 @@ int queue_evaluation(Output_queue *q){
     return SYNTAX_OK;
 }
 
+/** Main function of expression analysis, calls all the other functions and performs syntax analysis*/
 ReturnData *analyze_expresssion(tToken token, tToken aheadToken, bool tokenLookAheadFlag, Bnode *tree ){
     //allocating data managment
     ReturnData *data = (ReturnData*)malloc(sizeof(ReturnData));

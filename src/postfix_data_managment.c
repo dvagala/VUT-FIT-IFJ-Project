@@ -45,11 +45,6 @@ bool operator_pop(Operator_stack *stack){
     return false;
 }
 
-bool is_stack_top_not_null(Operator_stack *stack){
-    if(stack->top != NULL)
-        return true;
-    else return false;
-}
 
 bool pop_to_output_queue(Operator_stack *stack, Output_queue *q){
     if(!(stack && q) )
@@ -305,20 +300,4 @@ bool first_from_queue_to_stack(Output_queue *q, P_stack *stack){
     return false;
 }
 
-//int main() {
-//
-//    P_stack *stack = malloc(sizeof(P_stack));
-//    p_stack_init(stack);
-//    Output_queue *q = malloc(sizeof(Output_queue));
-//    queue_inint(q);
-//    queue_insert(q,false,5,0,NULL,P_INT_NUM);
-//    queue_insert(q,false,0,0,"ahojky",P_ID);
-//    first_from_queue_to_stack(q,stack);
-//    p_stack_push(stack,true,0,0,"ahoj",P_ID);
-//    p_stack_push(stack,true,5,0,NULL,P_INT_NUM);
-//    printf("%d\n",stack->top->operator);
-//    p_stack_free(stack);
-//    queue_dispose(q);
-//
-//}
 
