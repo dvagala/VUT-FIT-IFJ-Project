@@ -15,6 +15,7 @@
 #include <string.h>
 
 #define DEBGUG_CODE_GEN 0
+#define DEBGUG_CODE_GEN_FREE 0
 #define DEBUG_EXPR_GEN 0
 
 void code_list_init(){
@@ -165,9 +166,9 @@ void free_code_lists(){
         if(DEBGUG_CODE_GEN) if(DEBGUG_CODE_GEN) printf("CODE_GEN: freeint text: %p\n", active_code_list->text);
 
         if(active_code_list->next == NULL){
-            if(DEBGUG_CODE_GEN) printf("freeing string: %p\n", active_code_list);
-            if(DEBGUG_CODE_GEN) printf("freeing strin->text: %p\n", active_code_list->text);
-            if(DEBGUG_CODE_GEN) printf("freeing strin->text: %s\n", active_code_list->text);
+            if(DEBGUG_CODE_GEN) printf("Code gen: freeing string: %p\n", active_code_list);
+            if(DEBGUG_CODE_GEN) printf("Code gen: freeing strin->text: %p\n", active_code_list->text);
+            if(DEBGUG_CODE_GEN) printf("Code gen: freeing strin->text: %s\n", active_code_list->text);
             free(active_code_list->text);
             active_code_list->text = NULL;
             free(active_code_list);
@@ -176,9 +177,9 @@ void free_code_lists(){
         } else{
             active_code_list = active_code_list->next;
 
-            if(DEBGUG_CODE_GEN) printf("freeing string: %p\n", active_code_list->prev);
-            if(DEBGUG_CODE_GEN) printf("freeing strin->text: %p\n", active_code_list->prev->text);
-            if(DEBGUG_CODE_GEN) printf("freeing strin->text: %s\n", active_code_list->prev->text);
+            if(DEBGUG_CODE_GEN) printf("Code gen: freeing string: %p\n", active_code_list->prev);
+            if(DEBGUG_CODE_GEN) printf("Code gen: freeing strin->text: %p\n", active_code_list->prev->text);
+            if(DEBGUG_CODE_GEN) printf("Code gen: freeing strin->text: %s\n", active_code_list->prev->text);
 
             free(active_code_list->prev->text);
             active_code_list->prev->text = NULL;
@@ -198,9 +199,9 @@ void free_code_lists(){
 
         if(active_code_list->next == NULL){
 
-            if(DEBGUG_CODE_GEN) printf("freeing string: %p\n", active_code_list);
-            if(DEBGUG_CODE_GEN) printf("freeing strin->text: %p\n", active_code_list->text);
-            if(DEBGUG_CODE_GEN) printf("freeing strin->text: %s\n", active_code_list->text);
+            if(DEBGUG_CODE_GEN) printf("Code gen: freeing string: %p\n", active_code_list);
+            if(DEBGUG_CODE_GEN) printf("Code gen: freeing strin->text: %p\n", active_code_list->text);
+            if(DEBGUG_CODE_GEN) printf("Code gen: freeing strin->text: %s\n", active_code_list->text);
 
             free(active_code_list->text);
             active_code_list->text = NULL;
@@ -210,9 +211,9 @@ void free_code_lists(){
         } else{
             active_code_list = active_code_list->next;
 
-            if(DEBGUG_CODE_GEN) printf("freeing string: %p\n", active_code_list->prev);
-            if(DEBGUG_CODE_GEN) printf("freeing strin->text: %p\n", active_code_list->prev->text);
-            if(DEBGUG_CODE_GEN) printf("freeing strin->text: %s\n", active_code_list->prev->text);
+            if(DEBGUG_CODE_GEN) printf("Code gen: freeing string: %p\n", active_code_list->prev);
+            if(DEBGUG_CODE_GEN) printf("Code gen: freeing strin->text: %p\n", active_code_list->prev->text);
+            if(DEBGUG_CODE_GEN) printf("Code gen: freeing strin->text: %s\n", active_code_list->prev->text);
 
             free(active_code_list->prev->text);
             active_code_list->prev->text = NULL;

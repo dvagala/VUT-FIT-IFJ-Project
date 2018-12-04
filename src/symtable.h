@@ -94,8 +94,6 @@ bool add_variables_from_func_params(Bnode *global_symtable, Bnode *actual_symtab
 
 char *get_name_of_defined_param_at_position(Bnode *global_symtable, char *func_name, int n);
 
-void free_local_symtable(Bnode *symtable);
-
-void free_global_symtable(Bnode *symtable);
+void free_symtable(Bnode *symtable);
 
 #endif //IFJ_PROJECT_SYMTABLE_H

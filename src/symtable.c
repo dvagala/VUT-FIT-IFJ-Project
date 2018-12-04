@@ -54,16 +54,17 @@ bool Binsert(Bnode *rootPtr, char *id, bool func_bool){
 
     if(!*rootPtr){
         Bnode new = malloc(sizeof(struct Node));
-        if(DEBUG_FREE) fprintf(stderr, "Malloc Bnode: %p\n", new);
+        if(DEBUG_FREE) fprintf(stderr, "Symtable: Malloc Bnode: %p\n", new);
         if(new) {
             // Copy so it is independant from token.data
             new->key = malloc(sizeof(char)*(strlen(id)+1));
             strcpy(new->key, id);
-            if(DEBUG_FREE) fprintf(stderr, "Malloc Bonode->key: %p, %s\n", new->key, id);
+            if(DEBUG_FREE) fprintf(stderr, "Symtable: Malloc Bonode->key: %p, %s\n", new->key, id);
             new->data.function = func_bool;
             new->Lptr = NULL;
             new->Rptr = NULL;
             new->data.list = malloc(sizeof(List));
+            if(DEBUG_FREE) fprintf(stderr, "Symtable: Malloc Bonode->data->list: %p\n", new->data.list);
             new->data.list->element_count =0;
             listInit(new->data.list);
             *rootPtr = new;
@@ -108,8 +109,13 @@ void global_symtable_init(Bnode *rootPtr){
     *rootPtr = NULL;
 
     // Populate symtable with system functions
+    add_func_to_symtable(rootPtr, "print");
+    Bnode pom = Bsearch(*rootPtr, "print");
+    pom->data.system_function = true;
+    pom->data.list->element_count = -1;         // This means that number of print() parameters can vary
+
     add_func_to_symtable(rootPtr, "inputs");
-    Bnode pom = Bsearch(*rootPtr, "inputs");
+    pom = Bsearch(*rootPtr, "inputs");
     pom->data.system_function = true;
 
     add_func_to_symtable(rootPtr, "inputi");
@@ -119,11 +125,6 @@ void global_symtable_init(Bnode *rootPtr){
     add_func_to_symtable(rootPtr, "inputf");
     pom = Bsearch(*rootPtr, "inputf");
     pom->data.system_function = true;
-
-    add_func_to_symtable(rootPtr, "print");
-    pom = Bsearch(*rootPtr, "print");
-    pom->data.system_function = true;
-    pom->data.list->element_count = -1;         // This means that number of print() parameters can vary
 
     add_func_to_symtable(rootPtr, "length");
     pom = Bsearch(*rootPtr, "length");
@@ -243,19 +244,7 @@ bool add_variable_to_func_params(Bnode *global_symtable, char *func_name, char *
     return false;
 }
 
-void free_params(Bnode *global_symtable){
 
-    if(*global_symtable){
-        free_params(&(*global_symtable)->Rptr);
-        free_params(&(*global_symtable)->Lptr);
-        if((*global_symtable)->data.function == true){
-            if((*(*global_symtable)->data.list).First != NULL){         // just functions that have parameters
-//                if(DEBUG_FREE) fprintf(stderr, "Free: Param in Bnode: %p\n", (*(*global_symtable)->data.list).First);
-                list_disposal((*global_symtable)->data.list);
-            }
-        }
-    }
-}
 
 bool add_variables_from_func_params(Bnode *global_symtable, Bnode *actual_symtable, char *func_name){
     Bnode pom = Bsearch(*global_symtable,func_name);
@@ -283,13 +272,15 @@ char *get_name_of_defined_param_at_position(Bnode *global_symtable, char *func_n
     return NULL;
 }
 
-void free_symtable(Bnode *symtable){
+void free_symtable_recursive(Bnode *symtable){
 
     if(*symtable){
-        free_symtable(&(*symtable)->Rptr);
-        free_symtable(&(*symtable)->Lptr);
-        if(DEBUG_FREE) fprintf(stderr, "Free: Bonode: %p\n", *symtable);
-        if(DEBUG_FREE) fprintf(stderr, "Free: Bonode: %p, %s\n", (*symtable)->key, (*symtable)->key);
+        free_symtable_recursive(&(*symtable)->Rptr);
+        free_symtable_recursive(&(*symtable)->Lptr);
+        if(DEBUG_FREE) fprintf(stderr, "Symtable: Free: Bonode->data->list: %p\n", (*symtable)->data.list);
+        if(DEBUG_FREE) fprintf(stderr, "Symtable: Free: Bonode: %p\n", *symtable);
+        if(DEBUG_FREE) fprintf(stderr, "Symtable: Free: Bonode->key: %p, %s\n", (*symtable)->key, (*symtable)->key);
+        free((*symtable)->data.list);
         free((*symtable)->key);
         (*symtable)->key = NULL;
         free(*symtable);
@@ -297,13 +288,23 @@ void free_symtable(Bnode *symtable){
     }
 }
 
-void free_local_symtable(Bnode *symtable){
-    free_symtable(symtable);
+void free_params(Bnode *global_symtable){
+
+    if(*global_symtable){
+        free_params(&(*global_symtable)->Rptr);
+        free_params(&(*global_symtable)->Lptr);
+        if((*global_symtable)->data.function == true){
+            if((*(*global_symtable)->data.list).First != NULL){         // just functions that have parameters
+//                if(DEBUG_FREE) fprintf(stderr, "Free: Param in Bnode: %p\n", (*(*global_symtable)->data.list).First);
+                list_disposal((*global_symtable)->data.list);
+            }
+        }
+    }
 }
 
-void free_global_symtable(Bnode *symtable){
+void free_symtable(Bnode *symtable){
     free_params(symtable);
-    free_symtable(symtable);
+    free_symtable_recursive(symtable);
 }
 
 //int main(){
