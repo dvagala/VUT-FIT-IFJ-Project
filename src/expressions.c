@@ -365,6 +365,19 @@ int operation_gen(P_item *o2, Prec_table_symbols_enum operator){
             break;
         case P_MORE:
             insert_simple_instruction("GTS");
+            break;
+        case P_NOT_EQ:
+            insert_simple_instruction("EQS");
+            insert_simple_instruction("NOTS");
+            break;
+        case P_MORE_EQ:
+            insert_simple_instruction("LTS");
+            insert_simple_instruction("NOTS");
+            break;
+        case P_LESS_EQ:
+            insert_simple_instruction("GTS");
+            insert_simple_instruction("NOTS");
+            break;
         default:
             break;
     }
@@ -377,9 +390,11 @@ int both_are_undefined(Output_queue q,P_stack *post_stack, Prec_table_symbols_en
     P_item *o1;
     P_item *int_pom = (P_item*)malloc(sizeof(P_item));
     int_pom->operator = P_INT_NUM;
+    int_pom->value_int =1;
     P_item *float_pom = (P_item*)malloc(sizeof(P_item));
     P_item *string_pom = (P_item*)malloc(sizeof(P_item));
     float_pom->operator = P_FLOAT_NUM;
+    float_pom->value_double = 1;
     string_pom->operator = P_STRING;
     insert_defvar_res();
     declare_defvar_restype();
@@ -408,14 +423,14 @@ int both_are_undefined(Output_queue q,P_stack *post_stack, Prec_table_symbols_en
     insert_instruction("PUSHS",o2,NULL,NULL); // PUSHS LF@a
     insert_simple_instruction("INT2FLOATS");
     insert_simple_instruction("JUMP");
-    gen_unique_operation(operator); // JUMP $plus1
+    gen_unique_operation(operator,float_pom); // JUMP $plus1
 
     insert_instruction("LABEL",int_pom,NULL,NULL); // LABEL $%res$type1$int
     insert_instruction("PUSHS",o1,NULL,NULL); //PUSHS LF@%res1
     insert_simple_instruction("INT2FLOATS");
     insert_instruction("PUSHS",o2,NULL,NULL); //PUSHS LF@a
     insert_simple_instruction("JUMP");
-    gen_unique_operation(operator);// JUMP $plus1
+    gen_unique_operation(operator,float_pom);// JUMP $plus1
 
     insert_instruction("LABEL",o2,NULL,NULL); //LABEL $%res$type1$LF$a || o1 type == o2 type LABEL
     insert_instruction("JUMPIFEQ",string_pom,NULL,NULL); // JUMPIFEQ $%res$type1$string LF@%res$type1 string@string
@@ -430,9 +445,19 @@ int both_are_undefined(Output_queue q,P_stack *post_stack, Prec_table_symbols_en
     push_res();
     insert_instruction("JUMP",NULL,NULL,"end");//JUMP to end
 
+    if(operator == P_DIV){
+        insert_simple_instruction("LABEL");
+        gen_unique_operation(operator,int_pom);
+        operation_gen(int_pom,operator);
+        insert_instruction("JUMP",NULL,NULL,"end");
+    }
+
     insert_simple_instruction("LABEL");
-    gen_unique_operation(operator);// LABEL $plus1
-    operation_gen(o2,operator);
+    gen_unique_operation(operator,float_pom);// LABEL $plus1
+    if(operator== P_DIV){
+        operation_gen(float_pom,operator);
+    }
+    else operation_gen(o2,operator);
     insert_instruction("LABEL",NULL,NULL,"end");
 
 
