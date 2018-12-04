@@ -131,7 +131,7 @@ tToken nextToken()
     }
     else if(c == ',')
     {
-        state = COLON;
+        state = COMMA;
     }
     else if(c == '(')
     {
@@ -520,10 +520,10 @@ tToken nextToken()
             break;
         }
 
-        case COLON:
+        case COMMA:
         {
             c=getchar();
-            identificator.type = COLON;
+            identificator.type = COMMA;
             break;
         }
 

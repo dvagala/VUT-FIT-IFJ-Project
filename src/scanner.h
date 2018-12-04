@@ -59,7 +59,7 @@ typedef enum {
     //SYMBOLS
     LBRA,       // { 111
     RBRA,       // } 112
-    COLON,      // , 113
+    COMMA,      // , 113
     LPAR,       // ( 114
     RPAR,       // ) 115
 
