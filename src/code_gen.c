@@ -502,7 +502,6 @@ void gen_defvar_in_while(P_item *o1){
     char *value = malloc(sizeof(strlen(o1->string))+1);
     char *ifj18string;
     strcpy(value, o1->string);
-
     add_string_after_specific_string(find_nearest_good_place_for_defvar()->prev,"LF@");
     ifj18string = convert_string_to_correct_IFJcode18_format(value);
     append_text_to_specific_string(find_nearest_good_place_for_defvar()->prev,ifj18string);

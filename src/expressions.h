@@ -44,5 +44,5 @@ typedef struct {
     int error_code;
 }ReturnData;
 
-ReturnData analyze_expresssion(tToken token, tToken aheadToken, bool tokenLookAheadFlag, Bnode *tree );
+ReturnData *analyze_expresssion(tToken token, tToken aheadToken, bool tokenLookAheadFlag, Bnode *tree );
 #endif //IFJ_PROJECT_EXPRESSION_H
