@@ -430,6 +430,9 @@ bool def_func(){
                             return false;
                         if (token.type == END) {
 
+//                            add_string_after_specific_string(active_code_list->end, "POPS LF@%retval");
+//                            active_code_list->end->is_start_of_new_line = true;
+
                             // Generate code
                             add_string_after_specific_string(active_code_list->end, "POPFRAME");
                             active_code_list->end->is_start_of_new_line = true;
@@ -497,18 +500,6 @@ bool term(int *num_of_args, char *func_name){
     } else{
         add_string_after_specific_string(active_code_list->end, "WRITE");
         active_code_list->end->is_start_of_new_line = true;
-    }
-
-    // This is not by ll rules, when is minus before number in call func args, this will handle it
-    if(token.type == MINUS){
-        token = enhanced_next_token();
-        if(DEBUG_PARSER) printf("PARSER: minus was before number in argument\n");
-        if(token.type == INT)
-            token.data.value_int *= -1;
-        else if (token.type == FLOAT)
-            token.data.value_double *= -1;
-        else
-            return false;
     }
 
     // 18. Term -> id
@@ -641,18 +632,6 @@ bool arg_in_brackets(int *num_of_args, char *func_name){
     if(DEBUG_PARSER) printf("PARSER: Im in %s\n", non_term);
     if(DEBUG_PARSER) printf("PARSER: token type: %s\n", token_type_enum_string[token.type]);
 
-    // This is not by ll rules, when is minus before number in call func args, this will handle it
-    if(token.type == MINUS){
-        token = enhanced_next_token();
-        if(DEBUG_PARSER) printf("PARSER: minus was before number in argument\n");
-        if(token.type == INT)
-            token.data.value_int *= -1;
-        else if (token.type == FLOAT)
-            token.data.value_double *= -1;
-        else
-            return false;
-    }
-
     // 15. Arg_in_brackets -> Term More-args
     if(token.type == IDENTIFICATOR || token.type == INT || token.type == FLOAT ||
        token.type == STRING || token.type == NIL){
@@ -684,17 +663,6 @@ bool call_func_args(int *num_of_args, char *func_name){
         active_code_list->end->is_start_of_new_line = true;
     }
 
-    // This is not by ll rules, when is minus before number in call func args, this will handle it
-    if(token.type == MINUS){
-        token = enhanced_next_token();
-        if(DEBUG_PARSER) printf("PARSER: minus was before number in argument\n");
-        if(token.type == INT)
-            token.data.value_int *= -1;
-        else if (token.type == FLOAT)
-            token.data.value_double *= -1;
-        else
-            return false;
-    }
 
     // 13. Call_func_args -> Term More-args
     if(token.type == IDENTIFICATOR || token.type == INT || token.type == FLOAT ||
@@ -814,18 +782,6 @@ bool after_id() {
     char non_term[] = "after_id";
     if(DEBUG_PARSER) printf("PARSER: Im in %s\n", non_term);
     if(DEBUG_PARSER) printf("PARSER: token type: %s\n", token_type_enum_string[token.type]);
-
-    // This is not by ll rules, when is minus before number in call func args, this will handle it
-    if(token.type == MINUS){
-        token = nextToken();        // TODO: this will probbably cause error in the future
-        if(DEBUG_PARSER) printf("PARSER: minus was before number in argument\n");
-        if(token.type == INT)
-            token.data.value_int *= -1;
-        else if (token.type == FLOAT)
-            token.data.value_double *= -1;
-        else
-            return false;
-    }
 
     // 10. After_id -> Call_func_args
     if(token.type == IDENTIFICATOR || token.type == EOL_CASE || token.type == LPAR ||
