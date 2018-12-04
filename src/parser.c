@@ -99,14 +99,14 @@ bool is_token_start_of_expr() {
             return true;
         }
         aheadToken = next_token_lookahead();
-        // This throw sematic error 3, when: func + 5
+        // This throw sematic error 2, when: func + 5
         if(is_func_defined(&global_symtable, token.data.string)){
             if(aheadToken.type == PLUS || aheadToken.type == MINUS || aheadToken.type == DIVIDE || aheadToken.type == MULT ||
             aheadToken.type == EQUAL || aheadToken.type == NOTEQUAL || aheadToken.type == LOE || aheadToken.type == MOE ||
             aheadToken.type == LESS || aheadToken.type == MORE){
                 // This ensures that only first error will be in error_code
                 if(error_code == 0)
-                    error_code = 3;
+                    error_code = 2;
             }
         }
         if(is_id_variable(&actual_symtable, token.data.string)){
@@ -361,6 +361,7 @@ bool def_func(){
 
     // 27. Def_func -> def id ( Param ) eol St_list end eol
     if(token.type == DEF) {
+        im_in_function = true;
         active_code_list = functions_code_list;     // Switch context
         pop();
         if (token.type == IDENTIFICATOR) {
@@ -406,6 +407,8 @@ bool def_func(){
             active_code_list->end->is_start_of_new_line = true;
             add_string_after_specific_string(active_code_list->end, "MOVE LF@%retval nil@nil");
             active_code_list->end->is_start_of_new_line = true;
+            add_string_after_specific_string(active_code_list->end, "PUSHS nil@nil");
+            active_code_list->end->is_start_of_new_line = true;
 
             // New local symtable for this function
             local_symtable_init(&actual_symtable);
@@ -430,8 +433,8 @@ bool def_func(){
                             return false;
                         if (token.type == END) {
 
-//                            add_string_after_specific_string(active_code_list->end, "POPS LF@%retval");
-//                            active_code_list->end->is_start_of_new_line = true;
+                            add_string_after_specific_string(active_code_list->end, "POPS LF@%retval");
+                            active_code_list->end->is_start_of_new_line = true;
 
                             // Generate code
                             add_string_after_specific_string(active_code_list->end, "POPFRAME");
@@ -741,10 +744,7 @@ bool call_func(char *var_name, char **func_name_to_parent){
             add_string_after_specific_string(active_code_list->end, func_name);
         }
 
-        if(DEBUG_FREE) fprintf(stderr, "Parser: Call func: Free: %p, %s, %c\n", func_name, func_name, func_name[0]);
-        // Free string stored in token.data.string, dont need this anymore
-        free(func_name);
-        func_name = NULL;
+
 
         return sub_analysis_result;
     }
@@ -806,9 +806,9 @@ bool after_id() {
 
         // Semantics. Check if num_of_args == func_name.defined.parameters, if not error 5
         // If number of define_params == -1,
-        // it means number of parameters is variable (for system func print()), thus skip error scope
+        // it means number of parameters is variable (at leaast 1), (for system func print()), thus skip error scope
         int defined_params = get_num_of_defined_func_params(&global_symtable, func_name);
-        if(num_of_args != defined_params && defined_params != -1){
+        if(num_of_args != defined_params && (defined_params != -1 || num_of_args < 1)){
             if(DEBUG_SEMATNICS) printf("SEMANTICS: %s: number of arg not quals params\n", func_name);
             // This ensures that only first error will be in error_code
             if(error_code == 0)
@@ -824,6 +824,10 @@ bool after_id() {
             add_string_after_specific_string(active_code_list->end, "CALL");
             active_code_list->end->is_start_of_new_line = true;
             add_string_after_specific_string(active_code_list->end, func_name);
+
+            // If this is last line in func, put result of expression on stack
+            add_string_after_specific_string(active_code_list->end, "PUSHS TF@%retval");
+            active_code_list->end->is_start_of_new_line = true;
         }
 
         if(DEBUG_FREE) fprintf(stderr, "Parser: After id: Free: %p, %s, %c\n", func_name, func_name, func_name[0]);
@@ -917,10 +921,20 @@ bool after_id() {
             append_text_to_specific_string(active_code_list->end, var_name);
         }
 
+        // If this is last line in func, put result of expression on stack
+        add_string_after_specific_string(active_code_list->end, "PUSHS LF@");
+        active_code_list->end->is_start_of_new_line = true;
+        append_text_to_specific_string(active_code_list->end, var_name);
+
         if(DEBUG_FREE) fprintf(stderr, "Parser: After id: free: %p, %s, %c\n", var_name, var_name, var_name[0]);
         // Free string stored in token.data.string, dont need this anymore
         free(var_name);
         var_name = NULL;
+
+        if(DEBUG_FREE) fprintf(stderr, "Parser: Call func: Free: %p, %s, %c\n", func_name, func_name, func_name[0]);
+        // Free string stored in token.data.string, dont need this anymore
+        free(func_name);
+        func_name = NULL;
 
 
         return result;
@@ -1119,6 +1133,10 @@ bool state(){
                         active_code_list->end->is_start_of_new_line = true;
                         sprintf(str, "%d", while_end_num);
                         append_text_to_specific_string(active_code_list->end, str);
+
+                        // Because while always return nil
+                        add_string_after_specific_string(active_code_list->end, "PUSHS nil@nil");
+                        active_code_list->end->is_start_of_new_line = true;
 
                         if(im_parent_while_loop)
                             im_in_while_loop = false;
