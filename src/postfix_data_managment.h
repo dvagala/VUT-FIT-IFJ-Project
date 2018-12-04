@@ -17,7 +17,30 @@
 
 #include "param_list.h"
 #include "scanner.h"
-#include "expressions.h"
+
+typedef enum prec_table_symbols{
+    P_PLUS,   // +
+    P_MINUS,  // -
+    P_MUL,    // *
+    P_DIV,    // /
+    P_EQ,     // ==
+    P_NOT_EQ, // !=
+    P_LESS_EQ,// <=
+    P_MORE_EQ,// >=
+    P_LESS,   // <
+    P_MORE,   // >
+    P_LEFT_PAR,// (
+    P_RIGHT_PAR,// )
+    P_ID,     // ID
+    P_INT_NUM,// int
+    P_FLOAT_NUM,// float
+    P_STRING,// string
+    P_DOLLAR,// $
+    P_STOP,
+    P_NON_TERM,// non terminal
+    P_IDIV
+
+}Prec_table_symbols_enum;
 
 typedef struct operator_stack_item{
     Prec_table_symbols_enum operator;
@@ -51,6 +74,8 @@ typedef struct {
     P_item_ptr first;
     P_item_ptr last;
 }Output_queue;
+
+
 
 void operator_stack_init(Operator_stack *stack);
 bool operator_stack_push(Operator_stack *stack,Prec_table_symbols_enum operator);
