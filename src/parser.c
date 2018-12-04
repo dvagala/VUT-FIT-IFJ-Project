@@ -28,7 +28,6 @@ tToken aheadToken;          // When I need to do lookahead what is after actual 
 tToken previousToken;       // always behind actual token, use for expression detect
 //tToken previousPreviousToken;       // always behind previousToken, this
 bool tokenLookAheadFlag = false;
-bool im_in_while_loop = false;
 
 // If we are in definition of function this is local_symtable of that function, otherwise == global_symtable
 Bnode actual_symtable;
@@ -1220,6 +1219,7 @@ bool prog(){
 
 void init_parser(){
     // For throwing away EOL if is as start of file
+    im_in_while_loop = false;
     token.type = EOL_CASE;
     code_list_init();
     generic_label_count = 0;
