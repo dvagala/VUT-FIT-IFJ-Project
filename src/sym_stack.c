@@ -101,6 +101,7 @@ void s_free (S_stack *stack){
     while(stack->top){
         s_pop(stack);
     }
+    s_init(stack);
 }
 
 //int main(){

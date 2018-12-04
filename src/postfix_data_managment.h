@@ -37,8 +37,8 @@ typedef enum prec_table_symbols{
     P_STRING,// string
     P_DOLLAR,// $
     P_STOP,
-    P_NON_TERM,// non terminal
-    P_IDIV
+    P_NON_TERM// non terminal
+
 
 }Prec_table_symbols_enum;
 
@@ -98,8 +98,5 @@ void queue_dispose(Output_queue *q);
 bool determine_type_and_insert(Output_queue *q, tToken *token);
 void delete_first(Output_queue *q);
 bool first_from_queue_to_stack(Output_queue *q, P_stack *stack);
-void update_res(P_item *item);
-P_item* get_first_operand(Output_queue *q);
-P_item* get_second_operand(Output_queue *q);
-void delete_until_operator(Output_queue *q);
+
 #endif //IFJ_PROJECT_POSTFIX_STACK_H

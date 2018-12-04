@@ -358,6 +358,7 @@ void exit_gen(int error_code){
 }
 bool item_value_gen_and_add(P_item *item,bool append){
     char *value;
+    char *ifj18string;
     if(!item)
         return false;
     switch(item->operator){
@@ -392,8 +393,10 @@ bool item_value_gen_and_add(P_item *item,bool append){
             if(!append){
                 add_string_after_specific_string(active_code_list->end,"string@");
             }else append_text_to_specific_string(active_code_list->end, "string$");
-            append_text_to_specific_string(active_code_list->end,convert_string_to_correct_IFJcode18_format(value));
+            ifj18string = convert_string_to_correct_IFJcode18_format(value);
+            append_text_to_specific_string(active_code_list->end,ifj18string);
             free(value);
+            free(ifj18string);
             break;
         case P_ID:
             value = malloc(sizeof(strlen(item->string))+1);
@@ -401,9 +404,10 @@ bool item_value_gen_and_add(P_item *item,bool append){
             if(!append){
                 add_string_after_specific_string(active_code_list->end,"LF@");
             }else append_text_to_specific_string(active_code_list->end, "LF$");
-            append_text_to_specific_string(active_code_list->end,convert_string_to_correct_IFJcode18_format(value));
-
+            ifj18string = convert_string_to_correct_IFJcode18_format(value);
+            append_text_to_specific_string(active_code_list->end,ifj18string);
             free(value);
+            free(ifj18string);
             break;
         default:
             return false;
@@ -496,10 +500,13 @@ void gen_defvar_in_while(P_item *o1){
     add_string_after_specific_string(find_nearest_good_place_for_defvar()->prev,"DEFVAR");
     find_nearest_good_place_for_defvar()->prev->is_start_of_new_line = true;
     char *value = malloc(sizeof(strlen(o1->string))+1);
+    char *ifj18string;
     strcpy(value, o1->string);
 
     add_string_after_specific_string(find_nearest_good_place_for_defvar()->prev,"LF@");
-    append_text_to_specific_string(find_nearest_good_place_for_defvar()->prev,convert_string_to_correct_IFJcode18_format(value));
+    ifj18string = convert_string_to_correct_IFJcode18_format(value);
+    append_text_to_specific_string(find_nearest_good_place_for_defvar()->prev,ifj18string);
+    free(ifj18string);
     free(value);
     append_text_to_specific_string(find_nearest_good_place_for_defvar()->prev,"$type");
     append_unique_code_to_newfound_defvar();

@@ -67,6 +67,7 @@ void operator_stack_free (Operator_stack *stack){
     while(stack->top){
         operator_pop(stack);
     }
+    operator_stack_init(stack);
 
 }
 //--------------------------------------------------
@@ -140,6 +141,9 @@ void p_stack_pop(P_stack *stack){
         if(stack->top!=NULL){
             P_item *pom = stack->top;
             stack->top = stack->top->next_item;
+            if(pom->string!=NULL) {
+                free(pom->string);
+            }
             free(pom);
         }
 }
@@ -150,6 +154,7 @@ void p_stack_free(P_stack *stack){
             p_stack_pop(stack);
         }
     }
+    p_stack_init(stack);
 
 }
 
@@ -200,9 +205,6 @@ void update_last_is_variable(Output_queue *q){
 void update_last_is_operator(Output_queue *q){
     q->last->is_operator = true;
 }
-void update_res(P_item *item){
-    item->res = true;
-}
 
 bool determine_type_and_insert(Output_queue *q, tToken *token){
     if(token->type == IDENTIFICATOR){
@@ -245,43 +247,6 @@ bool insert_operator(Output_queue *q, Prec_table_symbols_enum operator){
     }
     return false;
 }
-
-P_item* get_first_operand(Output_queue *q){
-    if(q){
-        P_item *item = q->first;
-        while(item){
-            if(!item->is_operator){
-                return item;
-            }
-            item = item->next_item;
-        }
-
-    }
-    return NULL;
-}
-P_item* get_second_operand(Output_queue *q){
-    if(q){
-        P_item *item = q->first;
-        while(item){
-            if(!item->is_operator){
-                return item->next_item;
-            }
-            item = item->next_item;
-        }
-
-    }
-    return NULL;
-}
-
-void delete_until_operator(Output_queue *q){
-    if(q){
-        while(!q->first->is_operator){
-            delete_first(q);
-        }
-        delete_first(q);
-    }
-}
-
 
 void print_queue(Output_queue q){
     P_item *item = q.first;
