@@ -113,7 +113,7 @@ bool is_token_start_of_expr() {
         }
         if(is_id_variable(&actual_symtable, token.data.string)){
             if(aheadToken.type != ASSIGN && previousToken.type != LPAR &&
-               previousToken.type != COLON && previousToken.type != IDENTIFICATOR){
+               previousToken.type != COMMA && previousToken.type != IDENTIFICATOR){
                 // There are only 3 cases when id_variable is not start of expression
                 // 1. id_variable = restOfCode
                 // 2. def id_func(id_variable, id_variable)
@@ -126,7 +126,7 @@ bool is_token_start_of_expr() {
         // In this cases it is not start of expression
         // 1. id_func 45, "hoho"
         // 2. id_func (45, "hoho")
-        if(previousToken.type != IDENTIFICATOR && previousToken.type != COLON && previousToken.type != LPAR){
+        if(previousToken.type != IDENTIFICATOR && previousToken.type != COMMA && previousToken.type != LPAR){
             if(DEBUG_PARSER) printf("PARSER: --Start of expr: Second\n");
             return true;
         }
@@ -254,7 +254,7 @@ bool more_param(char *func_name){
     if(token.type == RPAR){
         if(DEBUG_PARSER) printf("PARSER: %s returning: %d\n", non_term, 1);
         return true;
-    } else if(token.type == COLON){        // 32. More_params -> , id More_params
+    } else if(token.type == COMMA){        // 32. More_params -> , id More_params
         pop();
         if(token.type == IDENTIFICATOR){
 
@@ -468,7 +468,7 @@ bool more_args(int *num_of_args, char *func_name){
     if(token.type == EOL_CASE || token.type == RPAR){
         if(DEBUG_PARSER) printf("PARSER: %s returning: %d\n", non_term, 1);
         return true;
-    } else if(token.type == COLON){         // 16. More-args -> , Term More-args
+    } else if(token.type == COMMA){         // 16. More-args -> , Term More-args
         pop();
         (*num_of_args)++;                   // So we found another argument
         return term(num_of_args, func_name) && more_args(num_of_args, func_name);
