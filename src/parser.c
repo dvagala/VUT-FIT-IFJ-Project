@@ -1060,9 +1060,6 @@ bool state(){
         Tstring good_place_for_defvar = active_code_list->end;
         if(im_in_while_loop){
             good_place_for_defvar = find_nearest_good_place_for_defvar()->prev;
-        } else{
-            active_code_list->end->before_me_is_good_place_for_defvar = true;
-            im_parent_while_loop = true;
         }
 
         add_string_after_specific_string(good_place_for_defvar, "DEFVAR LF@condition_");
@@ -1070,13 +1067,18 @@ bool state(){
         sprintf(str, "%d", condition_num);
         append_text_to_specific_string(good_place_for_defvar->next, str);
 
-        im_in_while_loop = true;
-
         add_string_after_specific_string(active_code_list->end, "LABEL $while_");
         active_code_list->end->is_start_of_new_line = true;
         int while_num = generic_label_count++;
         sprintf(str, "%d", while_num);
         append_text_to_specific_string(active_code_list->end, str);
+
+        if(!im_in_while_loop){
+            active_code_list->end->before_me_is_good_place_for_defvar = true;
+            im_parent_while_loop = true;
+        }
+
+        im_in_while_loop = true;
 
         pop();
         if(!expr())
