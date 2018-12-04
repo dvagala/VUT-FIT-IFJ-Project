@@ -233,7 +233,7 @@ void append_unique_code(){
     free(value);
 }
 
-void gen_unique_operation(Prec_table_symbols_enum operator){
+void gen_unique_operation(Prec_table_symbols_enum operator,P_item *o1){
     char *value=malloc(sizeof(char)*8+1);
     switch (operator) {
         case P_PLUS:
@@ -246,10 +246,12 @@ void gen_unique_operation(Prec_table_symbols_enum operator){
             strcpy(value,"$muls");
             break;
         case P_DIV:
-            strcpy(value,"$divs");
+            if(o1->operator == P_FLOAT_NUM) {
+                strcpy(value, "$divs");
+            }else if(o1->operator == P_INT_NUM){
+                strcpy(value,"$idivs");
+            }
             break;
-        case P_IDIV:
-            strcpy(value,"$idivs");
         case P_LESS:
             strcpy(value,"$less");
             break;
@@ -258,6 +260,16 @@ void gen_unique_operation(Prec_table_symbols_enum operator){
             break;
         case P_MORE:
             strcpy(value,"$mores");
+            break;
+        case P_NOT_EQ:
+            strcpy(value,"$noteqs");
+            break;
+        case P_LESS_EQ:
+            strcpy(value, "$lesseqs");
+            break;
+        case P_MORE_EQ:
+            strcpy(value,"$moreeqs");
+            break;
         default:
             break;
     }
@@ -451,7 +463,7 @@ bool item_type_gen_and_add(P_item *item, bool append){
 
 void gen_custom_jumpifeq(P_item *o1, Prec_table_symbols_enum operator){
     insert_simple_instruction("JUMPIFEQ");
-    gen_unique_operation(operator);
+    gen_unique_operation(operator,o1);
     add_unique_res_type(false);
     item_type_gen_and_add(o1,false);
 

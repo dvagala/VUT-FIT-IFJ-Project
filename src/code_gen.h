@@ -40,7 +40,7 @@ void add_string_after_specific_string(Tstring specific_string, char *text);
 void free_code_lists();
 
 void gen_custom_jumpifeq(P_item *o1, Prec_table_symbols_enum operator);
-void gen_unique_operation(Prec_table_symbols_enum operator);
+void gen_unique_operation(Prec_table_symbols_enum operator, P_item *o1);
 void exit_gen(int error_code);
 bool push_res();
 bool declare_defvar_restype();
