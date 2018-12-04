@@ -92,10 +92,31 @@ bool is_token_start_of_expr() {
     if (token.type == IDENTIFICATOR) {
         if(DEBUG_PARSER) printf("PARSER: Token.data.string: \"%s\"\n", token.data.string);
         if(previousToken.type == IF || previousToken.type == WHILE){
+            if(is_func_defined(&global_symtable, token.data.string)){
+                // This ensures that only first error will be in error_code
+                if(error_code == 0)
+                    error_code = 4;
+            }
+            else if(!is_id_variable(&actual_symtable, token.data.string)) {
+                // This ensures that only first error will be in error_code
+                if (error_code == 0)
+                    error_code = 3;
+            }
+
             return true;
         }
+        aheadToken = next_token_lookahead();
+        // This throw sematic error 4, when: func + 5
+        if(is_func_defined(&global_symtable, token.data.string)){
+            if(aheadToken.type == PLUS || aheadToken.type == MINUS || aheadToken.type == DIVIDE || aheadToken.type == MULT ||
+            aheadToken.type == EQUAL || aheadToken.type == NOTEQUAL || aheadToken.type == LOE || aheadToken.type == MOE ||
+            aheadToken.type == LESS || aheadToken.type == MORE){
+                // This ensures that only first error will be in error_code
+                if(error_code == 0)
+                    error_code = 4;
+            }
+        }
         if(is_id_variable(&actual_symtable, token.data.string)){
-            aheadToken = next_token_lookahead();
             if(aheadToken.type != ASSIGN && previousToken.type != LPAR &&
                previousToken.type != COLON && previousToken.type != IDENTIFICATOR){
                 // There are only 3 cases when id_variable is not start of expression
@@ -1386,7 +1407,6 @@ int main(){
 //    return 0;
 
 
-
     pop();      // get first token
 
     // Start analyser
@@ -1397,13 +1417,16 @@ int main(){
         error_code = 2;
     }
 
-    // Print functions definitions
-    active_code_list = functions_code_list;
-    print_code();
+    if(!DEBUG_PARSER){
+            // Print functions definitions
+        active_code_list = functions_code_list;
+        print_code();
 
-    // Print main body
-    active_code_list = main_code_list;
-    print_code();
+        // Print main body
+        active_code_list = main_code_list;
+        print_code();
+    }
+
 
     // Free stuff
     free_global_symtable(&global_symtable);
