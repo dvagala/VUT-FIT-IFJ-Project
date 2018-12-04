@@ -17,8 +17,7 @@
 #include "sym_stack.h"
 #include "postfix_data_managment.h"
 
-
-
+bool im_in_while_loop;
 
 typedef enum expr_rules{
                // E->

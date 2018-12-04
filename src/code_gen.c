@@ -233,6 +233,12 @@ void append_unique_code(){
     append_text_to_specific_string(active_code_list->end, value);
     free(value);
 }
+void append_unique_code_to_newfound_defvar(){
+    char *value = malloc(sizeof(int)+1);
+    sprintf(value,"%d",generic_label_count);
+    append_text_to_specific_string(find_nearest_good_place_for_defvar()->prev, value);
+    free(value);
+}
 
 void gen_unique_operation(Prec_table_symbols_enum operator,P_item *o1){
     char *value=malloc(sizeof(char)*8+1);
@@ -298,14 +304,29 @@ void add_unique_res(){
     append_unique_code();
 }
 
-bool declare_defvar_restype(){
-    insert_simple_instruction("DEFVAR");
-    add_unique_res_type(false);
+bool declare_defvar_restype(bool is_while){
+    if(is_while){
+        add_string_after_specific_string(find_nearest_good_place_for_defvar()->prev,"DEFVAR");
+        find_nearest_good_place_for_defvar()->prev->is_start_of_new_line = true;
+        add_string_after_specific_string(find_nearest_good_place_for_defvar()->prev, "LF@%res$type");
+        append_unique_code_to_newfound_defvar();
+    }
+    else {
+        insert_simple_instruction("DEFVAR");
+        add_unique_res_type(false);
+    }
 }
 
-bool insert_defvar_res(){
-    insert_simple_instruction("DEFVAR");
-    add_unique_res();
+bool insert_defvar_res(bool is_while){
+    if(is_while){
+        add_string_after_specific_string(find_nearest_good_place_for_defvar()->prev,"DEFVAR");
+        find_nearest_good_place_for_defvar()->prev->is_start_of_new_line = true;
+        add_string_after_specific_string(find_nearest_good_place_for_defvar()->prev, "LF@%res");
+        append_unique_code_to_newfound_defvar();
+    }else {
+        insert_simple_instruction("DEFVAR");
+        add_unique_res();
+    }
 }
 
 bool insert_simple_instruction(char *instruction){
@@ -381,6 +402,7 @@ bool item_value_gen_and_add(P_item *item,bool append){
                 add_string_after_specific_string(active_code_list->end,"LF@");
             }else append_text_to_specific_string(active_code_list->end, "LF$");
             append_text_to_specific_string(active_code_list->end,convert_string_to_correct_IFJcode18_format(value));
+
             free(value);
             break;
         default:
@@ -470,7 +492,19 @@ void gen_custom_jumpifeq(P_item *o1, Prec_table_symbols_enum operator){
 
 }
 
+void gen_defvar_in_while(P_item *o1){
+    add_string_after_specific_string(find_nearest_good_place_for_defvar()->prev,"DEFVAR");
+    find_nearest_good_place_for_defvar()->prev->is_start_of_new_line = true;
+    char *value = malloc(sizeof(strlen(o1->string))+1);
+    strcpy(value, o1->string);
 
+    add_string_after_specific_string(find_nearest_good_place_for_defvar()->prev,"LF@");
+    append_text_to_specific_string(find_nearest_good_place_for_defvar()->prev,convert_string_to_correct_IFJcode18_format(value));
+    free(value);
+    append_text_to_specific_string(find_nearest_good_place_for_defvar()->prev,"$type");
+    append_unique_code_to_newfound_defvar();
+
+}
 
 bool insert_instruction(char *instruction, P_item *o1, P_item *o2,char *type){
     add_string_after_specific_string(active_code_list->end,instruction);
@@ -541,6 +575,7 @@ bool insert_instruction(char *instruction, P_item *o1, P_item *o2,char *type){
     }
     else if(!strcmp(instruction,"DEFVAR")){
         add_unique_var_type(o1);
+
     }
 
     return true;

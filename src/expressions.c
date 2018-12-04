@@ -396,12 +396,15 @@ int both_are_undefined(Output_queue q,P_stack *post_stack, Prec_table_symbols_en
     float_pom->operator = P_FLOAT_NUM;
     float_pom->value_double = 1;
     string_pom->operator = P_STRING;
-    insert_defvar_res();
-    declare_defvar_restype();
+    insert_defvar_res(im_in_while_loop);
+    declare_defvar_restype(im_in_while_loop);
 
     o2 = post_stack->top;//o1 + o2
     o1 = post_stack->top->next_item;
-    insert_instruction("DEFVAR", o2, NULL, NULL);
+    if(im_in_while_loop){
+        gen_defvar_in_while(o1);
+    }
+    else insert_instruction("DEFVAR", o2, NULL, NULL);
 
     insert_instruction("MOVE", o1, NULL, NULL);//MOVE Lf@%res o1
 
@@ -477,8 +480,8 @@ int one_is_undefined_semantics(Output_queue q,P_stack *post_stack,Prec_table_sym
     o2 = post_stack->top;//o1 + o2
     o1 = post_stack->top->next_item;
 
-    insert_defvar_res();
-    declare_defvar_restype();
+    insert_defvar_res(im_in_while_loop);
+    declare_defvar_restype(im_in_while_loop);
     if(o1->operator == P_ID) {
         insert_instruction("MOVE",o1, NULL,NULL);//MOVE Lf@%res o1
         insert_instruction("TYPE",NULL,NULL,NULL);//TYPE LF@%res$type LF@%res
@@ -503,6 +506,7 @@ int one_is_undefined_semantics(Output_queue q,P_stack *post_stack,Prec_table_sym
             exit_gen(4);
             insert_instruction("LABEL", defined, NULL, NULL);
             insert_instruction("CONCAT", defined, NULL,NULL);
+            push_res();
             return SYNTAX_OK;
         }
         else return COMPATIBILITY_ERROR;
@@ -572,10 +576,11 @@ int semantics(Output_queue q,P_stack *stack,Prec_table_symbols_enum operator, Re
 
         } else if (o1->operator != o2->operator) return COMPATIBILITY_ERROR;
 
-        insert_defvar_res();
+        insert_defvar_res(im_in_while_loop);
 
         if (o1->operator == P_STRING && o2->operator == P_STRING) {
             insert_instruction("CONCAT", o1, o2,NULL);
+            push_res();
         } else {
             insert_instruction("PUSHS", o1, NULL,NULL);
             insert_instruction("PUSHS", o2, NULL,NULL);

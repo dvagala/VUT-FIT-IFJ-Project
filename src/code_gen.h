@@ -43,13 +43,13 @@ void gen_custom_jumpifeq(P_item *o1, Prec_table_symbols_enum operator);
 void gen_unique_operation(Prec_table_symbols_enum operator, P_item *o1);
 void exit_gen(int error_code);
 bool push_res();
-bool declare_defvar_restype();
-bool insert_defvar_res();
+bool declare_defvar_restype(bool is_while);
+bool insert_defvar_res(bool is_while);
 bool insert_simple_instruction(char *instruction);
 bool insert_instruction(char *instruction, P_item *o1, P_item *o2, char *type);
 bool item_value_gen_and_add(P_item *item, bool append);
 void insert_res_and_type( P_item *o1);
-
+void gen_defvar_in_while(P_item *o1);
 char* convert_string_to_correct_IFJcode18_format(char *input);
 
 void generate_system_functions();
