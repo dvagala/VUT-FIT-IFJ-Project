@@ -37,7 +37,7 @@ const char* token_type_enum_string[] = {
         "NOTEQUAL",   // !=110
         "LBRA",       // { 111
         "RBRA",       // } 112
-        "COLON",      // , 113
+        "COMMA",      // , 113
         "LPAR",       // ( 114
         "RPAR",       // ) 115
         [200] = "SINGLECOM",   // # -"SINGLE""LINE"" "COMMENTS"  200

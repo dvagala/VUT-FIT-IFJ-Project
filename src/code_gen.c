@@ -609,8 +609,11 @@ char* convert_string_to_correct_IFJcode18_format(char *input)
                 amount++;
                 char *old_output = output;
                 output=realloc(output, sizeof(char)*chunk*amount);
-                if(output != old_output)
+                if(output != old_output){
+//                    fprintf(stderr, "Reall\n");
                     free(old_output);
+                }
+
             }
 
             output[index]='0';
@@ -628,8 +631,10 @@ char* convert_string_to_correct_IFJcode18_format(char *input)
                         amount++;
                         char *old_output = output;
                         output=realloc(output, sizeof(char)*chunk*amount);
-                        if(output != old_output)
+                        if(output != old_output){
+//                            fprintf(stderr, "Reall\n");
                             free(old_output);
+                        }
                     }
                     output[index]=number[j];
                     index++;
@@ -646,8 +651,10 @@ char* convert_string_to_correct_IFJcode18_format(char *input)
             char *old_output = output;
             output=realloc(output, sizeof(char)*chunk*amount);
             // If realloc returned different address, free that old one
-            if(output != old_output)
+            if(output != old_output){
+//                fprintf(stderr, "Reall\n");
                 free(old_output);
+            }
         }
     }
     output[index]='\0';
