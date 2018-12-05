@@ -152,7 +152,6 @@ bool expr(){
     token = *(returnData->token);
 
     if(error_code == 0 && returnData->error){
-        fprintf(stderr, "PARSER: Expression sending me error: %d\n", returnData->error_code);
         error_code = returnData->error_code;
     }
 
@@ -854,7 +853,6 @@ bool state(){
 
         if(!im_in_while_or_if){
             active_code_list->end->before_me_is_good_place_for_defvar = true;
-            fprintf(stderr, "good place: %s\n", active_code_list->end->text);
             im_parent_while_or_if = true;
         }
         im_in_while_or_if = true;
