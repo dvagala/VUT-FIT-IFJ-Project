@@ -24,6 +24,7 @@
 // Created by Ancient on 22.11.2018.
 //
 
+/**Function returns data_type from token*/
 Data_type get_type_from_token(tToken *token){
     switch (token->type){
         case INT:
@@ -37,7 +38,7 @@ Data_type get_type_from_token(tToken *token){
     }
 }
 
-//used to decide position of next node
+/**Function that compares keys in tree structure and decides if key2 is less, more or equal */
 int keyCmp(char *key1, char *key2, int letter_position ) {
     if (!strcmp(key1, key2)) {
         return TEQUAL; //equal
@@ -50,6 +51,7 @@ int keyCmp(char *key1, char *key2, int letter_position ) {
 
 }
 
+/**Function for inserting Bnode into the tree structure */
 bool Binsert(Bnode *rootPtr, char *id, bool func_bool){
 
     if(!*rootPtr){
@@ -88,6 +90,7 @@ bool Binsert(Bnode *rootPtr, char *id, bool func_bool){
 
 }
 
+/**Function that enables searching for Bnode of a certain key and returns it if found. */
 Bnode Bsearch(Bnode rootPtr, char *key ) {
 
     if (rootPtr) {
@@ -151,10 +154,11 @@ void global_symtable_init(Bnode *rootPtr){
 
 }
 
+/**Initializes tree */
 void local_symtable_init(Bnode *rootPtr){
     *rootPtr = NULL;
 }
-
+/**Returns true if variable is already defined in tree */
 bool is_variable_defined(Bnode *actual_symtable, char *var_name){
     Bnode pom = Bsearch(*actual_symtable,var_name);
     if(pom) {
@@ -163,6 +167,7 @@ bool is_variable_defined(Bnode *actual_symtable, char *var_name){
     return false;
 }
 
+/**Returns true if function is already defined in tree*/
 bool is_func_defined(Bnode *global_symtable, char *func_name){
     Bnode pom = Bsearch(*global_symtable, func_name);
     if(pom) {
@@ -171,6 +176,7 @@ bool is_func_defined(Bnode *global_symtable, char *func_name){
     }
     return false;
 }
+
 
 bool is_system_function(Bnode *global_symtable, char *func_name){
     Bnode pom = Bsearch(*global_symtable, func_name);
@@ -181,6 +187,7 @@ bool is_system_function(Bnode *global_symtable, char *func_name){
     return false;
 }
 
+/**Returns true if variable is already in list of a function parameters */
 bool is_variable_already_in_func_params(Bnode *global_symtable, char *func_name, char *var_name){
     Bnode pom = Bsearch(*global_symtable, func_name);
     if(pom) {
@@ -190,11 +197,13 @@ bool is_variable_already_in_func_params(Bnode *global_symtable, char *func_name,
     return false;
 }
 
+
 bool has_func_same_name_as_global_variable(Bnode *global_symtable, char *func_name){
     if(Bsearch(*global_symtable,func_name) != NULL)
         return true;
     return false;
 }
+
 bool has_variable_same_name_as_func(Bnode *global_symtable, char *var_name){
     Bnode pom = Bsearch(*global_symtable,var_name);
     if(pom != NULL && pom->data.function )
@@ -220,7 +229,7 @@ bool is_id_variable(Bnode *actual_symtable, char *var_name){
     return false;
 }
 
-//---- These return false only when malloc fail creating new tree node,
+/**These functions return false, when malloc fails*/
 bool add_variable_to_symtable(Bnode *actual_symtable, char *var_name){
     if (Binsert(actual_symtable, var_name, false))
         return true;
@@ -244,22 +253,7 @@ bool add_variable_to_func_params(Bnode *global_symtable, char *func_name, char *
     return false;
 }
 
-
-
-bool add_variables_from_func_params(Bnode *global_symtable, Bnode *actual_symtable, char *func_name){
-    Bnode pom = Bsearch(*global_symtable,func_name);
-    if (pom){
-        for(int i = 0; i < pom->data.list->element_count; i++){
-            if(!add_variable_to_symtable(actual_symtable, get_nth_element(pom->data.list,i)->id)) {
-//                printf("%d",i);
-                return false;
-            }
-        }
-        return true;
-    }
-    return false;
-}
-
+/**This function return id of a parameter at certain position */
 char *get_name_of_defined_param_at_position(Bnode *global_symtable, char *func_name, int n){
 
     if(n >= get_num_of_defined_func_params(global_symtable, func_name))
@@ -272,6 +266,7 @@ char *get_name_of_defined_param_at_position(Bnode *global_symtable, char *func_n
     return NULL;
 }
 
+/**Functions for tree disposal*/
 void free_symtable_recursive(Bnode *symtable){
 
     if(*symtable){
@@ -306,22 +301,3 @@ void free_symtable(Bnode *symtable){
     free_params(symtable);
     free_symtable_recursive(symtable);
 }
-
-//int main(){
-//    Bnode tree = symtable_init();
-//    Bnode local_tree = symtable_init();
-//    add_variable_to_symtable(&tree,"ondo");
-//    add_func_to_symtable(&tree, "orechi");
-//    add_variable_to_func_params(&tree,"orechi","a");
-//    add_variable_to_func_params(&tree,"orechi","b");
-//    add_variable_to_func_params(&tree,"orechi","c");
-//    if(add_variables_from_func_params(&tree,&local_tree,"orechi"))
-//        printf("%s","juch");
-//
-//    if(is_variable_defined(&local_tree,"b"))
-//        printf("%s","je");
-//    if(is_variable_defined(&local_tree,"c"))
-//        printf("%s","je");
-//    printf("%d",Bsearch(tree,"orechi")->data.list->element_count);
-//    free_symtable(&tree);
-//}

@@ -17,7 +17,9 @@
 
 
 #define DEBUG_POSTFIX 0         // Set to '1', if you want to print debug stuff
-//Operator stack
+\
+/**Operator stack
+ * Basic stack structure that is designed to store expression operators.*/
 void operator_stack_init(Operator_stack *stack){
     stack->top = NULL;
 };
@@ -45,11 +47,6 @@ bool operator_pop(Operator_stack *stack){
     return false;
 }
 
-bool is_stack_top_not_null(Operator_stack *stack){
-    if(stack->top != NULL)
-        return true;
-    else return false;
-}
 
 bool pop_to_output_queue(Operator_stack *stack, Output_queue *q){
     if(!(stack && q) )
@@ -71,7 +68,9 @@ void operator_stack_free (Operator_stack *stack){
 
 }
 //--------------------------------------------------
-//Postfix stack
+/**Postfix stack
+ * Another stack structure designed to store operands (in form of a P_item) from postfix output queue
+ * */
 
 void p_stack_init(P_stack *stack) {
     if (stack) {
@@ -162,7 +161,10 @@ void p_stack_free(P_stack *stack){
 
 
 //---------------------------------------------------
-//Output queue
+/**Output queue
+ * Queue that is more of a list as a result of my not exactly right calculations. Stores postfix, and enables transfering
+ * values from it to postfix stack.
+ * */
 void queue_inint(Output_queue *q){
     q->first = NULL;
     q->last = NULL;
@@ -305,20 +307,4 @@ bool first_from_queue_to_stack(Output_queue *q, P_stack *stack){
     return false;
 }
 
-//int main() {
-//
-//    P_stack *stack = malloc(sizeof(P_stack));
-//    p_stack_init(stack);
-//    Output_queue *q = malloc(sizeof(Output_queue));
-//    queue_inint(q);
-//    queue_insert(q,false,5,0,NULL,P_INT_NUM);
-//    queue_insert(q,false,0,0,"ahojky",P_ID);
-//    first_from_queue_to_stack(q,stack);
-//    p_stack_push(stack,true,0,0,"ahoj",P_ID);
-//    p_stack_push(stack,true,5,0,NULL,P_INT_NUM);
-//    printf("%d\n",stack->top->operator);
-//    p_stack_free(stack);
-//    queue_dispose(q);
-//
-//}
 

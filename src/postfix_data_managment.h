@@ -82,7 +82,7 @@ bool operator_stack_push(Operator_stack *stack,Prec_table_symbols_enum operator)
 bool operator_pop(Operator_stack *stack);
 bool pop_to_output_queue(Operator_stack *stack, Output_queue *q);
 void operator_stack_free (Operator_stack *stack);
-bool is_stack_top_not_null(Operator_stack *stack);
+
 
 void p_stack_init(P_stack *stack);
 bool p_stack_push(P_stack *stack, bool is_variable, int int_value, double float_value, char *string, Prec_table_symbols_enum type);

@@ -26,7 +26,6 @@ int error_code = 0;
 tToken token;
 tToken aheadToken;          // When I need to do lookahead what is after actual token, this is it, use for expression detect
 tToken previousToken;       // always behind actual token, use for expression detect
-//tToken previousPreviousToken;       // always behind previousToken, this
 bool tokenLookAheadFlag = false;
 
 // If we are in definition of function this is local_symtable of that function, otherwise == global_symtable
@@ -36,7 +35,6 @@ Bnode global_symtable;
 // Because I set token type as EXPR when I find out that is indeed start of expression, I need
 // somehow store this original type of token, so it can set back to original before calling analyze_expression()
 int original_token_type_backup;
-
 
 /** Wrapper for nextToken enhanced with memory
  *  Always remember previously readed token
@@ -67,7 +65,7 @@ tToken next_token_lookahead(){
 
     if(tokenLookAheadFlag){
         if(DEBUG_PARSER) printf("PARSER: Can do look ahead for only one token!\n");
-        exit(1);
+        exit(99);
     }
 
     aheadToken = nextToken();
@@ -90,7 +88,7 @@ bool is_token_start_of_expr() {
             if(is_func_defined(&global_symtable, token.data.string)){
                 // This ensures that only first error will be in error_code
                 if(error_code == 0)
-                    error_code = 4;
+                    error_code = 3;
             }
             else if(!is_id_variable(&actual_symtable, token.data.string)) {
                 // This ensures that only first error will be in error_code
@@ -101,14 +99,14 @@ bool is_token_start_of_expr() {
             return true;
         }
         aheadToken = next_token_lookahead();
-        // This throw sematic error 4, when: func + 5
+        // This throw sematic error 2, when: func + 5
         if(is_func_defined(&global_symtable, token.data.string)){
             if(aheadToken.type == PLUS || aheadToken.type == MINUS || aheadToken.type == DIVIDE || aheadToken.type == MULT ||
             aheadToken.type == EQUAL || aheadToken.type == NOTEQUAL || aheadToken.type == LOE || aheadToken.type == MOE ||
             aheadToken.type == LESS || aheadToken.type == MORE){
                 // This ensures that only first error will be in error_code
                 if(error_code == 0)
-                    error_code = 4;
+                    error_code = 2;
             }
         }
         if(is_id_variable(&actual_symtable, token.data.string)){
@@ -219,18 +217,21 @@ bool expr(){
     add_string_after_specific_string(active_code_list->end, "# Expr start");
     active_code_list->end->is_start_of_new_line = true;
 
-    ReturnData returnData;
+    ReturnData *returnData;
 
     // TODO: Change this if you want to have just fake_analyze_expresssion
-    returnData = analyze_expresssion(token, aheadToken, tokenLookAheadFlag, &global_symtable);
+    returnData = analyze_expresssion(token, aheadToken, tokenLookAheadFlag, &actual_symtable);
 //    returnData = fake_analyze_expresssion(token, aheadToken, tokenLookAheadFlag, &global_symtable);
 
-    token = (*returnData.token);
+    token = *(returnData->token);
 
-    if(error_code == 0 && returnData.error){
-        fprintf(stderr, "PARSER: Expression sending me error: %d\n", returnData.error_code);
-        error_code = returnData.error_code;
+    if(error_code == 0 && returnData->error){
+        fprintf(stderr, "PARSER: Expression sending me error: %d\n", returnData->error_code);
+        error_code = returnData->error_code;
     }
+
+    //    fprintf(stderr, "Free retrndata: %p\n", &returnData);
+    free(returnData);
 
     // Because after analyze_expression this will reset
     tokenLookAheadFlag = false;
@@ -374,6 +375,7 @@ bool def_func(){
                 if(DEBUG_SEMATNICS) printf("SEMANTICS: %s, calling funciton wanst declared\n", func_name);
                 if(error_code == 0)
                     error_code = 3;
+                free(func_name);
                 return false;
             }
             if(has_func_same_name_as_global_variable(&global_symtable, func_name)){
@@ -381,12 +383,14 @@ bool def_func(){
                 // This ensures that only first error will be in error_code
                 if(error_code == 0)
                     error_code = 3;
+                free(func_name);
                 return false;
             }
             if(!add_func_to_symtable(&global_symtable, func_name)){
                 // This ensures that only first error will be in error_code
                 if(error_code == 0)
                     error_code = 99;
+                free(func_name);
                 return false;
             }
 
@@ -398,13 +402,12 @@ bool def_func(){
             add_string_after_specific_string(active_code_list->end, func_name);
             add_string_after_specific_string(active_code_list->end, "PUSHFRAME");
             active_code_list->end->is_start_of_new_line = true;
-            add_string_after_specific_string(active_code_list->end, "DEFVAR");
+            add_string_after_specific_string(active_code_list->end, "DEFVAR LF@%retval");
             active_code_list->end->is_start_of_new_line = true;
-            add_string_after_specific_string(active_code_list->end, "LF@%retval");
-            add_string_after_specific_string(active_code_list->end, "MOVE");
+            add_string_after_specific_string(active_code_list->end, "MOVE LF@%retval nil@nil");
             active_code_list->end->is_start_of_new_line = true;
-            add_string_after_specific_string(active_code_list->end, "LF@%retval");
-            add_string_after_specific_string(active_code_list->end, "nil@nil");
+            add_string_after_specific_string(active_code_list->end, "PUSHS nil@nil");
+            active_code_list->end->is_start_of_new_line = true;
 
             // New local symtable for this function
             local_symtable_init(&actual_symtable);
@@ -418,7 +421,6 @@ bool def_func(){
                 if(DEBUG_FREE) fprintf(stderr, "Parser: Def func: Free: %p, %s, %c\n", func_name,  func_name, func_name[0]);
 //                // Free string stored in token.data.string, dont need this anymore
                 free(func_name);
-                func_name = NULL;
 
                 if(!result)
                     return false;
@@ -429,6 +431,9 @@ bool def_func(){
                         if(!st_list())
                             return false;
                         if (token.type == END) {
+
+                            add_string_after_specific_string(active_code_list->end, "POPS LF@%retval");
+                            active_code_list->end->is_start_of_new_line = true;
 
                             // Generate code
                             add_string_after_specific_string(active_code_list->end, "POPFRAME");
@@ -485,32 +490,18 @@ bool term(int *num_of_args, char *func_name){
 
     // Generate code
     if(strcmp(func_name, "print") != 0){
-        add_string_after_specific_string(active_code_list->end, "DEFVAR");
+        add_string_after_specific_string(active_code_list->end, "DEFVAR TF@");
         active_code_list->end->is_start_of_new_line = true;
-        add_string_after_specific_string(active_code_list->end, "TF@");
         char *defined_param_name = get_name_of_defined_param_at_position(&global_symtable, func_name, (*num_of_args)-1);
         if(defined_param_name == NULL)
             return false;
         append_text_to_specific_string(active_code_list->end, defined_param_name);
-        add_string_after_specific_string(active_code_list->end, "MOVE");
+        add_string_after_specific_string(active_code_list->end, "MOVE TF@");
         active_code_list->end->is_start_of_new_line = true;
-        add_string_after_specific_string(active_code_list->end, "TF@");
         append_text_to_specific_string(active_code_list->end, defined_param_name);
     } else{
         add_string_after_specific_string(active_code_list->end, "WRITE");
         active_code_list->end->is_start_of_new_line = true;
-    }
-
-    // This is not by ll rules, when is minus before number in call func args, this will handle it
-    if(token.type == MINUS){
-        token = enhanced_next_token();
-        if(DEBUG_PARSER) printf("PARSER: minus was before number in argument\n");
-        if(token.type == INT)
-            token.data.value_int *= -1;
-        else if (token.type == FLOAT)
-            token.data.value_double *= -1;
-        else
-            return false;
     }
 
     // 18. Term -> id
@@ -524,6 +515,12 @@ bool term(int *num_of_args, char *func_name){
             // This ensures that only first error will be in error_code
             if(error_code == 0)
                 error_code = 3;
+            return false;
+        }
+
+        if(is_func_defined(&global_symtable, var_name)){
+            if(error_code == 0)
+                error_code = 2;
             return false;
         }
 
@@ -643,18 +640,6 @@ bool arg_in_brackets(int *num_of_args, char *func_name){
     if(DEBUG_PARSER) printf("PARSER: Im in %s\n", non_term);
     if(DEBUG_PARSER) printf("PARSER: token type: %s\n", token_type_enum_string[token.type]);
 
-    // This is not by ll rules, when is minus before number in call func args, this will handle it
-    if(token.type == MINUS){
-        token = enhanced_next_token();
-        if(DEBUG_PARSER) printf("PARSER: minus was before number in argument\n");
-        if(token.type == INT)
-            token.data.value_int *= -1;
-        else if (token.type == FLOAT)
-            token.data.value_double *= -1;
-        else
-            return false;
-    }
-
     // 15. Arg_in_brackets -> Term More-args
     if(token.type == IDENTIFICATOR || token.type == INT || token.type == FLOAT ||
        token.type == STRING || token.type == NIL){
@@ -686,17 +671,6 @@ bool call_func_args(int *num_of_args, char *func_name){
         active_code_list->end->is_start_of_new_line = true;
     }
 
-    // This is not by ll rules, when is minus before number in call func args, this will handle it
-    if(token.type == MINUS){
-        token = enhanced_next_token();
-        if(DEBUG_PARSER) printf("PARSER: minus was before number in argument\n");
-        if(token.type == INT)
-            token.data.value_int *= -1;
-        else if (token.type == FLOAT)
-            token.data.value_double *= -1;
-        else
-            return false;
-    }
 
     // 13. Call_func_args -> Term More-args
     if(token.type == IDENTIFICATOR || token.type == INT || token.type == FLOAT ||
@@ -743,6 +717,7 @@ bool call_func(char *var_name, char **func_name_to_parent){
             // This ensures that only first error will be in error_code
             if(error_code == 0)
                 error_code = 3;
+            free(func_name);
             return false;
         }
 
@@ -759,6 +734,7 @@ bool call_func(char *var_name, char **func_name_to_parent){
             // This ensures that only first error will be in error_code
             if(error_code == 0)
                 error_code = 5;
+            free(func_name);
             return false;
         }
 
@@ -773,10 +749,7 @@ bool call_func(char *var_name, char **func_name_to_parent){
             add_string_after_specific_string(active_code_list->end, func_name);
         }
 
-        if(DEBUG_FREE) fprintf(stderr, "Parser: Call func: Free: %p, %s, %c\n", func_name, func_name, func_name[0]);
-        // Free string stored in token.data.string, dont need this anymore
-        free(func_name);
-        func_name = NULL;
+
 
         return sub_analysis_result;
     }
@@ -815,18 +788,6 @@ bool after_id() {
     if(DEBUG_PARSER) printf("PARSER: Im in %s\n", non_term);
     if(DEBUG_PARSER) printf("PARSER: token type: %s\n", token_type_enum_string[token.type]);
 
-    // This is not by ll rules, when is minus before number in call func args, this will handle it
-    if(token.type == MINUS){
-        token = nextToken();        // TODO: this will probbably cause error in the future
-        if(DEBUG_PARSER) printf("PARSER: minus was before number in argument\n");
-        if(token.type == INT)
-            token.data.value_int *= -1;
-        else if (token.type == FLOAT)
-            token.data.value_double *= -1;
-        else
-            return false;
-    }
-
     // 10. After_id -> Call_func_args
     if(token.type == IDENTIFICATOR || token.type == EOL_CASE || token.type == LPAR ||
        token.type == INT || token.type == FLOAT || token.type == STRING || token.type == NIL){
@@ -840,6 +801,7 @@ bool after_id() {
             // This ensures that only first error will be in error_code
             if(error_code == 0)
                 error_code = 3;
+            free(func_name);
             return false;
         }
 
@@ -849,13 +811,14 @@ bool after_id() {
 
         // Semantics. Check if num_of_args == func_name.defined.parameters, if not error 5
         // If number of define_params == -1,
-        // it means number of parameters is variable (for system func print()), thus skip error scope
+        // it means number of parameters is variable (at leaast 1), (for system func print()), thus skip error scope
         int defined_params = get_num_of_defined_func_params(&global_symtable, func_name);
-        if(num_of_args != defined_params && defined_params != -1){
+        if(num_of_args != defined_params && (defined_params != -1 || num_of_args < 1)){
             if(DEBUG_SEMATNICS) printf("SEMANTICS: %s: number of arg not quals params\n", func_name);
             // This ensures that only first error will be in error_code
             if(error_code == 0)
                 error_code = 5;
+            free(func_name);
             return false;
         }
 
@@ -866,6 +829,10 @@ bool after_id() {
             add_string_after_specific_string(active_code_list->end, "CALL");
             active_code_list->end->is_start_of_new_line = true;
             add_string_after_specific_string(active_code_list->end, func_name);
+
+            // If this is last line in func, put result of expression on stack
+            add_string_after_specific_string(active_code_list->end, "PUSHS TF@%retval");
+            active_code_list->end->is_start_of_new_line = true;
         }
 
         if(DEBUG_FREE) fprintf(stderr, "Parser: After id: Free: %p, %s, %c\n", func_name, func_name, func_name[0]);
@@ -884,6 +851,7 @@ bool after_id() {
             // This ensures that only first error will be in error_code
             if(error_code == 0)
                 error_code = 2;
+            free(var_name);
             return false;
         }
 
@@ -898,6 +866,7 @@ bool after_id() {
             // This ensures that only first error will be in error_code
             if(error_code == 0)
                 error_code = 3;
+            free(var_name);
             return false;
         }
 
@@ -916,6 +885,7 @@ bool after_id() {
             // This ensures that only first error will be in error_code
             if(error_code == 0)
                 error_code = 99;
+            free(var_name);
             return false;
         }
 
@@ -926,27 +896,17 @@ bool after_id() {
         // Generate code
         // if var_name where we want assign return value from function is new variable, define it
         if(is_new_variable){
-            Tstring good_place_for_defvar;
-            if(im_in_while_loop){
-                if(DEBUG_PARSER) printf("\n\nserching for good palce\n\n");
+            Tstring good_place_for_defvar = active_code_list->end;
+            if(im_in_while_loop)
                 good_place_for_defvar = find_nearest_good_place_for_defvar()->prev;
-                if(DEBUG_PARSER) printf("good place: %s\n", good_place_for_defvar->text);
-                add_string_after_specific_string(good_place_for_defvar, "DEFVAR LF@");
-                good_place_for_defvar->next->is_start_of_new_line = true;
-                append_text_to_specific_string(good_place_for_defvar->next, var_name);
-                add_string_after_specific_string(good_place_for_defvar->next, "MOVE LF@");
-                good_place_for_defvar->next->next->is_start_of_new_line = true;
-                append_text_to_specific_string(good_place_for_defvar->next->next, var_name);
-                add_string_after_specific_string(good_place_for_defvar->next->next, "nil@nil");
-            }else{
-                add_string_after_specific_string(active_code_list->end, "DEFVAR LF@");
-                active_code_list->end->is_start_of_new_line = true;
-                append_text_to_specific_string(active_code_list->end, var_name);
-                add_string_after_specific_string(active_code_list->end, "MOVE LF@");
-                active_code_list->end->is_start_of_new_line = true;
-                append_text_to_specific_string(active_code_list->end, var_name);
-                add_string_after_specific_string(active_code_list->end, "nil@nil");
-            }
+
+            add_string_after_specific_string(good_place_for_defvar, "DEFVAR LF@");
+            good_place_for_defvar->next->is_start_of_new_line = true;
+            append_text_to_specific_string(good_place_for_defvar->next, var_name);
+            add_string_after_specific_string(good_place_for_defvar->next, "MOVE LF@");
+            good_place_for_defvar->next->next->is_start_of_new_line = true;
+            append_text_to_specific_string(good_place_for_defvar->next->next, var_name);
+            add_string_after_specific_string(good_place_for_defvar->next->next, "nil@nil");
         }
 
         bool result = func_or_expr(var_name, &func_name);
@@ -966,10 +926,20 @@ bool after_id() {
             append_text_to_specific_string(active_code_list->end, var_name);
         }
 
+        // If this is last line in func, put result of expression on stack
+        add_string_after_specific_string(active_code_list->end, "PUSHS LF@");
+        active_code_list->end->is_start_of_new_line = true;
+        append_text_to_specific_string(active_code_list->end, var_name);
+
         if(DEBUG_FREE) fprintf(stderr, "Parser: After id: free: %p, %s, %c\n", var_name, var_name, var_name[0]);
         // Free string stored in token.data.string, dont need this anymore
         free(var_name);
         var_name = NULL;
+
+        if(DEBUG_FREE) fprintf(stderr, "Parser: Call func: Free: %p, %s, %c\n", func_name, func_name, func_name[0]);
+        // Free string stored in token.data.string, dont need this anymore
+        free(func_name);
+        func_name = NULL;
 
 
         return result;
@@ -1021,13 +991,18 @@ bool state(){
     } else if(token.type == IF){        // 25. State -> if Expr then eol St_list else eol St_list end eol
         pop();
 
-        add_string_after_specific_string(active_code_list->end, "DEFVAR");
-        active_code_list->end->is_start_of_new_line = true;
-        add_string_after_specific_string(active_code_list->end, "LF@condition_");
         char str[12];       // 12 because 32bit int cant have higher value
         int condition_num = generic_label_count++;
+
+        // Place DEFVAR at good place, if we are in while loop, above that label
+        Tstring good_place_for_defvar = active_code_list->end;
+        if(im_in_while_loop)
+            good_place_for_defvar = find_nearest_good_place_for_defvar()->prev;
+
+        add_string_after_specific_string(good_place_for_defvar, "DEFVAR LF@condition_");
+        good_place_for_defvar->next->is_start_of_new_line = true;
         sprintf(str, "%d", condition_num);
-        append_text_to_specific_string(active_code_list->end, str);
+        append_text_to_specific_string(good_place_for_defvar->next, str);
 
         if(!expr())
             return false;
@@ -1056,9 +1031,8 @@ bool state(){
                 if(!st_list())
                     return false;
 
-                add_string_after_specific_string(active_code_list->end, "JUMP");
+                add_string_after_specific_string(active_code_list->end, "JUMP $if_end_");
                 active_code_list->end->is_start_of_new_line = true;
-                add_string_after_specific_string(active_code_list->end, "$if_end_");
                 int if_end_num = generic_label_count++;
                 sprintf(str, "%d", if_end_num);
                 append_text_to_specific_string(active_code_list->end, str);
@@ -1066,9 +1040,8 @@ bool state(){
                 if(token.type == ELSE ) {
                     pop();
 
-                    add_string_after_specific_string(active_code_list->end, "LABEL");
+                    add_string_after_specific_string(active_code_list->end, "LABEL $else_");
                     active_code_list->end->is_start_of_new_line = true;
-                    add_string_after_specific_string(active_code_list->end, "$else_");
                     sprintf(str, "%d", else_num);
                     append_text_to_specific_string(active_code_list->end, str);
 
@@ -1081,9 +1054,8 @@ bool state(){
                             if(token.type == EOL_CASE ) {
                                 pop();
 
-                                add_string_after_specific_string(active_code_list->end, "LABEL");
+                                add_string_after_specific_string(active_code_list->end, "LABEL $if_end_");
                                 active_code_list->end->is_start_of_new_line = true;
-                                add_string_after_specific_string(active_code_list->end, "$if_end_");
                                 sprintf(str, "%d", if_end_num);
                                 append_text_to_specific_string(active_code_list->end, str);
 
@@ -1100,41 +1072,44 @@ bool state(){
         // For nested while loops
         bool im_parent_while_loop = false;
 
-        add_string_after_specific_string(active_code_list->end, "DEFVAR");
+        char str[12];       // 12 because 32bit int cant have higher value
+        int condition_num = generic_label_count++;
+
+        // Place DEFVAR at good place, if we are in while loop, above that label
+        Tstring good_place_for_defvar = active_code_list->end;
+        if(im_in_while_loop){
+            good_place_for_defvar = find_nearest_good_place_for_defvar()->prev;
+        }
+
+        add_string_after_specific_string(good_place_for_defvar, "DEFVAR LF@condition_");
+        good_place_for_defvar->next->is_start_of_new_line = true;
+        sprintf(str, "%d", condition_num);
+        append_text_to_specific_string(good_place_for_defvar->next, str);
+
+        add_string_after_specific_string(active_code_list->end, "LABEL $while_");
         active_code_list->end->is_start_of_new_line = true;
-        add_string_after_specific_string(active_code_list->end, "LF@condition_");
+        int while_num = generic_label_count++;
+        sprintf(str, "%d", while_num);
+        append_text_to_specific_string(active_code_list->end, str);
+
         if(!im_in_while_loop){
             active_code_list->end->before_me_is_good_place_for_defvar = true;
             im_parent_while_loop = true;
         }
 
-        char str[12];       // 12 because 32bit int cant have higher value
-        int condition_num = generic_label_count++;
-        sprintf(str, "%d", condition_num);
-        append_text_to_specific_string(active_code_list->end, str);
-
         im_in_while_loop = true;
-
-        add_string_after_specific_string(active_code_list->end, "LABEL");
-        active_code_list->end->is_start_of_new_line = true;
-        add_string_after_specific_string(active_code_list->end, "$while_");
-        int while_num = generic_label_count++;
-        sprintf(str, "%d", while_num);
-        append_text_to_specific_string(active_code_list->end, str);
 
         pop();
         if(!expr())
             return false;
 
-        add_string_after_specific_string(active_code_list->end, "POPS");
+        add_string_after_specific_string(active_code_list->end, "POPS LF@condition_");
         active_code_list->end->is_start_of_new_line = true;
-        add_string_after_specific_string(active_code_list->end, "LF@condition_");
         sprintf(str, "%d", condition_num);
         append_text_to_specific_string(active_code_list->end, str);
 
-        add_string_after_specific_string(active_code_list->end, "JUMPIFNEQ");
+        add_string_after_specific_string(active_code_list->end, "JUMPIFNEQ $while_end_");
         active_code_list->end->is_start_of_new_line = true;
-        add_string_after_specific_string(active_code_list->end, "$while_end_");
         int while_end_num = generic_label_count++;
         sprintf(str, "%d", while_end_num );
         append_text_to_specific_string(active_code_list->end, str);
@@ -1154,17 +1129,19 @@ bool state(){
                     if(token.type == EOL_CASE ) {
                         pop();
 
-                        add_string_after_specific_string(active_code_list->end, "JUMP");
+                        add_string_after_specific_string(active_code_list->end, "JUMP $while_");
                         active_code_list->end->is_start_of_new_line = true;
-                        add_string_after_specific_string(active_code_list->end, "$while_");
                         sprintf(str, "%d", while_num);
                         append_text_to_specific_string(active_code_list->end, str);
 
-                        add_string_after_specific_string(active_code_list->end, "LABEL");
+                        add_string_after_specific_string(active_code_list->end, "LABEL $while_end_");
                         active_code_list->end->is_start_of_new_line = true;
-                        add_string_after_specific_string(active_code_list->end, "$while_end_");
                         sprintf(str, "%d", while_end_num);
                         append_text_to_specific_string(active_code_list->end, str);
+
+                        // Because while always return nil
+                        add_string_after_specific_string(active_code_list->end, "PUSHS nil@nil");
+                        active_code_list->end->is_start_of_new_line = true;
 
                         if(im_parent_while_loop)
                             im_in_while_loop = false;
@@ -1248,9 +1225,6 @@ void init_parser(){
 
 }
 
-/** Just test if scanner works properly
- *  Print tokens as types, not numbers
- * */
 void test_scanner(){
 
     token.type = EOL_CASE;
@@ -1406,14 +1380,12 @@ int main(){
     init_parser();
 
 //    test_scanner();
-//
 //    return 0;
 
     pop();      // get first token
 
     // Start analyser
     bool analysis_result = prog();
-//    bool analysis_result = 0;
 
     if(!analysis_result && error_code == 0){
         error_code = 2;
