@@ -451,17 +451,25 @@ int both_are_undefined(P_stack *post_stack, Prec_table_symbols_enum operator) {
     gen_unique_operation(operator,float_pom);// JUMP $plus1
 
     insert_instruction("LABEL",o2,NULL,NULL); //LABEL $%res$type1$LF$a || o1 type == o2 type LABEL
-    insert_instruction("JUMPIFEQ",string_pom,NULL,NULL); // JUMPIFEQ $%res$type1$string LF@%res$type1 string@string
+    if(operator == P_PLUS || operator == P_EQ || operator == P_NOT_EQ)
+        insert_instruction("JUMPIFEQ",string_pom,NULL,NULL); // JUMPIFEQ $%res$type1$string LF@%res$type1 string@string
     insert_instruction("PUSHS",o1,NULL,NULL);
     insert_instruction("PUSHS",o2,NULL,NULL);
     gen_custom_jumpifeq(int_pom,operator);
     gen_custom_jumpifeq(float_pom,operator);
     exit_gen(4);
+if(operator == P_PLUS || operator == P_EQ || operator == P_NOT_EQ) {
+    insert_instruction("LABEL", string_pom, NULL, NULL);// LABEL $%res$type1$string
+    if(operator == P_PLUS) {
+        insert_instruction("CONCAT", o2, NULL, NULL);
+        push_res();
+        insert_instruction("JUMP", NULL, NULL, "end");//JUMP to end
+    }else{
+        push_res();
+        insert_instruction("PUSHS",o2,NULL,NULL);
+    }
 
-    insert_instruction("LABEL",string_pom,NULL,NULL);// LABEL $%res$type1$string
-    insert_instruction("CONCAT", o2, NULL,NULL);
-    push_res();
-    insert_instruction("JUMP",NULL,NULL,"end");//JUMP to end
+}
 
 
     if(operator == P_DIV){
@@ -535,6 +543,15 @@ int one_is_undefined_semantics(P_stack *post_stack,Prec_table_symbols_enum opera
             insert_instruction("LABEL", defined, NULL, NULL);
             insert_instruction("CONCAT", defined, NULL,NULL);
             push_res();
+            return SYNTAX_OK;
+        }else if(operator==P_NOT_EQ || operator == P_EQ){
+            insert_instruction("JUMPIFEQ", defined, NULL, NULL);//pokial su rovnakeho typu
+            exit_gen(4);
+            insert_instruction("LABEL", defined, NULL, NULL);
+            push_res();
+            insert_instruction("PUSHS",defined,NULL,NULL);
+            operation_gen(o2,operator);
+
             return SYNTAX_OK;
         }
         else return COMPATIBILITY_ERROR;
@@ -622,8 +639,10 @@ int semantics(P_stack *stack,Prec_table_symbols_enum operator){
         } else if (o1->operator != o2->operator) return COMPATIBILITY_ERROR;
 
         insert_defvar_res(im_in_while_or_if);
-
-        if (o1->operator == P_STRING && o2->operator == P_STRING) {
+        if(o1->operator == P_STRING && (operator != P_PLUS && operator != P_EQ && operator != P_NOT_EQ)){
+            return COMPATIBILITY_ERROR;
+        }
+        if (o1->operator == P_STRING && o2->operator == P_STRING && operator == P_PLUS) {
             insert_instruction("CONCAT", o1, o2,NULL);
             push_res();
         } else {
