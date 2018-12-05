@@ -67,8 +67,6 @@ bool add_func_to_symtable(Bnode *global_symtable, char *func_name);
 
 bool add_variable_to_func_params(Bnode *global_symtable, char *func_name, char *var_name);
 
-bool add_variables_from_func_params(Bnode *global_symtable, Bnode *actual_symtable, char *func_name);
-
 char *get_name_of_defined_param_at_position(Bnode *global_symtable, char *func_name, int n);
 
 void free_symtable(Bnode *symtable);

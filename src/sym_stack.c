@@ -13,7 +13,8 @@
 #include "sym_stack.h"
 #include "stdlib.h"
 
-
+/**Symbol stack
+ * Stack structure needed in PSA for storing terminals and non-terminals*/
 void s_init(S_stack *stack){
 
     stack->top = NULL;
@@ -103,18 +104,3 @@ void s_free (S_stack *stack){
     }
     s_init(stack);
 }
-
-//int main(){
-//    S_stack *stack =  malloc(sizeof(S_stack));
-//    s_init(stack);
-//    s_push(stack, P_DOLLAR);
-//    s_push(stack, P_NON_TERM);
-//    printf("%d",get_top_terminal(stack)->symbol);
-//
-//
-//
-//    printf("%d",get_count_after_stop(*stack));
-////    printf("%d", get_top_terminal(stack)->symbol);
-////    insert_after_top_terminal(stack, P_ID);
-//
-//}

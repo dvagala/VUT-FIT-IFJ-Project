@@ -17,7 +17,9 @@
 
 
 #define DEBUG_POSTFIX 0         // Set to '1', if you want to print debug stuff
-//Operator stack
+\
+/**Operator stack
+ * Basic stack structure that is designed to store expression operators.*/
 void operator_stack_init(Operator_stack *stack){
     stack->top = NULL;
 };
@@ -66,7 +68,9 @@ void operator_stack_free (Operator_stack *stack){
 
 }
 //--------------------------------------------------
-//Postfix stack
+/**Postfix stack
+ * Another stack structure designed to store operands (in form of a P_item) from postfix output queue
+ * */
 
 void p_stack_init(P_stack *stack) {
     if (stack) {
@@ -157,7 +161,10 @@ void p_stack_free(P_stack *stack){
 
 
 //---------------------------------------------------
-//Output queue
+/**Output queue
+ * Queue that is more of a list as a result of my not exactly right calculations. Stores postfix, and enables transfering
+ * values from it to postfix stack.
+ * */
 void queue_inint(Output_queue *q){
     q->first = NULL;
     q->last = NULL;
