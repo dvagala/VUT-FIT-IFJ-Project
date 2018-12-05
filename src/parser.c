@@ -65,7 +65,7 @@ tToken next_token_lookahead(){
 
     if(tokenLookAheadFlag){
         if(DEBUG_PARSER) printf("PARSER: Can do look ahead for only one token!\n");
-        exit(1);
+        exit(99);
     }
 
     aheadToken = nextToken();
@@ -515,6 +515,12 @@ bool term(int *num_of_args, char *func_name){
             // This ensures that only first error will be in error_code
             if(error_code == 0)
                 error_code = 3;
+            return false;
+        }
+
+        if(is_func_defined(&global_symtable, var_name)){
+            if(error_code == 0)
+                error_code = 2;
             return false;
         }
 
