@@ -16,8 +16,6 @@
 #include "sym_stack.h"
 
 
-#define DEBUG_POSTFIX 0         // Set to '1', if you want to print debug stuff
-\
 /**Operator stack
  * Basic stack structure that is designed to store expression operators.*/
 void operator_stack_init(Operator_stack *stack){
@@ -31,8 +29,7 @@ bool operator_stack_push(Operator_stack *stack,Prec_table_symbols_enum operator)
 
     item->next = stack->top;
     item->operator = operator;
-    if(DEBUG_POSTFIX) printf("POSTFIX: %s","pushing operator to stack:");
-    if(DEBUG_POSTFIX) printf("POSTFIX: %d\n",item->operator);
+
     stack->top = item;
     return true;
 }
@@ -52,8 +49,8 @@ bool pop_to_output_queue(Operator_stack *stack, Output_queue *q){
     if(!(stack && q) )
         return false;
     Prec_table_symbols_enum *operator = &stack->top->operator;
-    if(DEBUG_POSTFIX) printf("POSTFIX: %s","popin operator from stack:");
-    if(DEBUG_POSTFIX) printf("POSTFIX: %d\n",*operator);
+
+
     if(insert_operator(q, *operator))
         if(operator_pop(stack))
             return true;
@@ -81,7 +78,7 @@ void p_stack_init(P_stack *stack) {
 bool p_stack_push(P_stack *stack, bool is_variable, int int_value, double float_value, char *string, Prec_table_symbols_enum type){
     if(stack){
         P_item *new = (P_item*)malloc(sizeof(struct postfix_stack_item));
-        if(DEBUG_POSTFIX) printf("POSTFIX: %s%d\n","I am pushin onto post_stack: ", int_value);
+
         if(!new)
             return false;
         new->value_int = int_value;
@@ -154,9 +151,7 @@ void p_stack_free(P_stack *stack){
         }
     }
     p_stack_init(stack);
-
 }
-
 
 
 
@@ -252,24 +247,11 @@ bool insert_operator(Output_queue *q, Prec_table_symbols_enum operator){
 
 void print_queue(Output_queue q){
     P_item *item = q.first;
-    if(DEBUG_POSTFIX) printf("POSTFIX: %s\n","postfix: ");
+
     while(item){
-        if( item->operator == P_INT_NUM ) {
-            if(DEBUG_POSTFIX) printf("%d", item->value_int);
-        }
-        else if(item->operator == P_FLOAT_NUM) {
-            if (DEBUG_POSTFIX) printf("%f", item->value_double);
-        }
-        else if((item->operator == P_STRING) || (item->is_variable)  ) {
-            if (DEBUG_POSTFIX) printf("%s", item->string);
-        }
-        else if(item->is_operator){
-            if(DEBUG_POSTFIX) printf("%d",item->operator);
-        }
-        if(DEBUG_POSTFIX) printf("%s"," ");
         item = item->next_item;
     }
-    if(DEBUG_POSTFIX) printf("%s\n","");
+
 }
 void delete_first(Output_queue *q){
     if(q->first != NULL){

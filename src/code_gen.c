@@ -14,9 +14,6 @@
 #include "code_gen.h"
 #include <string.h>
 
-#define DEBGUG_CODE_GEN 0
-#define DEBGUG_CODE_GEN_FREE 0
-#define DEBUG_EXPR_GEN 0
 
 void code_list_init(){
     active_code_list = NULL;
@@ -26,12 +23,6 @@ void code_list_init(){
 
 /**Print code nicely formatted*/
 void print_code(){
-    if(DEBGUG_CODE_GEN) if(DEBGUG_CODE_GEN) printf("CODE_GEN: printing code...\n");
-
-    if(active_code_list == main_code_list)
-        if(DEBGUG_CODE_GEN) printf("\nPrinting main code...\n");
-    else
-        if(DEBGUG_CODE_GEN) printf("\nPrinting func code...\n");
 
     if(active_code_list == NULL)
         return;
@@ -41,7 +32,6 @@ void print_code(){
         if(temp->is_start_of_new_line)
             printf("\n");
         if(strcmp(temp->text, "LABEL") == 0){
-//            printf("\n");                       // This will nicely separate LABELS
             if(temp->next != NULL){
                 if(temp->next->text != NULL){
                     if(temp->next->text[0] != '$')
@@ -59,14 +49,12 @@ void print_code(){
 char* append_text_to_specific_string(Tstring specific_string, char *text){
 
     if(specific_string == NULL){
-        if(DEBGUG_CODE_GEN) if(DEBGUG_CODE_GEN) printf("Specific_string == NULL!");
-        exit(1);
+                exit(1);
     }
 
     char *old_text = specific_string->text;
     char *appended = malloc(sizeof(char) * ((strlen(specific_string->text) + strlen(text) + 1)));
-    if(DEBGUG_CODE_GEN) printf("alocing appen text: %p\n", appended);
-    strcpy(appended, specific_string->text);
+        strcpy(appended, specific_string->text);
     strcat(appended, text);
 
     specific_string->text = appended;
@@ -79,9 +67,7 @@ char* append_text_to_specific_string(Tstring specific_string, char *text){
 void add_string_after_specific_string(Tstring specific_string, char *text){
 
     struct Sstring *new_string = malloc(sizeof(struct Sstring));
-    if(DEBGUG_CODE_GEN) printf("allocing string: %p\n", new_string);
-    new_string->text = malloc(sizeof(char)*(strlen(text) + 1));
-    if(DEBGUG_CODE_GEN) printf("alocing string->text: %p\n", new_string->text);
+        new_string->text = malloc(sizeof(char)*(strlen(text) + 1));
 
     strcpy(new_string->text, text);
     new_string->is_start_of_new_line = false;
@@ -95,8 +81,7 @@ void add_string_after_specific_string(Tstring specific_string, char *text){
         new_string->next = NULL;
         active_code_list->end = new_string;
     }else if(specific_string == NULL){              // Insert at the beggining of the active_code_list
-        if(DEBGUG_CODE_GEN) printf("great\n");
-        new_string->prev = NULL;
+                new_string->prev = NULL;
         new_string->next = active_code_list->start;
         active_code_list->start->prev = new_string;
         active_code_list->start = new_string;
@@ -112,7 +97,6 @@ void add_string_after_specific_string(Tstring specific_string, char *text){
         new_string->next->prev = new_string;
     }
 
-    if(DEBGUG_CODE_GEN) printf("alocing string->text: %s\n", new_string->text);
 
     if(specific_string == main_code_list && functions_code_list != NULL)
         main_code_list = active_code_list;
@@ -125,13 +109,11 @@ Tstring find_nearest_good_place_for_defvar(){
 
     while(temp != NULL){
         if(temp->before_me_is_good_place_for_defvar){
-            if(DEBGUG_CODE_GEN) if(DEBGUG_CODE_GEN) printf("Before me is good place: %p, %s\n", temp, temp->text);
-            return temp->prev;
+                        return temp->prev;
         }
         temp = temp->prev;
     }
-    if(DEBGUG_CODE_GEN) if(DEBGUG_CODE_GEN) printf("not found good place for defvar\n");
-    return NULL;
+        return NULL;
 }
 
 void free_code_lists(){
@@ -142,13 +124,8 @@ void free_code_lists(){
     active_code_list = functions_code_list->start;
 
     while(active_code_list != NULL){
-        if(DEBGUG_CODE_GEN) if(DEBGUG_CODE_GEN) printf("CODE_GEN: freeint: %p\n", active_code_list);
-        if(DEBGUG_CODE_GEN) if(DEBGUG_CODE_GEN) printf("CODE_GEN: freeint text: %p\n", active_code_list->text);
 
         if(active_code_list->next == NULL){
-            if(DEBGUG_CODE_GEN) printf("Code gen: freeing string: %p\n", active_code_list);
-            if(DEBGUG_CODE_GEN) printf("Code gen: freeing strin->text: %p\n", active_code_list->text);
-            if(DEBGUG_CODE_GEN) printf("Code gen: freeing strin->text: %s\n", active_code_list->text);
             free(active_code_list->text);
             active_code_list->text = NULL;
             free(active_code_list);
@@ -156,11 +133,6 @@ void free_code_lists(){
             // Now go out of while
         } else{
             active_code_list = active_code_list->next;
-
-            if(DEBGUG_CODE_GEN) printf("Code gen: freeing string: %p\n", active_code_list->prev);
-            if(DEBGUG_CODE_GEN) printf("Code gen: freeing strin->text: %p\n", active_code_list->prev->text);
-            if(DEBGUG_CODE_GEN) printf("Code gen: freeing strin->text: %s\n", active_code_list->prev->text);
-
             free(active_code_list->prev->text);
             active_code_list->prev->text = NULL;
             free(active_code_list->prev);
@@ -174,15 +146,8 @@ void free_code_lists(){
     active_code_list = main_code_list->start;
 
     while(active_code_list != NULL){
-        if(DEBGUG_CODE_GEN) if(DEBGUG_CODE_GEN) printf("CODE_GEN: freeint: %p\n", active_code_list);
-        if(DEBGUG_CODE_GEN) if(DEBGUG_CODE_GEN) printf("CODE_GEN: freeint text: %p\n", active_code_list->text);
 
         if(active_code_list->next == NULL){
-
-            if(DEBGUG_CODE_GEN) printf("Code gen: freeing string: %p\n", active_code_list);
-            if(DEBGUG_CODE_GEN) printf("Code gen: freeing strin->text: %p\n", active_code_list->text);
-            if(DEBGUG_CODE_GEN) printf("Code gen: freeing strin->text: %s\n", active_code_list->text);
-
             free(active_code_list->text);
             active_code_list->text = NULL;
             free(active_code_list);
@@ -190,11 +155,6 @@ void free_code_lists(){
             // Now go out of while
         } else{
             active_code_list = active_code_list->next;
-
-            if(DEBGUG_CODE_GEN) printf("Code gen: freeing string: %p\n", active_code_list->prev);
-            if(DEBGUG_CODE_GEN) printf("Code gen: freeing strin->text: %p\n", active_code_list->prev->text);
-            if(DEBGUG_CODE_GEN) printf("Code gen: freeing strin->text: %s\n", active_code_list->prev->text);
-
             free(active_code_list->prev->text);
             active_code_list->prev->text = NULL;
             free(active_code_list->prev);
@@ -403,7 +363,6 @@ void item_value_gen_and_add(P_item *item,bool append){
         default:
             break;
     }
-
 }
 
 /**Generates unique label depending on operands type */
@@ -428,8 +387,6 @@ void gen_unique_label_for_res(P_item *o1){
         append_text_to_specific_string(active_code_list->end, "$");   // $%res$type$
         item_value_gen_and_add(o1,true);
     }
-
-
 }
 
 /**Generates Jumpifeq condition basically*/
@@ -452,7 +409,6 @@ void insert_res_and_type(P_item *o1){
         add_unique_res_type(false);
         add_unique_var_type(o1);
     }
-
 }
 
 /**Adds or appends items type */
@@ -473,9 +429,7 @@ void item_type_gen_and_add(P_item *item, bool append){
             break;
         default:
             break;
-
     }
-
 }
 
 /**Generates custom jumpifeq */
@@ -484,7 +438,6 @@ void gen_custom_jumpifeq(P_item *o1, Prec_table_symbols_enum operator){
     gen_unique_operation(operator,o1);
     add_unique_res_type(false);
     item_type_gen_and_add(o1,false); //JUMPIFEQ $plus1 LF@%res$type1 string@int
-
 }
 
 /**Generates defvar if expression is in while cycle */
@@ -501,7 +454,6 @@ void gen_defvar_in_while(P_item *o1){
     free(value);
     append_text_to_specific_string(find_nearest_good_place_for_defvar()->prev,"$type");
     append_unique_code_to_newfound_defvar();
-
 }
 
 /**Insert any other instructions depending on operands or on special type */
@@ -510,7 +462,6 @@ void insert_instruction(char *instruction, P_item *o1, P_item *o2,char *type){
     active_code_list->end->is_start_of_new_line = true;
 
     if(!strcmp(instruction,"PUSHS")){
-        if(DEBUG_EXPR_GEN) printf("%s\n","I'm gonna push");
         if(o1->res){
             add_unique_res();
         }
@@ -533,9 +484,7 @@ void insert_instruction(char *instruction, P_item *o1, P_item *o2,char *type){
             add_string_after_specific_string(active_code_list->end, "LF@%res");
             append_unique_code();
             item_value_gen_and_add(o1, false);
-
         }
-
     }
     else if(!strcmp(instruction, "MOVE")){
         if(o2 == NULL) {
@@ -553,7 +502,6 @@ void insert_instruction(char *instruction, P_item *o1, P_item *o2,char *type){
             add_unique_var_type(o1);
             item_value_gen_and_add(o1,false);
         }
-
     }
     else if(!strcmp(instruction, "JUMPIFEQ")){
         if(type!=NULL) {
@@ -625,7 +573,6 @@ char* convert_string_to_correct_IFJcode18_format(char *input)
                 char *old_output = output;
                 output=realloc(output, sizeof(char)*chunk*amount);
                 if(output != old_output){
-//                    fprintf(stderr, "Reall\n");
                     free(old_output);
                 }
 
@@ -647,13 +594,11 @@ char* convert_string_to_correct_IFJcode18_format(char *input)
                         char *old_output = output;
                         output=realloc(output, sizeof(char)*chunk*amount);
                         if(output != old_output){
-//                            fprintf(stderr, "Reall\n");
                             free(old_output);
                         }
                     }
                     output[index]=number[j];
                     index++;
-
                 }
             }
         }
@@ -667,7 +612,6 @@ char* convert_string_to_correct_IFJcode18_format(char *input)
             output=realloc(output, sizeof(char)*chunk*amount);
             // If realloc returned different address, free that old one
             if(output != old_output){
-//                fprintf(stderr, "Reall\n");
                 free(old_output);
             }
         }
@@ -882,5 +826,4 @@ void generate_system_functions(){
 
     add_string_after_specific_string(active_code_list->end, "# End declaring system function");
     active_code_list->end->is_start_of_new_line = true;
-
 }

@@ -17,7 +17,6 @@
 #include "errors.h"
 #include "string.h"
 
-#define DEBUG_FREE 0
 
 void listInit(List *list){
     list->First = NULL;
@@ -32,8 +31,6 @@ int insert_element(List *list, char *id, Data_type type){
     new->next = NULL;
     new->id = malloc(sizeof(char) * (strlen(id)+1));
     strcpy(new->id, id);
-    if(DEBUG_FREE) fprintf(stderr, "Param_list: Malloc: Param: %p,\n", new);
-    if(DEBUG_FREE) fprintf(stderr, "Param_list: Malloc: Param->id: %p, %s\n", new->id, new->id);
 
     if(list->First == NULL){
         list->First = new;
@@ -70,8 +67,6 @@ void list_disposal(List *list){
     while (list->First!=NULL){
         L_element *e = list->First;//pomocny element, potrebny na zapamatanie si prvku v zozname
         list->First = list->First->next;
-        if(DEBUG_FREE) fprintf(stderr, "Parama_list: Free: Param e: %p\n", e);
-        if(DEBUG_FREE) fprintf(stderr, "Parama_list: Free: Param e->id: %p, %s\n", e->id, e->id);
         free(e->id);
         free(e);
     }

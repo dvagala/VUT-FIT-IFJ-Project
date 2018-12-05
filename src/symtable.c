@@ -18,11 +18,6 @@
 
 #include "errors.h"
 
-#define DEBUG_FREE 0
-
-//
-// Created by Ancient on 22.11.2018.
-//
 
 /**Function returns data_type from token*/
 Data_type get_type_from_token(tToken *token){
@@ -56,17 +51,14 @@ bool Binsert(Bnode *rootPtr, char *id, bool func_bool){
 
     if(!*rootPtr){
         Bnode new = malloc(sizeof(struct Node));
-        if(DEBUG_FREE) fprintf(stderr, "Symtable: Malloc Bnode: %p\n", new);
         if(new) {
             // Copy so it is independant from token.data
             new->key = malloc(sizeof(char)*(strlen(id)+1));
             strcpy(new->key, id);
-            if(DEBUG_FREE) fprintf(stderr, "Symtable: Malloc Bonode->key: %p, %s\n", new->key, id);
             new->data.function = func_bool;
             new->Lptr = NULL;
             new->Rptr = NULL;
             new->data.list = malloc(sizeof(List));
-            if(DEBUG_FREE) fprintf(stderr, "Symtable: Malloc Bonode->data->list: %p\n", new->data.list);
             new->data.list->element_count =0;
             listInit(new->data.list);
             *rootPtr = new;
@@ -87,7 +79,6 @@ bool Binsert(Bnode *rootPtr, char *id, bool func_bool){
         else
             return false;
     }
-
 }
 
 /**Function that enables searching for Bnode of a certain key and returns it if found. */
@@ -272,9 +263,6 @@ void free_symtable_recursive(Bnode *symtable){
     if(*symtable){
         free_symtable_recursive(&(*symtable)->Rptr);
         free_symtable_recursive(&(*symtable)->Lptr);
-        if(DEBUG_FREE) fprintf(stderr, "Symtable: Free: Bonode->data->list: %p\n", (*symtable)->data.list);
-        if(DEBUG_FREE) fprintf(stderr, "Symtable: Free: Bonode: %p\n", *symtable);
-        if(DEBUG_FREE) fprintf(stderr, "Symtable: Free: Bonode->key: %p, %s\n", (*symtable)->key, (*symtable)->key);
         free((*symtable)->data.list);
         free((*symtable)->key);
         (*symtable)->key = NULL;
@@ -290,7 +278,6 @@ void free_params(Bnode *global_symtable){
         free_params(&(*global_symtable)->Lptr);
         if((*global_symtable)->data.function == true){
             if((*(*global_symtable)->data.list).First != NULL){         // just functions that have parameters
-//                if(DEBUG_FREE) fprintf(stderr, "Free: Param in Bnode: %p\n", (*(*global_symtable)->data.list).First);
                 list_disposal((*global_symtable)->data.list);
             }
         }
