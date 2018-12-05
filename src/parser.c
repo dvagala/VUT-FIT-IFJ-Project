@@ -361,7 +361,6 @@ bool def_func(){
 
     // 27. Def_func -> def id ( Param ) eol St_list end eol
     if(token.type == DEF) {
-        im_in_function = true;
         active_code_list = functions_code_list;     // Switch context
         pop();
         if (token.type == IDENTIFICATOR) {
