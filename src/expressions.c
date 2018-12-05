@@ -412,7 +412,10 @@ int both_are_undefined(P_stack *post_stack, Prec_table_symbols_enum operator) {
     o2 = post_stack->top;//o1 + o2
     o1 = post_stack->top->next_item;
     if(im_in_while_loop){
-        gen_defvar_in_while(o1);
+        if(o1->res)
+            gen_defvar_in_while(o1);
+        else
+            gen_defvar_in_while(o2);
     }
     else insert_instruction("DEFVAR", o2, NULL, NULL);
 
@@ -424,6 +427,7 @@ int both_are_undefined(P_stack *post_stack, Prec_table_symbols_enum operator) {
 
     insert_instruction("TYPE", NULL, NULL, NULL);//TYPE LF@%res$type LF@%res
     insert_instruction("TYPE", o2, NULL, NULL);//TYPE LF@%name$type LF@name
+
 
 
     insert_instruction("JUMPIFEQ",o2,NULL,NULL); //JUMPIFEQ $%res$type1$LF$a LF@%res$type1 LF@a  || if they are equal
@@ -441,6 +445,7 @@ int both_are_undefined(P_stack *post_stack, Prec_table_symbols_enum operator) {
     insert_instruction("LABEL",int_pom,NULL,NULL); // LABEL $%res$type1$int
     insert_instruction("PUSHS",o1,NULL,NULL); //PUSHS LF@%res1
     insert_simple_instruction("INT2FLOATS");
+
     insert_instruction("PUSHS",o2,NULL,NULL); //PUSHS LF@a
     insert_simple_instruction("JUMP");
     gen_unique_operation(operator,float_pom);// JUMP $plus1
@@ -458,9 +463,13 @@ int both_are_undefined(P_stack *post_stack, Prec_table_symbols_enum operator) {
     push_res();
     insert_instruction("JUMP",NULL,NULL,"end");//JUMP to end
 
+
     if(operator == P_DIV){
         insert_simple_instruction("LABEL");
-        gen_unique_operation(operator,int_pom);
+        gen_unique_operation(operator,int_pom);// LABEL $plus1if(operator == P_DIV){
+        int_pom->value_int =0;
+        insert_instruction("JUMPIFEQ",o2,int_pom,"exito");
+        int_pom->value_int =1;
         operation_gen(int_pom,operator);
         insert_instruction("JUMP",NULL,NULL,"end");
     }
@@ -468,9 +477,17 @@ int both_are_undefined(P_stack *post_stack, Prec_table_symbols_enum operator) {
     insert_simple_instruction("LABEL");
     gen_unique_operation(operator,float_pom);// LABEL $plus1
     if(operator== P_DIV){
+        float_pom->value_double =0;
+        insert_instruction("JUMPIFEQ",o2,float_pom,"exito");
+        float_pom->value_double =1;
         operation_gen(float_pom,operator);
     }
     else operation_gen(o2,operator);
+    insert_instruction("JUMP",NULL,NULL,"end");
+    if(operator==P_DIV) {
+        insert_instruction("LABEL", NULL, NULL, "exito");
+        exit_gen(9);
+    }
     insert_instruction("LABEL",NULL,NULL,"end");
 
 
@@ -532,8 +549,16 @@ int one_is_undefined_semantics(P_stack *post_stack,Prec_table_symbols_enum opera
 
         insert_instruction("JUMPIFEQ", non_defined, NULL, NULL);    //pokial su rozdielneho typu
         insert_instruction("PUSHS",o1,NULL,NULL);
-        insert_instruction("PUSHS",o2,NULL,NULL);
+        if(operator==P_DIV && non_defined == o2){
+            P_item *pom = malloc(sizeof(P_item));
+            pom->operator = defined->operator;
+            pom->value_double = 0;
+            pom->value_int = 0;
+            insert_instruction("JUMPIFEQ",pom,NULL,"exito");
+            free(pom);
 
+        }
+        insert_instruction("PUSHS",o2,NULL,NULL);
         insert_instruction("JUMPIFEQ", defined, NULL, NULL);//pokial su rovnakeho typu
         exit_gen(4);
 
@@ -551,6 +576,8 @@ int one_is_undefined_semantics(P_stack *post_stack,Prec_table_symbols_enum opera
 
         }
         if(operator == P_DIV && defined->operator!=P_FLOAT_NUM){
+            non_defined->value_double=0;
+            insert_instruction("JUMPIFEQ",non_defined,NULL,"exito");
             insert_simple_instruction("DIVS");
             insert_instruction("JUMP",NULL,NULL,"end");
         }
@@ -560,6 +587,11 @@ int one_is_undefined_semantics(P_stack *post_stack,Prec_table_symbols_enum opera
 
     error=operation_gen(o2,operator);
     if(operator == P_DIV){
+        if(non_defined==o2){
+            insert_instruction("JUMP",NULL,NULL,"end");
+            insert_instruction("LABEL",NULL,NULL,"exito");
+            exit_gen(9);
+        }
         insert_instruction("LABEL",NULL,NULL,"end");
     }
 
@@ -788,20 +820,11 @@ ReturnData *analyze_expresssion(tToken token, tToken aheadToken, bool tokenLookA
 };
 
 //int main(){
-//    tToken token = nextToken();
-//    Bnode tree;
-//    local_symtable_init(&tree);
+//    for(int i =0; i<3; i++){
+//        printf("%d",nextToken().type);
+//    }
 //
-//
-//    add_variable_to_symtable(&tree,"a");
-//    add_variable_to_symtable(&tree,"b");
-//    add_variable_to_symtable(&tree,"c");
-//    ReturnData data = analyze_expresssion(token,token,false,&tree);
-//    if(DEBUG_EXPRESSION_ANALYSIS) printf("EXPRESSIONS: %s%d\n","error code:", data.error_code);
-//
-//
-//    free_symtable(&tree);
 //
 //
 //}
-//
+

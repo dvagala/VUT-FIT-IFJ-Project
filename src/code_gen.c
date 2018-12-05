@@ -357,6 +357,11 @@ void add_end(){
     append_unique_code();
 }
 
+void add_exito(){
+    add_string_after_specific_string(active_code_list->end, "$exito$");
+    append_unique_code();
+}
+
 /**Generates needed exit code */
 void exit_gen(int error_code){
     insert_simple_instruction("EXIT");
@@ -571,13 +576,28 @@ void insert_instruction(char *instruction, P_item *o1, P_item *o2,char *type){
 
     }
     else if(!strcmp(instruction, "JUMPIFEQ")){
-        insert_res_and_type(o1);
+        if(type!=NULL) {
+            if (!strcmp(type, "exito") && o2!=NULL) {
+                add_exito();
+                item_value_gen_and_add(o1, false);
+                item_value_gen_and_add(o2, false);
+            }else
+            {
+                add_exito();
+                add_unique_res();
+                item_value_gen_and_add(o1,false);
+            }
+        }
+        else insert_res_and_type(o1);
     }
     else if(!strcmp(instruction, "LABEL")){
 
         if (type != NULL) {
             if (!strcmp(type, "end")) {
                 add_end();
+            }
+            else if (!strcmp(type, "exito")) {
+                add_exito();
             }
         } else gen_unique_label_for_res(o1);
 
@@ -590,6 +610,14 @@ void insert_instruction(char *instruction, P_item *o1, P_item *o2,char *type){
     else if(!strcmp(instruction,"DEFVAR")){
         add_unique_var_type(o1);
 
+    }
+    else if(!strcmp(instruction,"JUMPIFEQS")){
+        if (type != NULL) {
+            if (!strcmp(type, "exito")) {
+                add_exito();
+                item_value_gen_and_add(o1,false);
+            }
+        }
     }
 
 }
