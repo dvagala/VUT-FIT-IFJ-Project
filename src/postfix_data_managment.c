@@ -87,7 +87,7 @@ bool p_stack_push(P_stack *stack, bool is_variable, int int_value, double float_
         new->value_int = int_value;
         new->value_double = float_value;
         if(string != NULL) {
-            new->string = malloc(sizeof(strlen(string)) + 1);
+            new->string = malloc(sizeof(char)*(strlen(string)+1));
             strcpy(new->string, string);
         }
         else new->string = NULL;
@@ -177,7 +177,7 @@ bool queue_insert(Output_queue *q, bool is_operator, int int_value, double float
         new->value_int = int_value;
         new->value_double = float_value;
         if(string != NULL) {
-            new->string = malloc(sizeof(strlen(string)) + 1);
+            new->string = malloc(sizeof(char)*(strlen(string)+1));
             strcpy(new->string, string);
         }
         else new->string = NULL;

@@ -379,7 +379,7 @@ void item_value_gen_and_add(P_item *item,bool append){
             free(value);
             break;
         case P_STRING:
-            value = malloc(sizeof(strlen(item->string))+1);
+            value = malloc(sizeof(char) * (strlen(item->string)+1));
             strcpy(value, item->string);
             if(!append){
                 add_string_after_specific_string(active_code_list->end,"string@");
@@ -390,7 +390,7 @@ void item_value_gen_and_add(P_item *item,bool append){
             free(ifj18string);
             break;
         case P_ID:
-            value = malloc(sizeof(strlen(item->string))+1);
+            value = malloc(sizeof(char) * (strlen(item->string)+1));
             strcpy(value, item->string);
             if(!append){
                 add_string_after_specific_string(active_code_list->end,"LF@");
@@ -770,6 +770,8 @@ void generate_substr_func(){
                                                             "JUMPIFEQ $$substr_end LF@$$substr_bounds bool@true\n"
                                                             "LT LF@$$substr_bounds LF@n int@0     # n check lower bound\n"
                                                             "JUMPIFEQ $$substr_end LF@$$substr_bounds bool@true\n"
+                                                            "ADD LF@n LF@n LF@i\n"
+                                                            "SUB LF@n LF@n int@1\n"
                                                             "CREATEFRAME \n"
                                                             "DEFVAR TF@s \n"
                                                             "MOVE TF@s LF@s \n"
