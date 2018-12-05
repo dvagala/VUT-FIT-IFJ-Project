@@ -367,9 +367,11 @@ tToken nextToken()
             char hexValue[3]={0}; //special array to save HEX value that follows after sequence '\x'
             int symbol; //we'll save this value in int
             int tookFlag=0; //variable used to take care of edge case where string ends with \xh"
+            int escapeFlag=0;
             int bufferedMore=0;
             while (c !='\"')
             {
+                escapeFlag=0;
                 if (c == '\n')
                 {
                     identificator.type=ERROR;
@@ -378,6 +380,7 @@ tToken nextToken()
                 }
                 if (c == '\\') // \ is the so called escape character for special symbols. For our case, we make a case for each and implement
                 {              //their proper behavior.
+                    while (c =='\\'){
                     c=getchar();
                     switch(c)
                     {
@@ -434,6 +437,10 @@ tToken nextToken()
                                     {
                                         tookFlag=1;
                                     }
+                                    else if (c=='\\')
+                                    {
+                                        escapeFlag=1;
+                                    }
                                     else
                                     {
                                         bufferedMore=1;
@@ -446,7 +453,6 @@ tToken nextToken()
                                 TokenString->string[TokenString->index]='\0';
                                 if (bufferedMore==1)
                                 {
-
                                     bufferToken(TokenString);
                                 }
                                 break;
@@ -469,7 +475,17 @@ tToken nextToken()
                     {
                         break;
                     }
-                    c=getchar();
+                    if (escapeFlag !=1)
+                    {
+                        c = getchar();
+                        break;
+                    }
+                    escapeFlag=0;
+                    }
+                    if (tookFlag==1)
+                    {
+                        break;
+                    }
                 }
                 else
                 {
