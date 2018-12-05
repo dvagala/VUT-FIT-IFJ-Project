@@ -14,7 +14,7 @@ typedef struct Sstring{
 
     char *text;
     bool is_start_of_new_line;
-    bool before_me_is_good_place_for_defvar;         // This will be true if string is "while"
+    bool before_me_is_good_place_for_defvar;      // This will be true if this is start of while loop, or if statement
 
     struct Sstring *next;
     struct Sstring *prev;
@@ -33,7 +33,6 @@ int generic_label_count;
 
 void code_list_init();
 void print_code();
-void print_code_backwards();
 char* append_text_to_specific_string(Tstring specific_string, char *text);
 Tstring find_nearest_good_place_for_defvar();
 void add_string_after_specific_string(Tstring specific_string, char *text);

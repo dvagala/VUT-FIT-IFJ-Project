@@ -55,26 +55,6 @@ void print_code(){
     printf("\n");
 }
 
-// Just for testing
-void print_code_backwards(){
-    if(DEBGUG_CODE_GEN) if(DEBGUG_CODE_GEN) printf("CODE_GEN: printing code...\n");
-
-    if(DEBGUG_CODE_GEN) printf("\nPrinting code...\n");
-
-    if(active_code_list == NULL)
-        return;
-
-    Tstring temp = active_code_list->end;
-    while(temp != NULL){
-
-        if(temp->is_start_of_new_line)
-            if(DEBGUG_CODE_GEN) printf("\n");
-        if(DEBGUG_CODE_GEN) printf("%s ", temp->text);
-        temp = temp->prev;
-    }
-    if(DEBGUG_CODE_GEN) printf("\n");
-}
-
 /**Append text to specific string, I do not create new string as add_string_after_specific_string does*/
 char* append_text_to_specific_string(Tstring specific_string, char *text){
 

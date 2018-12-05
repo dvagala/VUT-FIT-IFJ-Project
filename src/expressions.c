@@ -406,12 +406,12 @@ int both_are_undefined(P_stack *post_stack, Prec_table_symbols_enum operator) {
     float_pom->operator = P_FLOAT_NUM;
     float_pom->value_double = 1;
     string_pom->operator = P_STRING;
-    insert_defvar_res(im_in_while_loop);
-    declare_defvar_restype(im_in_while_loop);
+    insert_defvar_res(im_in_while_or_if);
+    declare_defvar_restype(im_in_while_or_if);
 
     o2 = post_stack->top;//o1 + o2
     o1 = post_stack->top->next_item;
-    if(im_in_while_loop){
+    if(im_in_while_or_if){
         if(o1->res)
             gen_defvar_in_while(o1);
         else
@@ -508,8 +508,8 @@ int one_is_undefined_semantics(P_stack *post_stack,Prec_table_symbols_enum opera
     o2 = post_stack->top;//o1 + o2
     o1 = post_stack->top->next_item;
 
-    insert_defvar_res(im_in_while_loop);
-    declare_defvar_restype(im_in_while_loop);
+    insert_defvar_res(im_in_while_or_if);
+    declare_defvar_restype(im_in_while_or_if);
     if(o1->operator == P_ID) {
         insert_instruction("MOVE",o1, NULL,NULL);//MOVE Lf@%res o1
         insert_instruction("TYPE",NULL,NULL,NULL);//TYPE LF@%res$type LF@%res
@@ -621,7 +621,7 @@ int semantics(P_stack *stack,Prec_table_symbols_enum operator){
 
         } else if (o1->operator != o2->operator) return COMPATIBILITY_ERROR;
 
-        insert_defvar_res(im_in_while_loop);
+        insert_defvar_res(im_in_while_or_if);
 
         if (o1->operator == P_STRING && o2->operator == P_STRING) {
             insert_instruction("CONCAT", o1, o2,NULL);

@@ -897,7 +897,7 @@ bool after_id() {
         // if var_name where we want assign return value from function is new variable, define it
         if(is_new_variable){
             Tstring good_place_for_defvar = active_code_list->end;
-            if(im_in_while_loop)
+            if(im_in_while_or_if)
                 good_place_for_defvar = find_nearest_good_place_for_defvar()->prev;
 
             add_string_after_specific_string(good_place_for_defvar, "DEFVAR LF@");
@@ -991,12 +991,15 @@ bool state(){
     } else if(token.type == IF){        // 25. State -> if Expr then eol St_list else eol St_list end eol
         pop();
 
+        // For nested while loops or if statement
+        bool im_parent_while_or_if = false;
+
         char str[12];       // 12 because 32bit int cant have higher value
         int condition_num = generic_label_count++;
 
-        // Place DEFVAR at good place, if we are in while loop, above that label
+        // Place DEFVAR at good place, if we are in while loop or if statement, above that label
         Tstring good_place_for_defvar = active_code_list->end;
-        if(im_in_while_loop)
+        if(im_in_while_or_if)
             good_place_for_defvar = find_nearest_good_place_for_defvar()->prev;
 
         add_string_after_specific_string(good_place_for_defvar, "DEFVAR LF@condition_");
@@ -1007,22 +1010,27 @@ bool state(){
         if(!expr())
             return false;
 
-        add_string_after_specific_string(active_code_list->end, "POPS");
+        add_string_after_specific_string(active_code_list->end, "POPS LF@condition_");
         active_code_list->end->is_start_of_new_line = true;
-        add_string_after_specific_string(active_code_list->end, "LF@condition_");
         sprintf(str, "%d", condition_num);
         append_text_to_specific_string(active_code_list->end, str);
 
-        add_string_after_specific_string(active_code_list->end, "JUMPIFNEQ");
+        add_string_after_specific_string(active_code_list->end, "JUMPIFNEQ $else_");
         active_code_list->end->is_start_of_new_line = true;
-        add_string_after_specific_string(active_code_list->end, "$else_");
         int else_num = generic_label_count++;
         sprintf(str, "%d", else_num );
         append_text_to_specific_string(active_code_list->end, str);
-        add_string_after_specific_string(active_code_list->end, "LF@condition_");
+        append_text_to_specific_string(active_code_list->end, " LF@condition_");
         sprintf(str, "%d", condition_num);
         append_text_to_specific_string(active_code_list->end, str);
-        add_string_after_specific_string(active_code_list->end, "bool@true");
+        append_text_to_specific_string(active_code_list->end, " bool@true");
+
+        if(!im_in_while_or_if){
+            active_code_list->end->before_me_is_good_place_for_defvar = true;
+            fprintf(stderr, "good place: %s\n", active_code_list->end->text);
+            im_parent_while_or_if = true;
+        }
+        im_in_while_or_if = true;
 
         if(token.type == THEN ) {
             pop();
@@ -1059,6 +1067,9 @@ bool state(){
                                 sprintf(str, "%d", if_end_num);
                                 append_text_to_specific_string(active_code_list->end, str);
 
+                                if(im_parent_while_or_if)
+                                    im_in_while_or_if = false;
+
                                 if(DEBUG_PARSER) printf("PARSER: %s returning: %d\n", non_term, 1);
                                 return true;
                             }
@@ -1069,15 +1080,15 @@ bool state(){
         }
     } else if(token.type == WHILE){        // 26. State -> while Expr do eol St_list end eol
 
-        // For nested while loops
-        bool im_parent_while_loop = false;
+        // For nested while loops or if statement
+        bool im_parent_while_or_if = false;
 
         char str[12];       // 12 because 32bit int cant have higher value
         int condition_num = generic_label_count++;
 
-        // Place DEFVAR at good place, if we are in while loop, above that label
+        // Place DEFVAR at good place, if we are in while loop or if statement, above that label
         Tstring good_place_for_defvar = active_code_list->end;
-        if(im_in_while_loop){
+        if(im_in_while_or_if){
             good_place_for_defvar = find_nearest_good_place_for_defvar()->prev;
         }
 
@@ -1092,12 +1103,12 @@ bool state(){
         sprintf(str, "%d", while_num);
         append_text_to_specific_string(active_code_list->end, str);
 
-        if(!im_in_while_loop){
+        if(!im_in_while_or_if){
             active_code_list->end->before_me_is_good_place_for_defvar = true;
-            im_parent_while_loop = true;
+            im_parent_while_or_if = true;
         }
 
-        im_in_while_loop = true;
+        im_in_while_or_if = true;
 
         pop();
         if(!expr())
@@ -1143,8 +1154,8 @@ bool state(){
                         add_string_after_specific_string(active_code_list->end, "PUSHS nil@nil");
                         active_code_list->end->is_start_of_new_line = true;
 
-                        if(im_parent_while_loop)
-                            im_in_while_loop = false;
+                        if(im_parent_while_or_if)
+                            im_in_while_or_if = false;
 
                         if(DEBUG_PARSER) printf("PARSER: %s returning: %d\n", non_term,  1);
                         return true;
@@ -1196,7 +1207,7 @@ bool prog(){
 
 void init_parser(){
     // For throwing away EOL if is as start of file
-    im_in_while_loop = false;
+    im_in_while_or_if = false;
     token.type = EOL_CASE;
     code_list_init();
     generic_label_count = 0;
